@@ -1,3 +1,6 @@
+# Tests dir
+tests/
+scratch/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
