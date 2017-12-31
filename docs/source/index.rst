@@ -5,7 +5,7 @@ TorchRL Documentation
    :maxdepth: 2
    :caption: .. Contents::
 
-   readme.md
+   README
 
 
 Indices and tables

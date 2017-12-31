@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # TorchRL documentation build configuration file, created by
-# sphinx-quickstart on Sun Dec 31 15:44:50 2017.
+# sphinx-quickstart on Sun Dec 31 17:19:30 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -20,6 +20,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../torchrl'))
+# sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,8 +32,8 @@ sys.path.insert(0, os.path.abspath('../../torchrl'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode', 'sphinx.ext.napoleon'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -84,7 +85,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -104,11 +105,8 @@ html_static_path = ['_static']
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
     '**': [
-        'about.html',
-        'navigation.html',
         'relations.html',  # needs 'show_related': True theme option to display
         'searchbox.html',
-        'donate.html',
     ]
 }
 
