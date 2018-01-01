@@ -1,9 +1,11 @@
 import json
+from collections import OrderedDict
 
 
 class Config:
     '''
-    Configuration file used for initializing an Agent.
+    Configuration object used for initializing an Agent.
+    It maintains the order from which the attributes have been set.
 
     Parameters
     ----------
@@ -17,29 +19,37 @@ class Config:
     '''
 
     def __init__(self, **configs):
+        # We want to maintain the order of the attributes,
+        # this is especially necessary when defining NNs architectures
+        self.__dict__['_attrs'] = OrderedDict()
         for key, value in configs.items():
             self._nested_loader(key, value)
 
+    def __getattr__(self, value):
+        return self.__dict__['_attrs'][value]
+
+    def __setattr__(self, key, value):
+        self.__dict__['_attrs'][key] = value
+
     def __str__(self):
-        return (json.dumps(self.__dict__, cls=NestedEncoder, indent=4))
+        return (json.dumps(self.as_dict(), cls=NestedEncoder, indent=4))
 
     def _nested_loader(self, key, value):
         if isinstance(value, dict):
             return self.new_section(key, **value)
         else:
-            self.__dict__.update({key: value})
+            setattr(self, key, value)
 
     def as_dict(self):
         '''
-        Returns all object attributes as a nested dictionary.
+        Returns all object attributes as a nested OrderedDict.
 
         Returns
         -------
         dict
-            Nested dictionary containing all object attributes.
+            Nested OrderedDict containing all object attributes.
         '''
-
-        return self.__dict__
+        return self.__dict__['_attrs']
 
     def new_section(self, name, **configs):
         '''
@@ -71,14 +81,13 @@ class Config:
     def to_json(self, file_path):
         '''
         Saves current configuration to a JSON file.
-        The configuration is stored as a nested dictionary.
+        The configuration is stored as a nested dictionary (maintaining the order).
 
         Parameters
         ----------
         file_path: str
             Path to write the file
         '''
-
         with open(file_path + '.json', 'w') as f:
             json.dump(self, f, cls=NestedEncoder, indent=4)
 
@@ -98,7 +107,7 @@ class Config:
             A configuration object loaded from a JSON file
         '''
         with open(file_path + '.json', 'r') as f:
-            configs = json.load(f)
+            configs = json.load(f, object_hook=OrderedDict)
         return cls(**configs)
 
     @classmethod
@@ -117,7 +126,7 @@ class Config:
             A configuration object loaded from a JSON file
         '''
         if name == 'PPO':
-            return cls.from_json('ppo5')
+            return cls.from_json('CHANGE')
 
 
 class NestedEncoder(json.JSONEncoder):
