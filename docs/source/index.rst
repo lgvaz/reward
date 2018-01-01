@@ -1,11 +1,13 @@
+:github_url: https://github.com/lgvaz/torchrl
+
 TorchRL Documentation
 =====================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: .. Contents::
+   :maxdepth: 1
+   :caption: Package Reference
 
-   README
+   torchrl.common.config <config>
 
 
 Indices and tables
