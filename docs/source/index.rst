@@ -8,6 +8,7 @@ TorchRL Documentation
    :caption: Package Reference
 
    torchrl.common.config <config>
+   envs
 
 
 Indices and tables
