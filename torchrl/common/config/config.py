@@ -62,8 +62,8 @@ class Config:
         configs: Keyword arguments
             Parameters that will be stored in this section, accepts nested parameters.
 
-        Example
-        -------
+        Examples
+        --------
         Simple use case::
 
             config.new_section('new_section_name', attr1=value1, attr2=value2, ...)
@@ -72,7 +72,7 @@ class Config:
 
             config.new_section('new_section_name', attr1=Config(attr1=value1, attr2=value2))
 
-        Then you can access the variable like this::
+        It's possible to access the variable like so::
 
             config.new_section_name.attr1
         '''
