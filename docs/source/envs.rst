@@ -12,9 +12,10 @@ BaseEnv
 
 .. autoclass:: BaseEnv
   :members:
+  :private-members:
 
-Gym
----
+GymEnv
+------
 
 .. autoclass:: GymEnv
   :members:

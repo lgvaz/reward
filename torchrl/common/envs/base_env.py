@@ -1,14 +1,30 @@
 from abc import ABC, abstractmethod, abstractproperty
+from torchrl.common.utils import Normalizer
 
 
+# TODO: Config file
 class BaseEnv(ABC):
-    '''Base class used for implementing new environments'''
+    '''
+    Base class used for implementing new environments.
 
-    def __init__(self, config=None):
-        pass
+    Includes some basic functionalities, like the option to use a running mean
+    and standard deviation for normalizing states.
+
+    Parameters
+    ----------
+    normalize_states: bool
+        If True, normalize the states (Default is True).
+    '''
+
+    def __init__(self, normalize_states=False):
+        self.normalize_states = normalize_states
+        if normalize_states:
+            self.normalizer = Normalizer(self.state_info['shape'])
+        else:
+            self.normalizer = None
 
     @abstractmethod
-    def reset(self):
+    def _reset(self):
         '''
         This method should be overwritten by a subclass.
 
@@ -22,7 +38,7 @@ class BaseEnv(ABC):
         pass
 
     @abstractmethod
-    def step(self, action):
+    def _step(self, action):
         '''
         This method should be overwritten by a subclass.
 
@@ -47,8 +63,51 @@ class BaseEnv(ABC):
         '''
         pass
 
+    def _preprocess_state(self, state):
+        '''
+        Perform transformations on the state (scaling, normalizing, cropping, etc).
+
+        Parameters
+        ----------
+        state: numpy.ndarray
+            The state to be processed.
+
+        Returns
+        -------
+        state: numpy.ndarray
+            The transformed state.
+        '''
+        if self.normalizer is not None:
+            state = self.normalizer.normalize(state)
+
+        return state
+
+    def reset(self):
+        '''
+        Calls the reset method that should be implemented by a subclass.
+        The :meth:`_preprocess_state` function is called at the returned state.
+
+        Returns
+        -------
+        state: numpy.ndarray
+            The state received by resetting the environment.
+        '''
+        state = self._reset()
+        state = self._preprocess_state(state)
+
+        if self.normalizer is not None:
+            self.normalizer.update()
+
+        return state
+
+    def step(self, action):
+        next_state, reward, done = self._step(action)
+        next_state = self._preprocess_state(next_state)
+
+        return next_state, reward, done
+
     @abstractproperty
-    def state_shape(self):
+    def state_info(self):
         '''
         This method should be overwritten by a subclass.
 
@@ -66,7 +125,7 @@ class BaseEnv(ABC):
         pass
 
     @abstractproperty
-    def action_shape(self):
+    def action_info(self):
         '''
         This method should be overwritten by a subclass.
 
@@ -84,3 +143,35 @@ class BaseEnv(ABC):
             return dict(shape=(4,), dtype='float')
         '''
         pass
+
+    @abstractproperty
+    def simulator(self):
+        '''
+        This method should be overwritten by a subclass.
+
+        Should return the name of the simulator being used as a string.
+        '''
+        pass
+
+    def env_name(self):
+        '''
+        This method should be overwritten by a subclass.
+
+        Should return the name of the environment.
+        '''
+        pass
+
+    def update_config(self, config):
+        '''
+        Updates a Config object to include information about the environment.
+
+        Parameters
+        ----------
+        config: Config
+            Object used for storing configuration.
+        '''
+        config.new_section(
+            'env_config',
+            simulator=self.simulator,
+            env_name=self.env_name,
+            normalize_states=self.normalize_states)

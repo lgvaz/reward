@@ -9,6 +9,7 @@ TorchRL Documentation
 
    torchrl.common.config <config>
    envs
+   utils
 
 
 Indices and tables
