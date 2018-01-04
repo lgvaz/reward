@@ -35,7 +35,7 @@ class Config:
         return (json.dumps(self.as_dict(), cls=NestedEncoder, indent=4))
 
     def _nested_loader(self, key, value):
-        if isinstance(value, dict):
+        if isinstance(value, OrderedDict):
             return self.new_section(key, **value)
         else:
             setattr(self, key, value)

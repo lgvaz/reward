@@ -11,13 +11,16 @@ class GymEnv(BaseEnv):
     env_name: str
         The Gym ID of the env. For a list of available envs check
         `this <https://gym.openai.com/envs/>`_ page.
+    wrappers: list
+        List of wrappers to be applied on the env.
+        Each wrapper should be a function that receives and returns the env.
     '''
 
-    def __init__(self, env_name, wrappers=None, **kwargs):
+    def __init__(self, env_name, wrappers=[], **kwargs):
         self._env_name = env_name
         self.env = gym.make(env_name)
-        if wrappers is not None:
-            self.env = wrappers(self.env)
+        for wrapper in wrappers:
+            self.env = wrapper(self.env)
         super().__init__(**kwargs)
 
     def _reset(self):

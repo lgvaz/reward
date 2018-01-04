@@ -5,7 +5,7 @@ from torchrl.common.utils import Normalizer
 # TODO: Config file
 class BaseEnv(ABC):
     '''
-    Base class used for implementing new environments.
+    Abstract base class used for implementing new environments.
 
     Includes some basic functionalities, like the option to use a running mean
     and standard deviation for normalizing states.
