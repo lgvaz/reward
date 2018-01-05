@@ -1,8 +1,8 @@
-Configuration object - torchrl.common.config.Config
-===================================================
+Configuration object - torchrl.utils.config.Config
+==================================================
 
-.. automodule:: torchrl.common.config
-.. currentmodule:: torchrl.common.config
+.. automodule:: torchrl.utils.config
+.. currentmodule:: torchrl.utils.config
 
 .. autoclass:: Config
     :members:           

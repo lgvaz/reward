@@ -7,7 +7,7 @@ TorchRL Documentation
    :maxdepth: 1
    :caption: Package Reference
 
-   torchrl.common.config <config>
+   torchrl.utils.config <config>
    envs
    utils
 

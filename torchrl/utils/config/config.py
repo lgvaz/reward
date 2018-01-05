@@ -78,7 +78,7 @@ class Config:
         '''
         self._nested_loader(name, Config(**configs))
 
-    def to_json(self, file_path):
+    def save(self, file_path):
         '''
         Saves current configuration to a JSON file.
         The configuration is stored as a nested dictionary (maintaining the order).
@@ -92,7 +92,7 @@ class Config:
             json.dump(self, f, cls=NestedEncoder, indent=4)
 
     @classmethod
-    def from_json(cls, file_path):
+    def load(cls, file_path):
         '''
         Loads configuration from a JSON file.
 

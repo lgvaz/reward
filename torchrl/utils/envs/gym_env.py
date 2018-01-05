@@ -1,5 +1,5 @@
 import gym
-from torchrl.common.envs.base_env import BaseEnv
+from torchrl.utils.envs.base_env import BaseEnv
 
 
 class GymEnv(BaseEnv):

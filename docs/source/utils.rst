@@ -1,11 +1,11 @@
 .. role:: hidden
     :class: hidden-section
 
-torch.common.utils
-==================
+torch.utils.preprocessing
+=========================
 
-.. automodule:: torchrl.common.utils
-.. currentmodule:: torchrl.common.utils
+.. automodule:: torchrl.utils.preprocessing
+.. currentmodule:: torchrl.utils.preprocessing
 
 Normalizer
 ----------

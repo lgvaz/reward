@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod, abstractproperty
-from torchrl.common.utils import Normalizer
+from torchrl.utils.preprocessing import Normalizer
 
 
 # TODO: Config file
