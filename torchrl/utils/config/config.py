@@ -26,7 +26,10 @@ class Config:
             self._nested_loader(key, value)
 
     def __getattr__(self, value):
-        return self.__dict__['_attrs'][value]
+        try:
+            return self.__dict__['_attrs'][value]
+        except:
+            raise AttributeError(value)
 
     def __setattr__(self, key, value):
         self.__dict__['_attrs'][key] = value
@@ -39,6 +42,9 @@ class Config:
             return self.new_section(key, **value)
         else:
             setattr(self, key, value)
+
+    def pop(self, key):
+        return self.__dict__['_attrs'].pop(key)
 
     def as_dict(self):
         '''
@@ -126,7 +132,7 @@ class Config:
             A configuration object loaded from a JSON file
         '''
         if name == 'PPO':
-            return cls.from_json('CHANGE')
+            return cls.load('CHANGE')
 
 
 class NestedEncoder(json.JSONEncoder):

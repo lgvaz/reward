@@ -1,0 +1,62 @@
+{
+    "env_config": {
+        "simulator": "GymEnv",
+        "env_name": "BreakoutNoFrameskip-v4",
+        "normalize_states": false
+    },
+    "model": {
+        "kwargs": {
+            "cuda_default": true
+        },
+        "nn_body": {
+            "obj": "SequentialNNBody",
+            "kwargs": {
+                "normalize_imgs": true
+            },
+            "arch": {
+                "conv1": {
+                    "func": "nn.Conv2d",
+                    "in_channels": 1,
+                    "out_channels": 32,
+                    "kernel_size": 8,
+                    "stride": 4
+                },
+                "relu1": {
+                    "func": "nn.ReLU"
+                },
+                "conv2": {
+                    "func": "nn.Conv2d",
+                    "in_channels": 32,
+                    "out_channels": 64,
+                    "kernel_size": 4,
+                    "stride": 2
+                },
+                "relu2": {
+                    "func": "nn.ReLU"
+                },
+                "conv3": {
+                    "func": "nn.Conv2d",
+                    "in_channels": 64,
+                    "out_channels": 64,
+                    "kernel_size": 3,
+                    "stride": 1
+                },
+                "relu3": {
+                    "func": "nn.ReLU"
+                },
+                "pool": {
+                    "func": "nn.AdaptiveMaxPool2d",
+                    "output_size": 1
+                }
+            }
+        },
+        "nn_head": {
+            "obj": "DenseNNHead",
+            "kwargs": {
+                "units": [
+                    64
+                ]
+            }
+        }
+    }
+}
