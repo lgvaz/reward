@@ -1,8 +1,6 @@
-import copy
-
-
 def get_function(config):
-    config = copy.deepcopy(config)
-    func = eval(config.pop('func'))
+    func = config.pop('func')
+    obj = func(**config)
+    config['func'] = func
 
-    return func(**config)
+    return obj

@@ -24,12 +24,10 @@ class BaseModel(nn.Module):
 
     @classmethod
     def from_config(cls, config):
-        nn_body = eval(config.model.nn_body.obj)
-        nn_head = eval(config.model.nn_head.obj)
-        nn_body = nn_body.from_config(
+        nn_body = config.model.nn_body.obj.from_config(
             config.model.nn_body.arch.as_dict(),
             kwargs=config.model.nn_body.kwargs.as_dict())
-        nn_head = nn_head(
+        nn_head = config.model.nn_head.obj(
             # TODO: Hardcoded output shape
             input_shape=nn_body.get_output_shape((1, 84, 84)),
             output_shape=4,

@@ -1,4 +1,4 @@
-import json
+import yaml
 from collections import OrderedDict
 
 
@@ -35,7 +35,7 @@ class Config:
         self.__dict__['_attrs'][key] = value
 
     def __str__(self):
-        return (json.dumps(self.as_dict(), cls=NestedEncoder, indent=4))
+        return yaml.dump(self.as_dict(), default_flow_style=False)
 
     def _nested_loader(self, key, value):
         if isinstance(value, OrderedDict):
@@ -94,11 +94,11 @@ class Config:
         file_path: str
             Path to write the file
         '''
-        with open(file_path + '.json', 'w') as f:
-            json.dump(self, f, cls=NestedEncoder, indent=4)
+        with open(file_path + '.yaml', 'w') as f:
+            yaml.dump(self, f, default_flow_style=False)
 
-    @classmethod
-    def load(cls, file_path):
+    @staticmethod
+    def load(file_path):
         '''
         Loads configuration from a JSON file.
 
@@ -112,9 +112,8 @@ class Config:
         Config
             A configuration object loaded from a JSON file
         '''
-        with open(file_path + '.json', 'r') as f:
-            configs = json.load(f, object_hook=OrderedDict)
-        return cls(**configs)
+        with open(file_path + '.yaml', 'r') as f:
+            return yaml.load(f)
 
     @classmethod
     def from_default(cls, name):
@@ -133,11 +132,3 @@ class Config:
         '''
         if name == 'PPO':
             return cls.load('CHANGE')
-
-
-class NestedEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, 'as_dict'):
-            return obj.as_dict()
-        else:
-            return json.JSONEncoder.default(self, obj)
