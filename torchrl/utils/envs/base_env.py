@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from torchrl.utils.preprocessing import Normalizer
 
 
@@ -106,7 +106,8 @@ class BaseEnv(ABC):
 
         return next_state, reward, done
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def state_info(self):
         '''
         This method should be overwritten by a subclass.
@@ -124,7 +125,8 @@ class BaseEnv(ABC):
         '''
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def action_info(self):
         '''
         This method should be overwritten by a subclass.
@@ -144,7 +146,8 @@ class BaseEnv(ABC):
         '''
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def simulator(self):
         '''
         This method should be overwritten by a subclass.
