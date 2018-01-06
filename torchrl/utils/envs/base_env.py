@@ -156,6 +156,8 @@ class BaseEnv(ABC):
         '''
         pass
 
+    @property
+    @abstractmethod
     def env_name(self):
         '''
         This method should be overwritten by a subclass.
@@ -174,7 +176,9 @@ class BaseEnv(ABC):
             Object used for storing configuration.
         '''
         config.new_section(
-            'env_config',
-            simulator=self.simulator,
-            env_name=self.env_name,
+            'env',
+            obj=dict(func=self.simulator, env_name=self.env_name),
+            state_info=dict((key, value) for key, value in self.state_info.items()
+                            if key not in ('low_bound', 'high_bound')),
+            action_info=self.action_info,
             normalize_states=self.normalize_states)

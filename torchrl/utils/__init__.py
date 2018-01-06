@@ -1,3 +1,3 @@
-from .utils import get_function
+from .utils import get_obj
 
-__all__ = ['get_function']
+__all__ = ['get_obj']

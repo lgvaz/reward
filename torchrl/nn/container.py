@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from torchrl.utils import get_function
+from torchrl.utils import get_obj
 
 
 class SequentialExtended(nn.Module):
@@ -38,7 +38,7 @@ class SequentialExtended(nn.Module):
     @classmethod
     def from_config(cls, config, kwargs):
         layers_config = OrderedDict(
-            {key: get_function(value)
+            {key: get_obj(value)
              for key, value in config.items()})
 
         return cls(layers_config, **kwargs)

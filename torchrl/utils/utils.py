@@ -1,4 +1,4 @@
-def get_function(config):
+def get_obj(config):
     func = config.pop('func')
     obj = func(**config)
     config['func'] = func

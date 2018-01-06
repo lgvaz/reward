@@ -23,13 +23,13 @@ class BaseModel(nn.Module):
         return self.nn_head(self.nn_body(x))
 
     @classmethod
-    def from_config(cls, config):
+    def from_config(cls, config, state_shape):
         nn_body = config.model.nn_body.obj.from_config(
             config.model.nn_body.arch.as_dict(),
             kwargs=config.model.nn_body.kwargs.as_dict())
         nn_head = config.model.nn_head.obj(
-            # TODO: Hardcoded output shape
-            input_shape=nn_body.get_output_shape((1, 84, 84)),
+            # TODO: Don't use config for another section
+            input_shape=nn_body.get_output_shape(state_shape),
             output_shape=4,
             **config.model.nn_head.kwargs.as_dict())
 

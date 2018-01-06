@@ -1,5 +1,11 @@
-import yaml
+from abc import ABCMeta
 from collections import OrderedDict
+
+import yaml
+from yaml.representer import Representer
+
+# Support for abstract classes
+Representer.add_representer(ABCMeta, Representer.represent_name)
 
 
 class Config:

@@ -8,6 +8,7 @@ from torchrl.nn import SequentialExtended
 class DenseNNHead(SequentialExtended):
     def __init__(self, input_shape, output_shape, units=[], activation=nn.ReLU):
         in_units = input_shape.prod()
+        units = units.copy()
         units.insert(0, in_units)
         units.append(output_shape)
 

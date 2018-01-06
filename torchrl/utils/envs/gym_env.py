@@ -18,8 +18,9 @@ class GymEnv(BaseEnv):
 
     def __init__(self, env_name, wrappers=[], **kwargs):
         self._env_name = env_name
+        self.wrappers = wrappers
         self.env = gym.make(env_name)
-        for wrapper in wrappers:
+        for wrapper in self.wrappers:
             self.env = wrapper(self.env)
         super().__init__(**kwargs)
 
@@ -94,16 +95,20 @@ class GymEnv(BaseEnv):
                 shape=space.shape,
                 low_bound=space.low,
                 high_bound=space.high,
-                dtype='float')
+                dtype='continuous')
         if isinstance(space, gym.spaces.Discrete):
-            return dict(shape=space.n, dtype='int')
+            return dict(shape=space.n, dtype='discrete')
         if isinstance(space, gym.spaces.MultiDiscrete):
-            return dict(shape=space.shape, dtype='int')
+            return dict(shape=space.shape, dtype='multi_discrete')
 
     @property
     def simulator(self):
-        return 'GymEnv'
+        return GymEnv
 
     @property
     def env_name(self):
         return self._env_name
+
+    def update_config(self, config):
+        super().update_config(config)
+        config.env.obj.update(dict(wrappers=self.wrappers))
