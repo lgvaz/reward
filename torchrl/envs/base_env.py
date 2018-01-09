@@ -82,6 +82,22 @@ class BaseEnv(ABC):
 
         return state
 
+    def _preprocess_reward(self, reward):
+        '''
+        Perform transformations on the reward e.g. clipping.
+
+        Parameters
+        ----------
+        reward: float
+            The reward to be processed.
+
+        Returns
+        -------
+        reward: float
+            The transformed reward.
+        '''
+        return reward
+
     def reset(self):
         '''
         Calls the reset method that should be implemented by a subclass.
@@ -103,6 +119,7 @@ class BaseEnv(ABC):
     def step(self, action):
         next_state, reward, done = self._step(action)
         next_state = self._preprocess_state(next_state)
+        reward = self._preprocess_reward(reward)
 
         return next_state, reward, done
 

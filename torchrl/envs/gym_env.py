@@ -1,5 +1,5 @@
 import gym
-from torchrl.utils.envs.base_env import BaseEnv
+from torchrl.envs.base_env import BaseEnv
 
 
 class GymEnv(BaseEnv):
@@ -20,6 +20,7 @@ class GymEnv(BaseEnv):
         self._env_name = env_name
         self.wrappers = wrappers
         self.env = gym.make(env_name)
+        # self.env._max_timesteps = 5000
         for wrapper in self.wrappers:
             self.env = wrapper(self.env)
         super().__init__(**kwargs)
