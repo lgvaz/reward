@@ -1,11 +1,11 @@
 .. role:: hidden
     :class: hidden-section
 
-torchrl.utils.envs
+torchrl.envs
 ==================
 
-.. automodule:: torchrl.utils.envs
-.. currentmodule:: torchrl.utils.envs
+.. automodule:: torchrl.envs
+.. currentmodule:: torchrl.envs
 
 BaseEnv
 -------

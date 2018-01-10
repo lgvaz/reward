@@ -1,12 +1,6 @@
 import torch
 import torch.nn as nn
 
-from torchrl.nn.body import SequentialNNBody
-from torchrl.nn.head import DenseNNHead
-
-from collections import OrderedDict
-from torchrl.nn import SequentialExtended
-
 
 class BaseModel(nn.Module):
     def __init__(self, nn_body, nn_head, cuda_default=True):
@@ -24,16 +18,41 @@ class BaseModel(nn.Module):
 
     def forward(self, x):
         return self.nn_head(self.nn_body(x))
-        # return self.nn_body(x)
 
     def _create_optimizer(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-2)
-        # return torch.optim.SGD(
-        #     [
-        #         dict(params=self.nn_body.parameters()),
-        #         dict(params=self.nn_head.parameters())
-        #     ],
-        #     lr=1e-2)
+        '''
+        Creates an optimizer for the model.
+
+        Returns
+        -------
+        torch.optim
+
+        Examples
+        --------
+        It's possible to create an optimizer with the same
+        configurations for all the model::
+
+            torch.optim.Adam(self.parameters(), lr=1e-2)
+
+        Or use a different configuration for different parts of the model::
+
+            return torch.optim.Adam(
+                [
+                    dict(params=self.nn_body.parameters(), lr=1e-3),
+                    dict(params=self.nn_head.parameters(), epsilon=1e-7)
+                ],
+                lr=1e-2)
+
+        For more information see
+        `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
+        '''
+        # return torch.optim.Adam(self.parameters(), lr=1e-2)
+        return torch.optim.Adam(
+            [
+                dict(params=self.nn_body.parameters()),
+                dict(params=self.nn_head.parameters())
+            ],
+            lr=1e-2)
 
     @classmethod
     def from_config(cls, config, state_shape, action_shape):
@@ -42,11 +61,7 @@ class BaseModel(nn.Module):
             kwargs=config.model.nn_body.kwargs.as_dict())
         nn_head = config.model.nn_head.obj(
             input_shape=nn_body.get_output_shape(state_shape),
-            # input_shape=torch.Tensor([64]).int(),
             output_shape=action_shape,
             **config.model.nn_head.kwargs.as_dict())
-        # nn_body = SequentialExtended(
-        #     OrderedDict(linear1=nn.Linear(4, 64), relu1=nn.ReLU()))
-        # nn_head = SequentialExtended(OrderedDict(linear1=nn.Linear(64, 2)))
 
         return cls(nn_body, nn_head, **config.model.kwargs.as_dict())

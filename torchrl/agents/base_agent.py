@@ -15,9 +15,7 @@ class BaseAgent(ABC):
         self.model = model or self._model
 
     def select_action(self, state):
-        # return self.model.select_action(state[None])
-        return self.model.select_action(
-            Variable(torch.from_numpy(state[None])).float().cuda())
+        return self.model.select_action(state[None])
 
     def run_one_episode(self):
         return self.env.run_one_episode(select_action_fn=self.select_action)
