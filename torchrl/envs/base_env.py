@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+
+import numpy as np
+
 from torchrl.utils.preprocessing import Normalizer
 
 
@@ -22,6 +25,8 @@ class BaseEnv(ABC):
             self.normalizer = Normalizer(self.state_info['shape'])
         else:
             self.normalizer = None
+
+        self._state = self.reset()
 
     @abstractmethod
     def _reset(self):
@@ -199,3 +204,38 @@ class BaseEnv(ABC):
                             if key not in ('low_bound', 'high_bound')),
             action_info=self.action_info,
             normalize_states=self.normalize_states)
+
+    def run_one_step(self, select_action_fn):
+        # Choose and execute action
+        action = select_action_fn(self._state)
+        next_state, reward, done = self.step(action)
+
+        transition = dict(
+            state_t=self._state,
+            state_tp1=next_state,
+            action=action,
+            reward=reward,
+            done=done)
+
+        if done:
+            self._state = self.reset()
+        else:
+            self._state = next_state
+
+        return transition
+
+    def run_one_episode(self, **kwargs):
+        done = False
+        transitions = []
+
+        while not done:
+            transition = self.run_one_step(**kwargs)
+            transitions.append(transition)
+            done = transition['done']
+
+        trajectory = {
+            key + 's': np.array([t[key] for t in transitions])
+            for key in transitions[0]
+        }
+
+        return trajectory
