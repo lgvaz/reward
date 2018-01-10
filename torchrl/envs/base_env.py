@@ -5,7 +5,6 @@ import numpy as np
 from torchrl.utils.preprocessing import Normalizer
 
 
-# TODO: Config file
 class BaseEnv(ABC):
     '''
     Abstract base class used for implementing new environments.
@@ -40,7 +39,6 @@ class BaseEnv(ABC):
         numpy.ndarray
             A numpy array with the state information.
         '''
-        pass
 
     @abstractmethod
     def _step(self, action):
@@ -66,7 +64,6 @@ class BaseEnv(ABC):
         done: bool
             Flag indicating the termination of the episode.
         '''
-        pass
 
     def _preprocess_state(self, state):
         '''
@@ -145,7 +142,6 @@ class BaseEnv(ABC):
 
             return dict(shape=(4,), dtype='float')
         '''
-        pass
 
     @property
     @abstractmethod
@@ -166,7 +162,6 @@ class BaseEnv(ABC):
 
             return dict(shape=(4,), dtype='float')
         '''
-        pass
 
     @property
     @abstractmethod
@@ -176,7 +171,6 @@ class BaseEnv(ABC):
 
         Should return the name of the simulator being used as a string.
         '''
-        pass
 
     @property
     @abstractmethod
@@ -186,7 +180,6 @@ class BaseEnv(ABC):
 
         Should return the name of the environment.
         '''
-        pass
 
     def update_config(self, config):
         '''

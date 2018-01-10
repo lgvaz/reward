@@ -162,6 +162,7 @@ texinfo_documents = [
 intersphinx_mapping = {
     'https://docs.python.org/': None,
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'pytorch': ('http://pytorch.org/docs/master/', None),
 }
 
 # Sort methods by the same order of the code

@@ -2,7 +2,7 @@
     :class: hidden-section
 
 torchrl.envs
-==================
+============
 
 .. automodule:: torchrl.envs
 .. currentmodule:: torchrl.envs

@@ -1,8 +1,25 @@
 import torch
 import torch.nn as nn
+from abc import ABC, abstractmethod
 
 
-class BaseModel(nn.Module):
+class BaseModel(nn.Module, ABC):
+    '''
+    Basic TorchRL model. The model should take two PyTorch networks (body and head)
+    and chain them together.
+
+    Parameters
+    ----------
+    nn_body: torch.nn.Module
+        The body of the model, should receive the state
+        and return a representation used by the head network.
+    nn_head: torch.nn.Module
+        The head of the model, should receive the outputs of
+        the body network and outputs values used for selecting an action.
+    cuda_default: bool
+        If True and cuda is supported, use it.
+    '''
+
     def __init__(self, nn_body, nn_head, cuda_default=True):
         super().__init__()
 
@@ -15,9 +32,6 @@ class BaseModel(nn.Module):
             self.nn_head = self.nn_head.cuda()
 
         self.opt = self._create_optimizer()
-
-    def forward(self, x):
-        return self.nn_head(self.nn_body(x))
 
     def _create_optimizer(self):
         '''
@@ -36,7 +50,7 @@ class BaseModel(nn.Module):
 
         Or use a different configuration for different parts of the model::
 
-            return torch.optim.Adam(
+            torch.optim.Adam(
                 [
                     dict(params=self.nn_body.parameters(), lr=1e-3),
                     dict(params=self.nn_head.parameters(), epsilon=1e-7)
@@ -46,16 +60,62 @@ class BaseModel(nn.Module):
         For more information see
         `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
         '''
-        # return torch.optim.Adam(self.parameters(), lr=1e-2)
-        return torch.optim.Adam(
-            [
-                dict(params=self.nn_body.parameters()),
-                dict(params=self.nn_head.parameters())
-            ],
-            lr=1e-2)
+        return torch.optim.Adam(self.parameters(), lr=1e-2)
+        # return torch.optim.Adam(
+        #     [
+        #         dict(params=self.nn_body.parameters()),
+        #         dict(params=self.nn_head.parameters())
+        #     ],
+        #     lr=1e-2)
+
+    def forward(self, state):
+        '''
+        Feeds the output of the body network directly into the head.
+
+        Parameters
+        ----------
+        state: numpy.ndarray
+            The state of the environment.
+        '''
+        return self.nn_head(self.nn_body(state))
+
+    @abstractmethod
+    def select_action(self, state):
+        '''
+        This method should be overwritten by a subclass.
+
+        It should receive the state and select an action based on it.
+
+        Returns
+        -------
+        action: int or numpy.ndarray
+        '''
+        pass
+
+    @abstractmethod
+    def train(self, batch):
+        '''
+        This method should be overwritten by a subclass.
+
+        Should use the batch to compute and apply gradients to the network.
+
+        Parameters
+        ----------
+        batch: dict
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        pass
 
     @classmethod
     def from_config(cls, config, state_shape, action_shape):
+        '''
+        Creates a model from a configuration file.
+
+        Returns
+        -------
+        Model
+        '''
         nn_body = config.model.nn_body.obj.from_config(
             config.model.nn_body.arch.as_dict(),
             kwargs=config.model.nn_body.kwargs.as_dict())
