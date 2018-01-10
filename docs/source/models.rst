@@ -11,5 +11,14 @@ BaseModel
 ---------
 
 .. autoclass:: BaseModel
+  :show-inheritance:
+  :members:
+  :private-members:
+
+VanillaPGModel
+--------------
+
+.. autoclass:: VanillaPGModel
+  :show-inheritance:
   :members:
   :private-members:

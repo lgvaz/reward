@@ -11,6 +11,7 @@ BaseEnv
 -------
 
 .. autoclass:: BaseEnv
+  :show-inheritance:
   :members:
   :private-members:
 
@@ -18,5 +19,6 @@ GymEnv
 ------
 
 .. autoclass:: GymEnv
+  :show-inheritance:
   :members:
   :inherited-members:

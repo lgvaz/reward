@@ -7,16 +7,49 @@ from torchrl.utils import discounted_sum_rewards
 
 
 class VanillaPGModel(BaseModel):
+    '''
+    Vanilla Policy Gradient model.
+    '''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.saved_log_probs = []
 
     def forward(self, x):
+        '''
+        Uses the network to compute action scores
+        and apply softmax to obtain action probabilities.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            The environment state.
+
+        Returns
+        -------
+        numpy.ndarray
+            Action probabilities
+        '''
         action_scores = super().forward(x)
         return F.softmax(action_scores, dim=1)
 
     def select_action(self, state):
+        '''
+        Uses the values given by `self.forward` to select an action.
+
+        If the action space is discrete the values will be assumed to represent
+        probabilities of a categorical distribution.
+
+        If the action space is continuous the values will be assumed to represent
+        the mean and variance of a normal distribution.
+
+        Parameters
+        ----------
+        state: numpy.ndarray
+            The environment state.
+        '''
+        # TODO: Continuous distribution
         probs = self.forward(state)
         dist = Categorical(probs)
         action = dist.sample()
@@ -26,6 +59,17 @@ class VanillaPGModel(BaseModel):
         return action.data[0]
 
     def train(self, batch):
+        '''
+        Compute and apply gradients based on the policy gradient theorem.
+
+        Should use the batch to compute and apply gradients to the network.
+
+        Parameters
+        ----------
+        batch: dict
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
         returns = discounted_sum_rewards(batch['rewards'])
         objective = torch.cat(self.saved_log_probs) * torch.autograd.Variable(
             torch.from_numpy(returns).float().cuda())

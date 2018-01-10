@@ -5,4 +5,5 @@ Configuration object - torchrl.utils.config.Config
 .. currentmodule:: torchrl.utils.config
 
 .. autoclass:: Config
-    :members:           
+  :show-inheritance:
+  :members:           

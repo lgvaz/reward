@@ -40,6 +40,7 @@ class BaseModel(nn.Module, ABC):
         Returns
         -------
         torch.optim
+            A pytorch optimizer.
 
         Examples
         --------
@@ -68,16 +69,16 @@ class BaseModel(nn.Module, ABC):
         #     ],
         #     lr=1e-2)
 
-    def forward(self, state):
+    def forward(self, x):
         '''
         Feeds the output of the body network directly into the head.
 
         Parameters
         ----------
-        state: numpy.ndarray
-            The state of the environment.
+        x: numpy.ndarray
+            The environment state.
         '''
-        return self.nn_head(self.nn_body(state))
+        return self.nn_head(self.nn_body(x))
 
     @abstractmethod
     def select_action(self, state):
@@ -114,7 +115,8 @@ class BaseModel(nn.Module, ABC):
 
         Returns
         -------
-        Model
+        torchrl.models
+            A TorchRL model.
         '''
         nn_body = config.model.nn_body.obj.from_config(
             config.model.nn_body.arch.as_dict(),
