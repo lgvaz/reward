@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from torchrl.utils import get_obj
 from torchrl.utils.config import Config
@@ -20,6 +20,24 @@ class BaseAgent(ABC):
     def __init__(self, env, model=None):
         self.env = env
         self.model = model or self._model
+
+    @abstractmethod
+    def train(self, max_iters=-1, max_episodes=-1, max_steps=-1):
+        '''
+        This method should be overwritten by a subclass.
+
+        It should define the training loop of the algorithm.
+
+        Parameters
+        ----------
+        max_iters: int
+            Maximum number of iterations (Default is -1, meaning it doesn't matter).
+        max_episodes: int
+            Maximum number of episodes (Default is -1, meaning it doesn't matter).
+        max_steps: int
+            Maximum number of steps (Default is -1, meaning it doesn't matter).
+        '''
+        pass
 
     def select_action(self, state):
         '''
