@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from torch.autograd import Variable
 from torch.distributions import Categorical
 
 from torchrl.models import BaseModel
@@ -36,7 +37,7 @@ class VanillaPGModel(BaseModel):
 
     def select_action(self, state):
         '''
-        Uses the values given by `self.forward` to select an action.
+        Uses the values given by ``self.forward`` to select an action.
 
         If the action space is discrete the values will be assumed to represent
         probabilities of a categorical distribution.
@@ -48,6 +49,10 @@ class VanillaPGModel(BaseModel):
         ----------
         state: numpy.ndarray
             The environment state.
+
+        Returns
+        -------
+        action: int or numpy.ndarray
         '''
         # TODO: Continuous distribution
         probs = self.forward(state)
@@ -71,8 +76,8 @@ class VanillaPGModel(BaseModel):
             to compute the gradients.
         '''
         returns = discounted_sum_rewards(batch['rewards'])
-        objective = torch.cat(self.saved_log_probs) * torch.autograd.Variable(
-            torch.from_numpy(returns).float().cuda())
+        returns = Variable(self._maybe_cuda(torch.from_numpy(returns).float()))
+        objective = torch.cat(self.saved_log_probs) * returns
 
         self.opt.zero_grad()
         loss = -objective.sum()

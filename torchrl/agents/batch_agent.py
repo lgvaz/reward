@@ -2,10 +2,30 @@ from torchrl.agents import BaseAgent
 
 
 class BatchAgent(BaseAgent):
-    def generate_trajectories(self,
-                              timesteps_per_batch=-1,
-                              episodes_per_batch=-1,
-                              **kwargs):
+    '''
+    An agent that has methods for collecting a collection of trajectories.
+    '''
+
+    def generate_trajectories(self, timesteps_per_batch=-1, episodes_per_batch=-1):
+        '''
+        Generate a collection of trajectories, limited by
+        ``timesteps_per_batch`` or ``episodes_per_batch``.
+
+        Parameters
+        ----------
+        timesteps_per_batch: int
+            Maximum number of time steps per batch
+            (Default is -1, meaning it doesn't matter).
+        episodes_per_batch: int
+            Maximum number of episodes per batch
+            (Default is -1, meaning it doesn't matter).
+
+        Returns
+        -------
+        trajectories: list
+            A list containing all sampled trajectories,
+            each trajectory is in a ``dict``.
+        '''
         assert timesteps_per_batch > -1 or episodes_per_batch > -1, \
         'You must define how many timesteps or episodes will be in each batch'
 

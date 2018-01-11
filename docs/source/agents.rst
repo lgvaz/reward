@@ -1,24 +1,25 @@
 .. role:: hidden
     :class: hidden-section
 
-Models
+Agents
 ======
 
-.. automodule:: torchrl.models
-.. currentmodule:: torchrl.models
+.. automodule:: torchrl.agents
+.. currentmodule:: torchrl.agents
 
-BaseModel
+
+BaseAgent
 ---------
 
-.. autoclass:: BaseModel
+.. autoclass:: BaseAgent
   :show-inheritance:
   :members:
   :private-members:
 
-VanillaPGModel
+BatchAgent
 --------------
 
-.. autoclass:: VanillaPGModel
+.. autoclass:: BatchAgent
   :show-inheritance:
   :members:
   :private-members:

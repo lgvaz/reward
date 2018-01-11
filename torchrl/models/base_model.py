@@ -1,9 +1,9 @@
 import torch
-import torch.nn as nn
 from abc import ABC, abstractmethod
+from torchrl.nn import ModuleExtended
 
 
-class BaseModel(nn.Module, ABC):
+class BaseModel(ModuleExtended, ABC):
     '''
     Basic TorchRL model. The model should take two PyTorch networks (body and head)
     and chain them together.

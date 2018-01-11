@@ -7,7 +7,8 @@ TorchRL Documentation
    :maxdepth: 1
    :caption: Package Reference
 
-   models
+   torchrl.agents <agents>
+   torchrl.models <models>
    envs
    torchrl.utils.config <config>
    utils

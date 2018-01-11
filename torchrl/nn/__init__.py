@@ -1,3 +1,3 @@
-from .container import SequentialExtended
+from .container import SequentialExtended, ModuleExtended
 
-__all__ = ['SequentialExtended']
+__all__ = ['SequentialExtended', 'ModuleExtended']
