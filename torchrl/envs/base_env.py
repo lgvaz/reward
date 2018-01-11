@@ -25,6 +25,8 @@ class BaseEnv(ABC):
         else:
             self.normalizer = None
 
+        self.num_episodes = 0
+        self.num_steps = 0
         self._state = self.reset()
 
     @abstractmethod
@@ -158,7 +160,7 @@ class BaseEnv(ABC):
 
     def reset(self):
         '''
-        Calls the reset method that should be implemented by a subclass.
+        Calls the :meth:`_reset` method that should be implemented by a subclass.
         The :meth:`_preprocess_state` function is called at the returned state.
 
         Returns
@@ -172,13 +174,29 @@ class BaseEnv(ABC):
         if self.normalizer is not None:
             self.normalizer.update()
 
+        self.num_episodes += 1
         return state
 
     def step(self, action):
+        '''
+        Calls the :meth:`_step` method that should be implemented by a subclass.
+        The :meth:`_preprocess_state` function is called at the returned state.
+        The :meth:`_preprocess_reward` function is called at the returned reward.
+
+        Returns
+        -------
+        state: numpy.ndarray
+            The state received by taking the action.
+        reward: float
+            The reward received by taking the action.
+        done: bool
+            If True the episode is over, and :meth:`reset` should be called.
+        '''
         next_state, reward, done = self._step(action)
         next_state = self._preprocess_state(next_state)
         reward = self._preprocess_reward(reward)
 
+        self.num_steps += 1
         return next_state, reward, done
 
     def run_one_step(self, select_action_fn):

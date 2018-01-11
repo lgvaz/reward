@@ -32,6 +32,7 @@ class BaseModel(ModuleExtended, ABC):
             self.nn_head = self.nn_head.cuda()
 
         self.opt = self._create_optimizer()
+        self.num_updates = 0
 
     def _create_optimizer(self):
         '''
@@ -83,9 +84,9 @@ class BaseModel(ModuleExtended, ABC):
         pass
 
     @abstractmethod
-    def train(self, batch):
+    def train(self, batch=None):
         '''
-        This method should be overwritten by a subclass.
+        This method should be inherited by a subclass.
 
         Should use the batch to compute and apply gradients to the network.
 
@@ -95,7 +96,7 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        pass
+        self.num_updates += 1
 
     def forward(self, x):
         '''

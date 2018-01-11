@@ -75,6 +75,7 @@ class VanillaPGModel(BaseModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
+        super().train()
         returns = discounted_sum_rewards(batch['rewards'])
         returns = Variable(self._maybe_cuda(torch.from_numpy(returns).float()))
         objective = torch.cat(self.saved_log_probs) * returns

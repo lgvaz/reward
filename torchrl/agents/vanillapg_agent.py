@@ -1,6 +1,5 @@
-from torch.distributions import Categorical
-from torchrl.models import VanillaPGModel
 from torchrl.agents import BatchAgent
+from torchrl.models import VanillaPGModel
 
 
 class VanillaPGAgent(BatchAgent):
@@ -9,10 +8,14 @@ class VanillaPGAgent(BatchAgent):
     '''
     _model = VanillaPGModel
 
-    def train(self, num_episodes):
+    def train(self, **kwargs):
+        super().train(**kwargs)
         # TODO: Use generate_trajectories
-        for i_episode in range(num_episodes):
+        while True:
             batch = self.run_one_episode()
             self.model.train(batch)
 
             print(sum(batch['rewards']))
+
+            if self._check_termination():
+                break

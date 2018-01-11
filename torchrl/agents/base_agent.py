@@ -21,8 +21,16 @@ class BaseAgent(ABC):
         self.env = env
         self.model = model or self._model
 
+    def _check_termination(self):
+        if (self.model.num_updates // self.max_updates >= 1
+                or self.env.num_episodes // self.max_episodes >= 1
+                or self.env.num_steps // self.max_steps >= 1):
+            return True
+
+        return False
+
     @abstractmethod
-    def train(self, max_iters=-1, max_episodes=-1, max_steps=-1):
+    def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
         '''
         This method should be overwritten by a subclass.
 
@@ -30,14 +38,16 @@ class BaseAgent(ABC):
 
         Parameters
         ----------
-        max_iters: int
-            Maximum number of iterations (Default is -1, meaning it doesn't matter).
+        max_updates: int
+            Maximum number of gradient updates (Default is -1, meaning it doesn't matter).
         max_episodes: int
             Maximum number of episodes (Default is -1, meaning it doesn't matter).
         max_steps: int
             Maximum number of steps (Default is -1, meaning it doesn't matter).
         '''
-        pass
+        self.max_updates = max_updates
+        self.max_episodes = max_episodes
+        self.max_steps = max_steps
 
     def select_action(self, state):
         '''
