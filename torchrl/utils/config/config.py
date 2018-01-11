@@ -103,24 +103,6 @@ class Config:
         with open(file_path + '.yaml', 'w') as f:
             yaml.dump(self, f, default_flow_style=False)
 
-    @staticmethod
-    def load(file_path):
-        '''
-        Loads configuration from a JSON file.
-
-        Parameters
-        ----------
-        file_path: str
-            Path of the file to be loaded.
-
-        Returns
-        -------
-        Config
-            A configuration object loaded from a JSON file
-        '''
-        with open(file_path + '.yaml', 'r') as f:
-            return yaml.load(f)
-
     @classmethod
     def from_default(cls, name):
         '''
@@ -138,3 +120,21 @@ class Config:
         '''
         if name == 'PPO':
             return cls.load('CHANGE')
+
+    @staticmethod
+    def load(file_path):
+        '''
+        Loads configuration from a JSON file.
+
+        Parameters
+        ----------
+        file_path: str
+            Path of the file to be loaded.
+
+        Returns
+        -------
+        Config
+            A configuration object loaded from a JSON file
+        '''
+        with open(file_path + '.yaml', 'r') as f:
+            return yaml.load(f)

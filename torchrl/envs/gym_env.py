@@ -76,6 +76,18 @@ class GymEnv(BaseEnv):
         '''
         return GymEnv.get_space_info(self.env.action_space)
 
+    @property
+    def simulator(self):
+        return GymEnv
+
+    @property
+    def env_name(self):
+        return self._env_name
+
+    def update_config(self, config):
+        super().update_config(config)
+        config.env.obj.update(dict(wrappers=self.wrappers))
+
     @staticmethod
     def get_space_info(space):
         '''
@@ -101,15 +113,3 @@ class GymEnv(BaseEnv):
             return dict(shape=space.n, dtype='discrete')
         if isinstance(space, gym.spaces.MultiDiscrete):
             return dict(shape=space.shape, dtype='multi_discrete')
-
-    @property
-    def simulator(self):
-        return GymEnv
-
-    @property
-    def env_name(self):
-        return self._env_name
-
-    def update_config(self, config):
-        super().update_config(config)
-        config.env.obj.update(dict(wrappers=self.wrappers))

@@ -100,31 +100,6 @@ class BaseEnv(ABC):
         '''
         return reward
 
-    def reset(self):
-        '''
-        Calls the reset method that should be implemented by a subclass.
-        The :meth:`_preprocess_state` function is called at the returned state.
-
-        Returns
-        -------
-        state: numpy.ndarray
-            The state received by resetting the environment.
-        '''
-        state = self._reset()
-        state = self._preprocess_state(state)
-
-        if self.normalizer is not None:
-            self.normalizer.update()
-
-        return state
-
-    def step(self, action):
-        next_state, reward, done = self._step(action)
-        next_state = self._preprocess_state(next_state)
-        reward = self._preprocess_reward(reward)
-
-        return next_state, reward, done
-
     @property
     @abstractmethod
     def state_info(self):
@@ -181,24 +156,45 @@ class BaseEnv(ABC):
         Should return the name of the environment.
         '''
 
-    def update_config(self, config):
+    def reset(self):
         '''
-        Updates a Config object to include information about the environment.
+        Calls the reset method that should be implemented by a subclass.
+        The :meth:`_preprocess_state` function is called at the returned state.
+
+        Returns
+        -------
+        state: numpy.ndarray
+            The state received by resetting the environment.
+        '''
+        state = self._reset()
+        state = self._preprocess_state(state)
+
+        if self.normalizer is not None:
+            self.normalizer.update()
+
+        return state
+
+    def step(self, action):
+        next_state, reward, done = self._step(action)
+        next_state = self._preprocess_state(next_state)
+        reward = self._preprocess_reward(reward)
+
+        return next_state, reward, done
+
+    def run_one_step(self, select_action_fn):
+        '''
+        Performs a single action on the environment.
 
         Parameters
         ----------
-        config: Config
-            Object used for storing configuration.
-        '''
-        config.new_section(
-            'env',
-            obj=dict(func=self.simulator, env_name=self.env_name),
-            state_info=dict((key, value) for key, value in self.state_info.items()
-                            if key not in ('low_bound', 'high_bound')),
-            action_info=self.action_info,
-            normalize_states=self.normalize_states)
+        select_action_fn: function
+            A function that receives the state and returns an action.
 
-    def run_one_step(self, select_action_fn):
+        Returns
+        -------
+        dict
+            A dictionary containing the transition information.
+        '''
         # Choose and execute action
         action = select_action_fn(self._state)
         next_state, reward, done = self.step(action)
@@ -217,12 +213,25 @@ class BaseEnv(ABC):
 
         return transition
 
-    def run_one_episode(self, **kwargs):
+    def run_one_episode(self, select_action_fn):
+        '''
+        Performs actions until the end of the episode.
+
+        Parameters
+        ----------
+        select_action_fn: function
+            A function that receives the state and returns an action.
+
+        Returns
+        -------
+        dict
+            A dictionary containing information about the trajectory.
+        '''
         done = False
         transitions = []
 
         while not done:
-            transition = self.run_one_step(**kwargs)
+            transition = self.run_one_step(select_action_fn)
             transitions.append(transition)
             done = transition['done']
 
@@ -232,3 +241,23 @@ class BaseEnv(ABC):
         }
 
         return trajectory
+
+    def record(self, path):
+        raise NotImplementedError
+
+    def update_config(self, config):
+        '''
+        Updates a Config object to include information about the environment.
+
+        Parameters
+        ----------
+        config: Config
+            Object used for storing configuration.
+        '''
+        config.new_section(
+            'env',
+            obj=dict(func=self.simulator, env_name=self.env_name),
+            state_info=dict((key, value) for key, value in self.state_info.items()
+                            if key not in ('low_bound', 'high_bound')),
+            action_info=self.action_info,
+            normalize_states=self.normalize_states)

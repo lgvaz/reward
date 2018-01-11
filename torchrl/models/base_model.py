@@ -69,17 +69,6 @@ class BaseModel(ModuleExtended, ABC):
         #     ],
         #     lr=1e-2)
 
-    def forward(self, x):
-        '''
-        Feeds the output of the body network directly into the head.
-
-        Parameters
-        ----------
-        x: numpy.ndarray
-            The environment state.
-        '''
-        return self.nn_head(self.nn_body(x))
-
     @abstractmethod
     def select_action(self, state):
         '''
@@ -107,6 +96,17 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
         pass
+
+    def forward(self, x):
+        '''
+        Feeds the output of the body network directly into the head.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            The environment state.
+        '''
+        return self.nn_head(self.nn_body(x))
 
     @classmethod
     def from_config(cls, config, state_shape, action_shape):

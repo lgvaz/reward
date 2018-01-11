@@ -12,16 +12,16 @@ class ModuleExtended(nn.Module):
     def _maybe_cuda(self, x):
         return x.cuda() if self.is_cuda else x
 
+    @property
+    def is_cuda(self):
+        return next(self.parameters()).is_cuda
+
     def get_output_shape(self, input_shape):
         fake_input = Variable(self._maybe_cuda(torch.zeros(input_shape)[None]))
         out = self.layers(fake_input)
         shape = out.shape[1:]
 
         return torch.IntTensor(list(shape))
-
-    @property
-    def is_cuda(self):
-        return next(self.parameters()).is_cuda
 
 
 class SequentialExtended(ModuleExtended):
