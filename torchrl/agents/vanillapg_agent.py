@@ -1,5 +1,10 @@
+from collections import defaultdict
+
+import numpy as np
+
 from torchrl.agents import BatchAgent
 from torchrl.models import VanillaPGModel
+from torchrl.utils import discounted_sum_rewards
 
 
 class VanillaPGAgent(BatchAgent):
@@ -8,14 +13,18 @@ class VanillaPGAgent(BatchAgent):
     '''
     _model = VanillaPGModel
 
-    def train(self, **kwargs):
-        super().train(**kwargs)
-        # TODO: Use generate_trajectories
-        while True:
-            batch = self.run_one_episode()
-            self.model.train(batch)
+    def add_to_trajectory(self, traj):
+        self.add_discounted_returns(traj)
 
-            print(sum(batch['rewards']))
+    def add_discounted_returns(self, trajectory):
+        discounted_returns = discounted_sum_rewards(trajectory['rewards'], self.gamma)
+        trajectory['returns'] = discounted_returns
+
+    def train(self, timesteps_per_batch=-1, episodes_per_batch=-1, **kwargs):
+        super().train(**kwargs)
+        while True:
+            batch = self.generate_batch(timesteps_per_batch, episodes_per_batch)
+            self.model.train(batch)
 
             if self._check_termination():
                 break

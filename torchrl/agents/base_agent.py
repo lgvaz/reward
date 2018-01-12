@@ -17,9 +17,10 @@ class BaseAgent(ABC):
     '''
     _model = None
 
-    def __init__(self, env, model=None):
+    def __init__(self, env, model=None, gamma=0.99):
         self.env = env
         self.model = model or self._model
+        self.gamma = gamma
 
     def _check_termination(self):
         if (self.model.num_updates // self.max_updates >= 1

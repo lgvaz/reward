@@ -20,8 +20,10 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, nn_body, nn_head, cuda_default=True):
+    def __init__(self, nn_body, nn_head, gamma=0.99, cuda_default=True):
         super().__init__()
+
+        self.num_updates = 0
 
         self.nn_body = nn_body
         self.nn_head = nn_head
@@ -32,7 +34,6 @@ class BaseModel(ModuleExtended, ABC):
             self.nn_head = self.nn_head.cuda()
 
         self.opt = self._create_optimizer()
-        self.num_updates = 0
 
     def _create_optimizer(self):
         '''

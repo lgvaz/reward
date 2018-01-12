@@ -1,3 +1,5 @@
+import numpy as np
+
 from torchrl.agents import BaseAgent
 
 
@@ -30,15 +32,40 @@ class BatchAgent(BaseAgent):
         'You must define how many timesteps or episodes will be in each batch'
 
         total_steps = 0
-        trajectories = []
+        trajs = []
 
         while True:
-            trajectory = self.env.run_one_episode(select_action_fn=self.select_action)
-            trajectories.append(trajectory)
-            total_steps += trajectory['rewards'].shape[0]
+            traj = self.env.run_one_episode(select_action_fn=self.select_action)
+            self.add_to_trajectory(traj)
+            trajs.append(traj)
+
+            total_steps += traj['rewards'].shape[0]
+
+            # TODO: Temporaly
+            print(sum(traj['rewards']))
 
             if (total_steps // timesteps_per_batch >= 1
-                    or len(trajectories) // episodes_per_batch >= 1):
+                    or len(trajs) // episodes_per_batch >= 1):
                 break
 
-        return trajectories
+        return trajs
+
+    def generate_batch(self, timesteps_per_batch, episodes_per_batch):
+        trajs = self.generate_trajectories(timesteps_per_batch, episodes_per_batch)
+        batch = self.concat_trajectories(trajs)
+        self.add_to_batch(batch)
+
+        return batch
+
+    def concat_trajectories(self, trajs):
+        batch = dict()
+        for key in trajs[0]:
+            batch[key] = np.concatenate([t[key] for t in trajs])
+
+        return batch
+
+    def add_to_trajectory(self, traj):
+        pass
+
+    def add_to_batch(self, batch):
+        pass
