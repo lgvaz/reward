@@ -1,14 +1,28 @@
 .. role:: hidden
     :class: hidden-section
 
-torch.utils.preprocessing
-=========================
+torchrl.utils
+=============
+.. automodule:: torch.utils
+.. currentmodule:: torch.utils
+
+Config
+------
+
+.. automodule:: torchrl.utils.config
+
+.. autoclass:: Config
+  :show-inheritance:
+  :members:           
+
+Preprocessing
+-------------
 
 .. automodule:: torchrl.utils.preprocessing
 .. currentmodule:: torchrl.utils.preprocessing
 
-Normalizer
-----------
+:hidden:`Normalizer`
+~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: Normalizer
   :members:

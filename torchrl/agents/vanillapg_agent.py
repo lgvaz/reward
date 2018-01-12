@@ -25,3 +25,6 @@ class VanillaPGAgent(BatchAgent):
             self.write_logs()
             if self._check_termination():
                 break
+
+        import numpy as np
+        return np.mean(self.env.rewards)

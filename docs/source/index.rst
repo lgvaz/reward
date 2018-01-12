@@ -10,8 +10,7 @@ TorchRL Documentation
    torchrl.agents <agents>
    torchrl.models <models>
    envs
-   torchrl.utils.config <config>
-   utils
+   torchrl.utils <utils>
 
 
 Indices and tables

@@ -1,9 +1,7 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
-from torchrl.utils import get_obj
-from torchrl.utils.config import Config
-from torchrl.utils import Logger
+from torchrl.utils import Config, Logger, get_obj
 
 
 class BaseAgent(ABC):
