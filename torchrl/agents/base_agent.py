@@ -1,7 +1,9 @@
+import numpy as np
 from abc import ABC, abstractmethod
 
 from torchrl.utils import get_obj
 from torchrl.utils.config import Config
+from torchrl.utils import Logger
 
 
 class BaseAgent(ABC):
@@ -21,6 +23,8 @@ class BaseAgent(ABC):
         self.env = env
         self.model = model or self._model
         self.gamma = gamma
+        self.logger = Logger()
+        self.last_logged_ep = self.env.num_episodes
 
     def _check_termination(self):
         if (self.model.num_updates // self.max_updates >= 1
@@ -76,6 +80,19 @@ class BaseAgent(ABC):
             Dictionary containing information about the episode.
         '''
         return self.env.run_one_episode(select_action_fn=self.select_action)
+
+    # TODO: doc
+    def write_logs(self):
+        new_eps = abs(self.last_logged_ep - self.env.num_episodes)
+        self.last_logged_ep = self.env.num_episodes
+        rewards = self.env.rewards[-new_eps:]
+
+        self.logger.add_log('Reward/Episode', np.mean(rewards))
+
+        # self.logger.log('Update {} | Episode {} | Step {}'.format(
+        #     self.model.num_updates, self.env.num_episodes, self.env.num_steps))
+
+        self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
 
     @classmethod
     def from_config(cls, config):

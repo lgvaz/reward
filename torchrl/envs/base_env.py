@@ -27,6 +27,8 @@ class BaseEnv(ABC):
 
         self.num_episodes = 0
         self.num_steps = 0
+        self.ep_reward_sum = 0
+        self.rewards = []
         self._state = self.reset()
 
     @abstractmethod
@@ -175,6 +177,7 @@ class BaseEnv(ABC):
             self.normalizer.update()
 
         self.num_episodes += 1
+
         return state
 
     def step(self, action):
@@ -197,6 +200,12 @@ class BaseEnv(ABC):
         reward = self._preprocess_reward(reward)
 
         self.num_steps += 1
+        # TODO: Atari rewards are clipped, we want the unclipped rewards
+        self.ep_reward_sum += reward
+        if done:
+            self.rewards.append(self.ep_reward_sum)
+            self.ep_reward_sum = 0
+
         return next_state, reward, done
 
     def run_one_step(self, select_action_fn):

@@ -41,9 +41,6 @@ class BatchAgent(BaseAgent):
 
             total_steps += traj['rewards'].shape[0]
 
-            # TODO: Temporaly
-            print(sum(traj['rewards']))
-
             if (total_steps // timesteps_per_batch >= 1
                     or len(trajs) // episodes_per_batch >= 1):
                 break

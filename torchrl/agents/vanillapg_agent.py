@@ -1,7 +1,3 @@
-from collections import defaultdict
-
-import numpy as np
-
 from torchrl.agents import BatchAgent
 from torchrl.models import VanillaPGModel
 from torchrl.utils import discounted_sum_rewards
@@ -26,5 +22,6 @@ class VanillaPGAgent(BatchAgent):
             batch = self.generate_batch(timesteps_per_batch, episodes_per_batch)
             self.model.train(batch)
 
+            self.write_logs()
             if self._check_termination():
                 break
