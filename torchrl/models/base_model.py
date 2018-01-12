@@ -1,6 +1,10 @@
-import torch
 from abc import ABC, abstractmethod
+
+import torch
+import torch.nn as nn
+
 from torchrl.nn import ModuleExtended
+from torchrl.utils import Config
 
 
 class BaseModel(ModuleExtended, ABC):
@@ -10,28 +14,34 @@ class BaseModel(ModuleExtended, ABC):
 
     Parameters
     ----------
-    nn_body: torch.nn.Module
-        The body of the model, should receive the state
-        and return a representation used by the head network.
-    nn_head: torch.nn.Module
-        The head of the model, should receive the outputs of
-        the body network and outputs values used for selecting an action.
+    nn_bodies: Config
+        A configuration object containing sections with pytorch networks.
+    nn_heads: Config
+        A configuration object containing sections with pytorch networks.
     cuda_default: bool
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, nn_body, nn_head, gamma=0.99, cuda_default=True):
+    def __init__(self, nn_bodies, nn_heads, cuda_default=True):
         super().__init__()
 
         self.num_updates = 0
 
-        self.nn_body = nn_body
-        self.nn_head = nn_head
+        assert isinstance(nn_bodies, Config) and isinstance(nn_heads, Config), \
+            'nn_bodies and nn_heads must be of type {}'.format(Config.__name__)
+        self.nn_body = nn_bodies
+        self.nn_head = nn_heads
 
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
-            self.nn_body = self.nn_body.cuda()
-            self.nn_head = self.nn_head.cuda()
+            for module in self.nn_body.values():
+                module.cuda()
+            for module in self.nn_head.values():
+                module.cuda()
+
+        # This is needed for pytorch to register this modules as part of this class
+        self.nn_body_modules = nn.Sequential(self.nn_body.as_dict())
+        self.nn_head_modules = nn.Sequential(self.nn_head.as_dict())
 
         self.opt = self._create_optimizer()
 
@@ -49,27 +59,47 @@ class BaseModel(ModuleExtended, ABC):
         It's possible to create an optimizer with the same
         configurations for all the model::
 
-            torch.optim.Adam(self.parameters(), lr=1e-2)
+            opt = torch.optim.Adam(self.parameters(), lr=1e-2)
 
         Or use a different configuration for different parts of the model::
 
-            torch.optim.Adam(
-                [
-                    dict(params=self.nn_body.parameters(), lr=1e-3),
-                    dict(params=self.nn_head.parameters(), epsilon=1e-7)
-                ],
-                lr=1e-2)
+            parameters_body = [
+                dict(params=module.parameters()) for module in self.nn_body.values()
+            ]
+            parameters_head = [
+                dict(params=module.parameters()) for module in self.nn_head.values()
+            ]
+            parameters_total = parameters_body + parameters_head
+
+            opt = torch.optim.Adam(parameters_total, lr=1e-2)
 
         For more information see
         `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
         '''
         return torch.optim.Adam(self.parameters(), lr=1e-2)
-        # return torch.optim.Adam(
-        #     [
-        #         dict(params=self.nn_body.parameters()),
-        #         dict(params=self.nn_head.parameters())
-        #     ],
-        #     lr=1e-2)
+        # parameters_body = [
+        #     dict(params=module.parameters()) for module in self.nn_body.values()
+        # ]
+        # parameters_head = [
+        #     dict(params=module.parameters()) for module in self.nn_head.values()
+        # ]
+        # parameters_total = parameters_body + parameters_head
+        # return torch.optim.Adam(parameters_total, lr=1e-2)
+
+    @abstractmethod
+    def forward(self, x):
+        '''
+        This method should be overwritten by a subclass.
+
+        Should define how the networks are connected.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            The environment state.
+        '''
+        pass
+        # return self.nn_head(self.nn_body(x))
 
     @abstractmethod
     def select_action(self, state):
@@ -98,17 +128,6 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
         self.num_updates += 1
-
-    def forward(self, x):
-        '''
-        Feeds the output of the body network directly into the head.
-
-        Parameters
-        ----------
-        x: numpy.ndarray
-            The environment state.
-        '''
-        return self.nn_head(self.nn_body(x))
 
     @classmethod
     def from_config(cls, config, state_shape, action_shape):

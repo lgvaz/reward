@@ -32,7 +32,7 @@ class VanillaPGModel(BaseModel):
         numpy.ndarray
             Action probabilities
         '''
-        action_scores = super().forward(x)
+        action_scores = self.nn_head.main(self.nn_body.main(x))
         return F.softmax(action_scores, dim=1)
 
     def select_action(self, state):

@@ -43,14 +43,23 @@ class Config:
     def __str__(self):
         return yaml.dump(self.as_dict(), default_flow_style=False)
 
+    def __iter__(self):
+        yield from self.as_dict()
+
     def _nested_loader(self, key, value):
         if isinstance(value, OrderedDict):
             return self.new_section(key, **value)
         else:
             setattr(self, key, value)
 
+    def items(self):
+        return self.as_dict().items()
+
+    def values(self):
+        return self.as_dict().values()
+
     def pop(self, key):
-        return self.__dict__['_attrs'].pop(key)
+        return self.as_dict().pop(key)
 
     def as_dict(self):
         '''
@@ -62,6 +71,9 @@ class Config:
             Nested OrderedDict containing all object attributes.
         '''
         return self.__dict__['_attrs']
+
+    def as_list(self):
+        return list(self.as_dict().values())
 
     def new_section(self, name, **configs):
         '''
