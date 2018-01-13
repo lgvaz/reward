@@ -9,28 +9,28 @@ from torchrl.utils import Config
 
 class BaseModel(ModuleExtended, ABC):
     '''
-    Basic TorchRL model. The model should take two PyTorch networks (body and head)
-    and chain them together.
+    Basic TorchRL model. Takes two :obj:`Config` objects that identify
+    the body(ies) and head(s) of the model.
 
     Parameters
     ----------
-    nn_bodies: Config
+    nn_body: Config
         A configuration object containing sections with pytorch networks.
-    nn_heads: Config
+    nn_head: Config
         A configuration object containing sections with pytorch networks.
     cuda_default: bool
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, nn_bodies, nn_heads, cuda_default=True):
+    def __init__(self, nn_body, nn_head, cuda_default=True):
         super().__init__()
 
         self.num_updates = 0
 
-        assert isinstance(nn_bodies, Config) and isinstance(nn_heads, Config), \
+        assert isinstance(nn_body, Config) and isinstance(nn_head, Config), \
             'nn_bodies and nn_heads must be of type {}'.format(Config.__name__)
-        self.nn_body = nn_bodies
-        self.nn_head = nn_heads
+        self.nn_body = nn_body
+        self.nn_head = nn_head
 
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
@@ -147,4 +147,10 @@ class BaseModel(ModuleExtended, ABC):
             output_shape=action_shape,
             **config.model.nn_head.kwargs.as_dict())
 
-        return cls(nn_body, nn_head, **config.model.kwargs.as_dict())
+        return cls(nn_body=nn_body, nn_head=nn_head, **config.model.kwargs.as_dict())
+
+    @classmethod
+    def from_file(cls, file_path, *args, **kwargs):
+        config = Config.load(file_path)
+
+        return cls.from_config(config, *args, **kwargs)

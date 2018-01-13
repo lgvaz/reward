@@ -12,8 +12,8 @@ class VanillaPGModel(BaseModel):
     Vanilla Policy Gradient model.
     '''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         self.saved_log_probs = []
 
