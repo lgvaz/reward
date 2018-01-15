@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from torchrl.nn import ModuleExtended, SequentialExtended
-from torchrl.utils import Config, get_obj
+from torchrl.utils import Config, get_module_dict
 
 
 class BaseModel(ModuleExtended, ABC):
@@ -23,7 +23,7 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, config, cuda_default=True):
+    def __init__(self, nn_body, nn_head, cuda_default=True):
         super().__init__()
 
         self.num_updates = 0
@@ -140,41 +140,19 @@ class BaseModel(ModuleExtended, ABC):
         torchrl.models
             A TorchRL model.
         '''
-        # Prepare for creating body network dict
-        body_dict = OrderedDict()
-        body_configs = iter(config.nn_body.arch.items())
+        nn_body_dict = get_module_dict(
+            config.nn_body.arch, input_shape=state_shape, action_shape=action_shape)
+        nn_body = SequentialExtended(nn_body_dict)
 
-        # Get first layer
-        key, obj_config = next(body_configs)
-        assert 'Input' in obj_config['func'].__name__, \
-            'The first layer of the network must be an Input layer'
-        obj_config['input_shape'] = state_shape
-        body_dict[key] = get_obj(obj_config)
+        nn_head_dict = get_module_dict(
+            config.nn_head.arch,
+            input_shape=nn_body.get_output_shape(state_shape),
+            action_shape=action_shape)
+        nn_head = SequentialExtended(nn_head_dict)
 
-        # Get other layers
-        for key, obj_config in body_configs:
-            body_dict[key] = get_obj(obj_config)
-        # Encapsulate all layers
-        nn_body = SequentialExtended(body_dict)
-
-        # Prepare for creating head network dict
-        head_dict = OrderedDict()
-        head_configs = iter(config.nn_head.arch.items())
-
-        # Get first layer
-        key, obj_config = next(head_configs)
-        assert 'Input' in obj_config['func'].__name__, \
-            'The first layer of the network must be an Input layer'
-        obj_config['input_shape'] = nn_body.get_output_shape(state_shape)
-        head_dict[key] = get_obj(obj_config)
-
-        # TODO: Output is also dynamic!!
-        # Get other layers
-        for key, obj_dict in head_configs:
-            head_dict[key] = get_obj(obj_dict)
-        # Encapsulate all layers
-        nn_head = SequentialExtended(body_dict)
-
+        # TODO: Resume work here
+        # Loading a nn.Module object, but model is expecting config obj
+        # Maybe don't call SequentialExtended here, but only on init, so we can save dict
         return cls(nn_body=nn_body, nn_head=nn_head, **config.model.kwargs.as_dict())
 
     @classmethod

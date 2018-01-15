@@ -25,4 +25,4 @@ class DenseNNHead(SequentialExtended):
     def forward(self, x):
         x = x.view(x.shape[0], -1)
 
-        return self.layers(x)
+        return super().forward(x)

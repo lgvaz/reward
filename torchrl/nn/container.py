@@ -12,6 +12,11 @@ class ModuleExtended(nn.Module):
     def _maybe_cuda(self, x):
         return x.cuda() if self.is_cuda else x
 
+    def _to_variable(self, x):
+        if isinstance(x, np.ndarray):
+            x = torch.from_numpy(x).float()
+        return Variable(self._maybe_cuda(x))
+
     @property
     def is_cuda(self):
         return next(self.parameters()).is_cuda
@@ -30,11 +35,7 @@ class SequentialExtended(ModuleExtended):
         self.layers = nn.Sequential(layers_config)
 
     def forward(self, x):
-        if isinstance(x, np.ndarray):
-            x = Variable(self._maybe_cuda(torch.from_numpy(x).float()))
-        output = self.layers(x)
-
-        return output
+        return self.layers(self._to_variable(x))
 
     @classmethod
     def from_config(cls, config, kwargs):
@@ -43,3 +44,22 @@ class SequentialExtended(ModuleExtended):
              for key, value in config.items()})
 
         return cls(layers_config, **kwargs)
+
+
+class FlattenLinear(nn.Linear):
+    def __init__(self, in_features, out_features, **kwargs):
+        if isinstance(in_features, torch.IntTensor):
+            in_features = in_features.prod()
+        else:
+            in_features = int(np.prod(in_features))
+
+        super().__init__(in_features=in_features, out_features=out_features, **kwargs)
+
+    def forward(self, x):
+        x = x.view(x.shape[0], -1)
+
+        return super().forward(x)
+
+
+class ActionLinear(FlattenLinear):
+    pass

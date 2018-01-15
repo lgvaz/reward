@@ -1,3 +1,3 @@
-from .container import SequentialExtended, ModuleExtended
+from .container import ModuleExtended, SequentialExtended, FlattenLinear, ActionLinear
 
-__all__ = ['SequentialExtended', 'ModuleExtended']
+__all__ = ['ModuleExtended', 'SequentialExtended', 'FlattenLinear', 'ActionLinear']
