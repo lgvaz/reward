@@ -14,8 +14,8 @@ class ModuleExtended(nn.Module):
 
     def _to_variable(self, x):
         if isinstance(x, np.ndarray):
-            x = torch.from_numpy(x).float()
-        return Variable(self._maybe_cuda(x))
+            x = Variable(torch.from_numpy(x).float())
+        return self._maybe_cuda(x)
 
     @property
     def is_cuda(self):
@@ -30,9 +30,9 @@ class ModuleExtended(nn.Module):
 
 
 class SequentialExtended(ModuleExtended):
-    def __init__(self, layers_config):
+    def __init__(self, *args, **kwargs):
         super().__init__()
-        self.layers = nn.Sequential(layers_config)
+        self.layers = nn.Sequential(*args, **kwargs)
 
     def forward(self, x):
         return self.layers(self._to_variable(x))

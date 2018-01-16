@@ -4,6 +4,7 @@
 |
 '''
 from .base_model import BaseModel
-from .vanillapg_model import VanillaPGModel
+from .pg_model import PGModel
+from .reinforce_model import ReinforceModel
 
-__all__ = ['BaseModel', 'VanillaPGModel']
+__all__ = ['BaseModel', 'PGModel', 'ReinforceModel']

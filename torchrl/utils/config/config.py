@@ -24,11 +24,14 @@ class Config:
         An object containing all configuration details (with possibly nested Config).
     '''
 
-    def __init__(self, **configs):
+    def __init__(self, *args, **kwargs):
         # We want to maintain the order of the attributes,
         # this is especially necessary when defining NNs architectures
         self.__dict__['_attrs'] = OrderedDict()
-        for key, value in configs.items():
+
+        for i, value in enumerate(args):
+            self._nested_loader('attr{}'.format(i), value)
+        for key, value in kwargs.items():
             self._nested_loader(key, value)
 
     def __getattr__(self, value):

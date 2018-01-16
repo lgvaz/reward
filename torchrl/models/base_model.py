@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from torchrl.nn import ModuleExtended, SequentialExtended
-from torchrl.utils import Config, get_module_dict
+from torchrl.utils import Config, nn_from_config, get_module_dict
 
 
 class BaseModel(ModuleExtended, ABC):
@@ -23,26 +23,25 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, nn_body, nn_head, cuda_default=True):
+    def __init__(self, input_shape, action_shape, cuda_default=True):
         super().__init__()
 
+        self.input_shape = input_shape
+        self.action_shape = action_shape
         self.num_updates = 0
+        self.networks = []
+        self.losses = []
 
-        assert isinstance(nn_body, Config) and isinstance(nn_head, Config), \
-            'nn_bodies and nn_heads must be of type {}'.format(Config.__name__)
-        self.nn_body = config.nn_body
-        self.nn_head = config.nn_head
+        self.create_networks()
 
+        # Enable cuda if wanted
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
-            for module in self.nn_body.values():
-                module.cuda()
-            for module in self.nn_head.values():
-                module.cuda()
+            for network in self.networks:
+                network.cuda()
 
-        # This is needed for pytorch to register this modules as part of this class
-        self.nn_body_modules = nn.Sequential(self.nn_body.as_dict())
-        self.nn_head_modules = nn.Sequential(self.nn_head.as_dict())
+        # # This is needed for pytorch to register this modules as part of this class
+        self.nn_modules = nn.ModuleList(self.networks)
 
         self.opt = self._create_optimizer()
 
@@ -88,6 +87,10 @@ class BaseModel(ModuleExtended, ABC):
         # return torch.optim.Adam(parameters_total, lr=1e-2)
 
     @abstractmethod
+    def create_networks(self):
+        pass
+
+    @abstractmethod
     def forward(self, x):
         '''
         This method should be overwritten by a subclass.
@@ -116,7 +119,21 @@ class BaseModel(ModuleExtended, ABC):
         pass
 
     @abstractmethod
-    def train(self, batch=None):
+    def add_losses(self, batch):
+        '''
+        This method should be overwritten by a subclass.
+
+        It should append all the necessary losses to `self.losses`.
+
+        Parameters
+        ----------
+        batch: dict
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        pass
+
+    def train(self, batch):
         '''
         This method should be inherited by a subclass.
 
@@ -128,7 +145,23 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
+        self.add_losses(batch)
+
+        self.opt.zero_grad()
+        loss = sum(self.losses)
+        loss.backward()
+        self.opt.step()
+
+        self.losses = []
         self.num_updates += 1
+
+    def net_from_config(self, net_config, body=None, head=None):
+        nets = nn_from_config(net_config, self.input_shape, self.action_shape, body, head)
+
+        for net in nets.values():
+            self.networks.append(net)
+
+        return nets
 
     @classmethod
     def from_config(cls, config, state_shape, action_shape):

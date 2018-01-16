@@ -87,13 +87,13 @@ class BaseAgent(ABC):
 
         self.logger.add_log('Reward/Episode', np.mean(rewards))
 
-        # self.logger.log('Update {} | Episode {} | Step {}'.format(
-        #     self.model.num_updates, self.env.num_episodes, self.env.num_steps))
+        self.logger.log('Update {} | Episode {} | Step {}'.format(
+            self.model.num_updates, self.env.num_episodes, self.env.num_steps))
 
         self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
 
     @classmethod
-    def from_config(cls, config):
+    def from_config(cls, config, env=None):
         '''
         Create an agent from a configuration object.
 
@@ -102,7 +102,13 @@ class BaseAgent(ABC):
         torchrl.agents
             A TorchRL agent.
         '''
-        env = get_obj(config.env.obj)
+        if env is None:
+            try:
+                env = get_obj(config.env.obj)
+            except KeyError:
+                raise KeyError('The env must be defined in the config'
+                               'or passed as an argument')
+
         state_shape = env.state_info['shape']
         action_shape = env.action_info['shape']
         model = cls._model.from_config(config, state_shape, action_shape)

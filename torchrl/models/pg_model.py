@@ -4,18 +4,28 @@ from torch.autograd import Variable
 from torch.distributions import Categorical
 
 from torchrl.models import BaseModel
-from torchrl.utils import discounted_sum_rewards
+from torchrl.utils import nn_from_config, discounted_sum_rewards
 
 
-class VanillaPGModel(BaseModel):
-    '''
-    Vanilla Policy Gradient model.
-    '''
+class PGModel(BaseModel):
+    def __init__(self, policy_nn_config, value_nn_config=None, share_body=False,
+                 **kwargs):
+        self.policy_nn_config = policy_nn_config
+        self.value_nn_config = value_nn_config
+        self.share_body = share_body
+        self.saved_log_probs = []
+        self.saved_state_values = []
 
-    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.saved_log_probs = []
+    def create_networks(self):
+        self.policy_nn = self.net_from_config(self.policy_nn_config)
+
+        if self.value_nn_config is not None:
+            body = self.policy_nn.body if self.share_body else None
+            self.value_nn = self.net_from_config(self.value_nn_config, body=body)
+        else:
+            self.value_nn = None
 
     def forward(self, x):
         '''
@@ -32,8 +42,14 @@ class VanillaPGModel(BaseModel):
         numpy.ndarray
             Action probabilities
         '''
-        action_scores = self.nn_head.main(self.nn_body.main(x))
-        return F.softmax(action_scores, dim=1)
+        action_scores = self.policy_nn.head(self.policy_nn.body(x))
+        action_probs = F.softmax(action_scores, dim=1)
+
+        if self.value_nn is not None:
+            state_value = self.value_nn.head(self.value_nn.body(x))
+            self.saved_state_values.append(state_value)
+
+        return action_probs
 
     def select_action(self, state):
         '''
@@ -62,27 +78,3 @@ class VanillaPGModel(BaseModel):
         self.saved_log_probs.append(log_prob)
 
         return action.data[0]
-
-    def train(self, batch):
-        '''
-        Compute and apply gradients based on the policy gradient theorem.
-
-        Should use the batch to compute and apply gradients to the network.
-
-        Parameters
-        ----------
-        batch: dict
-            The batch should contain all the information necessary
-            to compute the gradients.
-        '''
-        super().train()
-        returns = discounted_sum_rewards(batch['rewards'])
-        returns = Variable(self._maybe_cuda(torch.from_numpy(returns).float()))
-        objective = torch.cat(self.saved_log_probs) * returns
-
-        self.opt.zero_grad()
-        loss = -objective.sum()
-        loss.backward()
-        self.opt.step()
-
-        self.saved_log_probs = []
