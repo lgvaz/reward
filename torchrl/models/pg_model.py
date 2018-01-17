@@ -1,10 +1,7 @@
-import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.distributions import Categorical
 
 from torchrl.models import BaseModel
-from torchrl.utils import nn_from_config, discounted_sum_rewards
 
 
 class PGModel(BaseModel):

@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 
-from torchrl.nn import ModuleExtended, SequentialExtended
-from torchrl.utils import Config, nn_from_config, get_module_dict
+import torchrl.utils as U
+from torchrl.nn import ModuleExtended
 
 
 class BaseModel(ModuleExtended, ABC):
@@ -23,10 +22,10 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, input_shape, action_shape, cuda_default=True):
+    def __init__(self, state_shape, action_shape, cuda_default=True):
         super().__init__()
 
-        self.input_shape = input_shape
+        self.state_shape = state_shape
         self.action_shape = action_shape
         self.num_updates = 0
         self.networks = []
@@ -102,7 +101,6 @@ class BaseModel(ModuleExtended, ABC):
         x: numpy.ndarray
             The environment state.
         '''
-        pass
         # return self.nn_head(self.nn_body(x))
 
     @abstractmethod
@@ -116,7 +114,6 @@ class BaseModel(ModuleExtended, ABC):
         -------
         action: int or numpy.ndarray
         '''
-        pass
 
     @abstractmethod
     def add_losses(self, batch):
@@ -131,7 +128,6 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        pass
 
     def train(self, batch):
         '''
@@ -156,7 +152,12 @@ class BaseModel(ModuleExtended, ABC):
         self.num_updates += 1
 
     def net_from_config(self, net_config, body=None, head=None):
-        nets = nn_from_config(net_config, self.input_shape, self.action_shape, body, head)
+        nets = U.nn_from_config(
+            config=net_config,
+            input_shape=self.state_shape,
+            action_shape=self.action_shape,
+            body=body,
+            head=head)
 
         for net in nets.values():
             self.networks.append(net)
@@ -173,23 +174,10 @@ class BaseModel(ModuleExtended, ABC):
         torchrl.models
             A TorchRL model.
         '''
-        nn_body_dict = get_module_dict(
-            config.nn_body.arch, input_shape=state_shape, action_shape=action_shape)
-        nn_body = SequentialExtended(nn_body_dict)
-
-        nn_head_dict = get_module_dict(
-            config.nn_head.arch,
-            input_shape=nn_body.get_output_shape(state_shape),
-            action_shape=action_shape)
-        nn_head = SequentialExtended(nn_head_dict)
-
-        # TODO: Resume work here
-        # Loading a nn.Module object, but model is expecting config obj
-        # Maybe don't call SequentialExtended here, but only on init, so we can save dict
-        return cls(nn_body=nn_body, nn_head=nn_head, **config.model.kwargs.as_dict())
+        return cls(**config.as_dict(), state_shape=state_shape, action_shape=action_shape)
 
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):
-        config = Config.load(file_path)
+        config = U.Config.load(file_path)
 
         return cls.from_config(config, *args, **kwargs)

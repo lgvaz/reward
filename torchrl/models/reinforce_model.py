@@ -1,11 +1,8 @@
-import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
-from torch.distributions import Categorical
 
+import torchrl.utils as U
 from torchrl.models import PGModel
-from torchrl.utils import nn_from_config, discounted_sum_rewards
 
 
 class ReinforceModel(PGModel):
@@ -13,18 +10,23 @@ class ReinforceModel(PGModel):
     REINFORCE model.
     '''
 
-    def __init__(self, policy_nn_config, value_nn_config=None, share_body=False,
+    def __init__(self,
+                 policy_nn_config,
+                 value_nn_config=None,
+                 share_body=False,
+                 normalize_returns=True,
                  **kwargs):
         self.policy_nn_config = policy_nn_config
         self.value_nn_config = value_nn_config
         self.share_body = share_body
+        self.normalize_returns = normalize_returns
         self.saved_log_probs = []
         self.saved_state_values = []
 
         super().__init__(
             policy_nn_config=policy_nn_config, value_nn_config=value_nn_config, **kwargs)
 
-    def add_pg_loss(self, batch):
+    def add_pg_loss(self, returns):
         '''
         Compute loss based on the policy gradient theorem.
 
@@ -34,20 +36,22 @@ class ReinforceModel(PGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        returns = self._to_variable(discounted_sum_rewards(batch['rewards']))
-
         if self.value_nn is not None:
             state_values = torch.cat(self.saved_state_values).view(-1)
-            returns = returns - state_values
+            advantages = returns - state_values
+        else:
+            advantages = returns
+
+        if self.normalize_returns:
+            advantages = (advantages - advantages.mean()) / (advantages.std() + U.EPSILON)
 
         log_probs = torch.cat(self.saved_log_probs).view(-1)
-        objective = log_probs * returns
+        objective = log_probs * advantages
         loss = -objective.sum()
 
         self.losses.append(loss)
 
-    def add_value_nn_loss(self, batch):
-        returns = self._to_variable(discounted_sum_rewards(batch['rewards']))
+    def add_value_nn_loss(self, returns):
         state_values = torch.cat(self.saved_state_values).view(-1)
 
         loss = F.mse_loss(input=state_values, target=returns)
@@ -64,8 +68,10 @@ class ReinforceModel(PGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        self.add_pg_loss(batch)
-        self.add_value_nn_loss(batch)
+        returns = self._to_variable(U.discounted_sum_rewards(batch['rewards']))
+
+        self.add_pg_loss(returns)
+        self.add_value_nn_loss(returns)
 
         self.saved_log_probs = []
         self.saved_state_values = []

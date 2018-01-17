@@ -1,7 +1,7 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
-from torchrl.utils import Config, Logger, get_obj
+import torchrl.utils as U
 
 
 class BaseAgent(ABC):
@@ -21,7 +21,7 @@ class BaseAgent(ABC):
         self.env = env
         self.model = model or self._model
         self.gamma = gamma
-        self.logger = Logger()
+        self.logger = U.Logger()
         self.last_logged_ep = self.env.num_episodes
 
     def _check_termination(self):
@@ -104,19 +104,19 @@ class BaseAgent(ABC):
         '''
         if env is None:
             try:
-                env = get_obj(config.env.obj)
-            except KeyError:
-                raise KeyError('The env must be defined in the config'
-                               'or passed as an argument')
+                env = U.get_obj(config.env.obj)
+            except AttributeError:
+                raise ValueError('The env must be defined in the config '
+                                 'or passed as an argument')
 
         state_shape = env.state_info['shape']
         action_shape = env.action_info['shape']
-        model = cls._model.from_config(config, state_shape, action_shape)
+        model = cls._model.from_config(config.model, state_shape, action_shape)
 
         return cls(env, model)
 
     @classmethod
-    def from_file(cls, file_path):
+    def from_file(cls, file_path, env=None):
         '''
         Create an agent from a configuration file.
 
@@ -130,6 +130,6 @@ class BaseAgent(ABC):
         torchrl.agents
             A TorchRL agent.
         '''
-        config = Config.load(file_path)
+        config = U.Config.load(file_path)
 
-        return cls.from_config(config)
+        return cls.from_config(config, env=env)

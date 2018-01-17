@@ -6,6 +6,6 @@
 '''
 from .base_agent import BaseAgent
 from .batch_agent import BatchAgent
-from .vanillapg_agent import ReinforceAgent
+from .reinforce_agent import ReinforceAgent
 
 __all__ = ['BaseAgent', 'BatchAgent', 'ReinforceAgent']
