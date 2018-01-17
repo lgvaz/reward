@@ -68,7 +68,8 @@ class ReinforceModel(PGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        returns = self._to_variable(U.discounted_sum_rewards(batch['rewards']))
+        # TODO: Wrong return, discounted_sum_rewards expect a trajectory not a batch
+        returns = self._to_variable(batch['returns'])
 
         self.add_pg_loss(returns)
         self.add_value_nn_loss(returns)
