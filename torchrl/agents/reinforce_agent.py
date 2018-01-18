@@ -59,7 +59,7 @@ class ReinforceAgent(BatchAgent):
         super().train(**kwargs)
         while True:
             batch = self.generate_batch(timesteps_per_batch, episodes_per_batch)
-            self.model.train(batch)
+            self.model.train(batch=batch, logger=self.logger)
 
             self.write_logs()
             if self._check_termination():

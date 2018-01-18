@@ -129,7 +129,7 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
-    def train(self, batch):
+    def train(self, batch, logger=None):
         '''
         This method should be inherited by a subclass.
 
@@ -140,6 +140,8 @@ class BaseModel(ModuleExtended, ABC):
         batch: dict
             The batch should contain all the information necessary
             to compute the gradients.
+        logger: U.Logger (optional)
+            If given use to log information.
         '''
         self.add_losses(batch)
 
@@ -148,8 +150,14 @@ class BaseModel(ModuleExtended, ABC):
         loss.backward()
         self.opt.step()
 
+        if logger is not None:
+            self.write_logs(batch, logger)
+
         self.losses = []
         self.num_updates += 1
+
+    def write_logs(self, batch, logger):
+        pass
 
     def net_from_config(self, net_config, body=None, head=None):
         nets = U.nn_from_config(

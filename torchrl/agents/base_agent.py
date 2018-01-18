@@ -79,7 +79,6 @@ class BaseAgent(ABC):
         '''
         return self.env.run_one_episode(select_action_fn=self.select_action)
 
-    # TODO: doc
     def write_logs(self):
         new_eps = abs(self.last_logged_ep - self.env.num_episodes)
         self.last_logged_ep = self.env.num_episodes

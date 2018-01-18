@@ -20,13 +20,11 @@ class ReinforceModel(PGModel):
         self.value_nn_config = value_nn_config
         self.share_body = share_body
         self.normalize_advantages = normalize_advantages
-        self.saved_log_probs = []
-        self.saved_state_values = []
 
         super().__init__(
             policy_nn_config=policy_nn_config, value_nn_config=value_nn_config, **kwargs)
 
-    def add_pg_loss(self, advantages):
+    def add_pg_loss(self, advantages, actions):
         '''
         Compute loss based on the policy gradient theorem.
 
@@ -36,7 +34,8 @@ class ReinforceModel(PGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        log_probs = torch.cat(self.saved_log_probs).view(-1)
+        log_probs = [dist.last_log_prob for dist in self.saved_dists]
+        log_probs = torch.cat(log_probs).view(-1)
         objective = log_probs * advantages
         loss = -objective.sum()
 
@@ -62,8 +61,11 @@ class ReinforceModel(PGModel):
         advantages = self._to_variable(batch['advantages'])
         vtarget = self._to_variable(batch['vtarget'])
 
-        self.add_pg_loss(advantages)
+        self.add_pg_loss(advantages, batch['actions'])
         self.add_value_nn_loss(vtarget)
 
-        self.saved_log_probs = []
-        self.saved_state_values = []
+    def write_logs(self, batch, logger):
+        entropy = [dist.entropy() for dist in self.saved_dists]
+        entropy = torch.cat(entropy).data[0]
+
+        logger.add_log('Policy/Entropy', entropy)

@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
-from torch.distributions import Categorical
 
+from torchrl.distributions import CategoricalDist
 from torchrl.models import BaseModel
 
 
@@ -11,7 +11,7 @@ class PGModel(BaseModel):
         self.policy_nn_config = policy_nn_config
         self.value_nn_config = value_nn_config
         self.share_body = share_body
-        self.saved_log_probs = []
+        self.saved_dists = []
         self.saved_state_values = []
 
         super().__init__(**kwargs)
@@ -70,17 +70,18 @@ class PGModel(BaseModel):
         '''
         # TODO: Continuous distribution
         probs = self.forward(state)
-        dist = Categorical(probs)
+        dist = CategoricalDist(probs)
         action = dist.sample()
-        log_prob = dist.log_prob(action)
-        self.saved_log_probs.append(log_prob)
+        # log_prob = dist.log_prob(action)
+        self.saved_dists.append(dist)
 
         return action.data[0]
 
-    def get_latests_state_values(self, n):
-        state_values = torch.cat(self.saved_state_values[-n:])
+    def train(self, batch, logger=None):
+        super().train(batch=batch, logger=logger)
 
-        return state_values.data.view(-1).cpu().numpy()
+        self.saved_dists = []
+        self.saved_state_values = []
 
     def add_state_values(self, traj):
         if self.value_nn is not None:
