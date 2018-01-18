@@ -7,5 +7,6 @@
 from .base_agent import BaseAgent
 from .batch_agent import BatchAgent
 from .reinforce_agent import ReinforceAgent
+from .actor_critic_agent import ActorCriticAgent
 
-__all__ = ['BaseAgent', 'BatchAgent', 'ReinforceAgent']
+__all__ = ['BaseAgent', 'BatchAgent', 'ReinforceAgent', 'ActorCriticAgent']

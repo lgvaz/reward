@@ -1,3 +1,4 @@
+import torch
 import torch.nn.functional as F
 from torch.distributions import Categorical
 
@@ -75,3 +76,19 @@ class PGModel(BaseModel):
         self.saved_log_probs.append(log_prob)
 
         return action.data[0]
+
+    def get_latests_state_values(self, n):
+        state_values = torch.cat(self.saved_state_values[-n:])
+
+        return state_values.data.view(-1).cpu().numpy()
+
+    def add_state_values(self, traj):
+        if self.value_nn is not None:
+            steps = len(traj['rewards'])
+
+            state_values = torch.cat(self.saved_state_values[-steps:])
+            state_values = state_values.data.view(-1).cpu().numpy()
+            traj['state_values'] = state_values
+
+        else:
+            pass

@@ -113,7 +113,7 @@ class BaseAgent(ABC):
         action_shape = env.action_info['shape']
         model = cls._model.from_config(config.model, state_shape, action_shape)
 
-        return cls(env, model)
+        return cls(env, model, **config.agent.as_dict())
 
     @classmethod
     def from_file(cls, file_path, env=None):
