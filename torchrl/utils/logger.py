@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 from datetime import timedelta
+from tensorboardX import SummaryWriter
 
 import numpy as np
 
@@ -17,9 +18,11 @@ class Logger:
         self.eta = None
         self.i_step = 0
 
-    def add_tf_writer(self, sess, tf_scalar_summary_writer):
-        self.sess = sess
-        self.tf_scalar_summary_writer = tf_scalar_summary_writer
+        self.add_tensorboard()
+
+    # TODO: Only testing, maybe create the writer at init? When logging add option to print
+    def add_tensorboard(self):
+        self.writer = SummaryWriter()
 
     def add_log(self, name, value, precision=2):
         self.logs[name].append(value)
@@ -44,10 +47,10 @@ class Logger:
             header += ' | ETA: {}'.format(self.eta)
         print_table(avg_dict, header)
 
-        # Write tensorflow summary
-        if self.tf_scalar_summary_writer is not None:
+        # Write tensorboard summary
+        if self.writer is not None:
             for key, value in self.logs.items():
-                self.tf_scalar_summary_writer(self.sess, key, value)
+                self.writer.add_scalar(key, value, global_step=self.i_step)
 
         # Reset dict
         self.logs = defaultdict(list)
@@ -68,7 +71,7 @@ class Logger:
 
 def print_table(tags_and_values_dict, header=None, width=42):
     '''
-    Print a pretty table =)
+    Prints a pretty table =)
     Expects keys and values of dict to be a string
     '''
 
@@ -80,10 +83,13 @@ def print_table(tags_and_values_dict, header=None, width=42):
     print()
     if header:
         print(header)
+
     print((2 + max_width) * '-')
+
     for tag, value in tags_and_values_dict.items():
         num_spaces = 2 + values_maxlen - len(value)
         string_right = '{:{n}}{}'.format('|', value, n=num_spaces)
         num_spaces = 2 + max_width - len(tag) - len(string_right)
         print(''.join((tag, ' ' * num_spaces, string_right)))
+
     print((2 + max_width) * '-')
