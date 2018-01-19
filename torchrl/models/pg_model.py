@@ -72,7 +72,6 @@ class PGModel(BaseModel):
         probs = self.forward(state)
         dist = CategoricalDist(probs)
         action = dist.sample()
-        # log_prob = dist.log_prob(action)
         self.saved_dists.append(dist)
 
         return action.data[0]

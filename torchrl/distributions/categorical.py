@@ -6,18 +6,28 @@ class CategoricalDist(Categorical):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.last_value = None
+        self.last_action = None
+
+    @property
+    def log_probs(self):
+        return self.probs.clamp(min=EPSILON, max=1 - EPSILON).log()
 
     @property
     def last_log_prob(self):
-        return self.log_prob(self.last_value)
+        return self.log_prob(self.last_action)
 
     def sample(self, *args, **kwargs):
-        value = super().sample(*args, **kwargs)
-        self.last_value = value
+        action = super().sample(*args, **kwargs)
+        self.last_action = action
 
-        return value
+        return action
 
     def entropy(self):
-        log_probs = self.probs.clamp(min=EPSILON, max=1 - EPSILON).log()
-        return -(self.probs * log_probs).sum(-1)
+        return -(self.probs * self.log_probs).sum(-1)
+
+    @staticmethod
+    def kl_divergence(old_dist, new_dist):
+        assert isinstance(old_dist, CategoricalDist) and isinstance(
+            new_dist, CategoricalDist)
+
+        return (old_dist.probs * (old_dist.log_probs - new_dist.log_probs)).sum(-1)

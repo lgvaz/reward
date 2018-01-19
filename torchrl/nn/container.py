@@ -14,7 +14,10 @@ class ModuleExtended(nn.Module):
 
     def _to_variable(self, x):
         if isinstance(x, np.ndarray):
-            x = Variable(torch.from_numpy(x).float())
+            x = torch.from_numpy(x).float()
+        if not isinstance(x, Variable):
+            x = Variable(x)
+
         return self._maybe_cuda(x)
 
     @property

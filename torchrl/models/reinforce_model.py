@@ -24,7 +24,7 @@ class ReinforceModel(PGModel):
         super().__init__(
             policy_nn_config=policy_nn_config, value_nn_config=value_nn_config, **kwargs)
 
-    def add_pg_loss(self, advantages, actions):
+    def add_pg_loss(self, advantages):
         '''
         Compute loss based on the policy gradient theorem.
 
