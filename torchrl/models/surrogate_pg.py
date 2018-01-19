@@ -49,8 +49,7 @@ class SurrogatePGModel(PGModel):
         actions = [old_dist.last_action for old_dist in self.saved_dists]
         # TODO: Using this repacking hack to get around diferentiation
         old_logprobs = torch.cat(
-            [old_dist.last_log_prob for old_dist in self.saved_dists]).data
-        old_logprobs = self._to_variable(old_logprobs)
+            [old_dist.last_log_prob for old_dist in self.saved_dists]).detach()
         new_logprobs = torch.cat(
             [new_dist.log_prob(action) for new_dist, action in zip(new_dists, actions)])
 
