@@ -10,11 +10,19 @@ from torchrl.utils import get_obj
 
 class ModuleExtended(nn.Module):
     def _maybe_cuda(self, x):
-        return x.cuda() if self.is_cuda else x
+        return x.cuda() if self.is_cuda and not x.is_cuda else x
 
     def _to_variable(self, x):
         if isinstance(x, np.ndarray):
-            x = torch.from_numpy(x).float()
+            # pytorch doesn't support bool
+            if x.dtype == 'bool':
+                x = x.astype('int')
+            # we want only single precision floats
+            if x.dtype == 'float64':
+                x = x.astype('float32')
+
+            x = torch.from_numpy(x)
+
         if not isinstance(x, Variable):
             x = Variable(x)
 

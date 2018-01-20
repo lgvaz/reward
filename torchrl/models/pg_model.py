@@ -12,7 +12,6 @@ class PGModel(BaseModel):
         self.value_nn_config = value_nn_config
         self.share_body = share_body
         self.saved_dists = []
-        self.saved_state_values = []
 
         super().__init__(**kwargs)
 
@@ -43,10 +42,6 @@ class PGModel(BaseModel):
         action_scores = self.policy_nn.head(self.policy_nn.body(x))
         action_probs = F.softmax(action_scores, dim=1)
 
-        if self.value_nn is not None:
-            state_value = self.value_nn.head(self.value_nn.body(x))
-            self.saved_state_values.append(state_value)
-
         return action_probs
 
     def select_action(self, state):
@@ -76,19 +71,37 @@ class PGModel(BaseModel):
 
         return action.data[0]
 
-    def train(self, batch, logger=None):
-        super().train(batch=batch, logger=logger)
+    def add_losses(self, batch):
+        '''
+        Define all losses used for calculating the gradient.
 
-        self.saved_dists = []
-        self.saved_state_values = []
+        Parameters
+        ----------
+        batch: dict
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        self.add_pg_loss(batch)
+        self.add_value_nn_loss(batch)
+
+    def add_value_nn_loss(self, batch):
+        state_values = self.value_nn.head(self.value_nn.body(batch['state_ts']))
+        vtarget = self._to_variable(batch['vtarget'])
+
+        loss = F.mse_loss(input=state_values, target=vtarget)
+
+        self.losses.append(loss)
 
     def add_state_values(self, traj):
         if self.value_nn is not None:
-            steps = len(traj['rewards'])
-
-            state_values = torch.cat(self.saved_state_values[-steps:])
+            state_values = self.value_nn.head(self.value_nn.body(traj['state_ts']))
             state_values = state_values.data.view(-1).cpu().numpy()
             traj['state_values'] = state_values
-
         else:
             pass
+
+    def write_logs(self, batch, logger):
+        entropy = [dist.entropy() for dist in self.saved_dists]
+        entropy = torch.cat(entropy).data[0]
+
+        logger.add_log('Policy/Entropy', entropy)

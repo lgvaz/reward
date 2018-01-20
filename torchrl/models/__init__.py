@@ -6,6 +6,7 @@
 from .base_model import BaseModel
 from .pg_model import PGModel
 from .reinforce_model import ReinforceModel
-from .surrogate_pg import SurrogatePGModel
+from .surrogate_pg_model import SurrogatePGModel
+from .ppo_model import PPOModel
 
-__all__ = ['BaseModel', 'PGModel', 'ReinforceModel', 'SurrogatePGModel']
+__all__ = ['BaseModel', 'PGModel', 'ReinforceModel', 'SurrogatePGModel', 'PPOModel']

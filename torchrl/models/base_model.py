@@ -131,7 +131,7 @@ class BaseModel(ModuleExtended, ABC):
 
     def train(self, batch, logger=None):
         '''
-        This method should be inherited by a subclass.
+        Apply the gradients in respect to the losses defined by :func:`add_losses`_.
 
         Should use the batch to compute and apply gradients to the network.
 
