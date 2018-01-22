@@ -55,11 +55,19 @@ class ReinforceAgent(BatchAgent):
         traj['advantages'] = advantages
         traj['vtarget'] = vtarget
 
-    def train(self, timesteps_per_batch=-1, episodes_per_batch=-1, **kwargs):
-        super().train(**kwargs)
+    def train(self,
+              timesteps_per_batch=-1,
+              episodes_per_batch=-1,
+              max_updates=-1,
+              max_episodes=-1,
+              max_steps=-1,
+              **kwargs):
+        super().train(
+            max_updates=max_updates, max_episodes=max_episodes, max_steps=max_steps)
+
         while True:
             batch = self.generate_batch(timesteps_per_batch, episodes_per_batch)
-            self.model.train(batch=batch, logger=self.logger)
+            self.model.train(batch=batch, logger=self.logger, **kwargs)
 
             self.write_logs()
             if self._check_termination():
