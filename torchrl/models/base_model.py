@@ -129,7 +129,29 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
-    def train(self, batch, logger=None):
+    def train(self, batch, num_epochs=1, logger=None):
+        '''
+        Basic train function.
+
+        Perform a optimizer step and write logs
+
+        Parameters
+        ----------
+        batch: dict
+            The batch should contain all the information necessary
+            to compute the gradients.
+        num_epochs: int
+            Number of times to fit on the same batch.
+        logger: U.Logger (optional)
+            If given, use to log information.
+        '''
+        for _ in range(num_epochs):
+            self.optimizer_step(batch)
+
+        if logger is not None:
+            self.write_logs(batch, logger)
+
+    def optimizer_step(self, batch):
         '''
         Apply the gradients in respect to the losses defined by :func:`add_losses`_.
 
@@ -140,8 +162,6 @@ class BaseModel(ModuleExtended, ABC):
         batch: dict
             The batch should contain all the information necessary
             to compute the gradients.
-        logger: U.Logger (optional)
-            If given use to log information.
         '''
         self.add_losses(batch)
 
@@ -149,9 +169,6 @@ class BaseModel(ModuleExtended, ABC):
         loss = sum(self.losses)
         loss.backward()
         self.opt.step()
-
-        if logger is not None:
-            self.write_logs(batch, logger)
 
         self.losses = []
         self.num_updates += 1
