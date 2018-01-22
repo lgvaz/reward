@@ -25,6 +25,10 @@ class CategoricalDist(Categorical):
     def entropy(self):
         return -(self.probs * self.log_probs).sum(-1)
 
+    def detach(self):
+        self.__dict__ = dict((key, value.detach()) if hasattr(value, 'detach') else (
+            key, value) for key, value in self.__dict__.items())
+
     @staticmethod
     def kl_divergence(old_dist, new_dist):
         assert isinstance(old_dist, CategoricalDist) and isinstance(
