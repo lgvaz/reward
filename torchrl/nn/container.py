@@ -72,5 +72,29 @@ class FlattenLinear(nn.Linear):
         return super().forward(x)
 
 
-class ActionLinear(FlattenLinear):
-    pass
+class ActionLinear(nn.Module):
+    def __init__(self, in_features, action_info, **kwargs):
+        super().__init__()
+
+        self.action_info = action_info
+        out_features = int(np.prod(action_info['shape']))
+
+        self.linear = nn.Linear(
+            in_features=int(in_features), out_features=out_features, **kwargs)
+
+        if action_info['dtype'] == 'continuous':
+            self.log_std = nn.Parameter(torch.zeros(1, out_features))
+
+    def forward(self, x):
+        if self.action_info['dtype'] == 'discrete':
+            logits = self.linear(x)
+            return logits
+
+        elif self.action_info['dtype'] == 'continuous':
+            mean = self.linear(x)
+            log_std = self.log_std.expand_as(mean)
+            return torch.cat((mean, log_std), dim=-1)
+
+        else:
+            raise ValueError('Action space {} not implemented'.format(
+                self.action_info['dtype']))

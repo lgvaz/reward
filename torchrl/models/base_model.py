@@ -22,11 +22,11 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, state_shape, action_shape, cuda_default=True):
+    def __init__(self, state_info, action_info, cuda_default=True):
         super().__init__()
 
-        self.state_shape = state_shape
-        self.action_shape = action_shape
+        self.state_info = state_info
+        self.action_info = action_info
         self.num_updates = 0
         self.networks = []
         self.losses = []
@@ -179,8 +179,8 @@ class BaseModel(ModuleExtended, ABC):
     def net_from_config(self, net_config, body=None, head=None):
         nets = U.nn_from_config(
             config=net_config,
-            input_shape=self.state_shape,
-            action_shape=self.action_shape,
+            state_info=self.state_info,
+            action_info=self.action_info,
             body=body,
             head=head)
 
@@ -190,7 +190,7 @@ class BaseModel(ModuleExtended, ABC):
         return nets
 
     @classmethod
-    def from_config(cls, config, state_shape, action_shape):
+    def from_config(cls, config, state_info, action_info):
         '''
         Creates a model from a configuration file.
 
@@ -199,7 +199,7 @@ class BaseModel(ModuleExtended, ABC):
         torchrl.models
             A TorchRL model.
         '''
-        return cls(**config.as_dict(), state_shape=state_shape, action_shape=action_shape)
+        return cls(**config.as_dict(), state_info=state_info, action_info=action_info)
 
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):

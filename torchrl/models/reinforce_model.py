@@ -45,7 +45,7 @@ class ReinforceModel(PGModel):
         if self.value_nn is not None:
             self.add_value_nn_loss(batch)
 
-    def train(self, batch, logger=None):
+    def train(self, batch, num_epochs=1, logger=None):
         batch['advantages'] = self._to_variable(batch['advantages'])
         batch['actions'] = self._to_variable(batch['actions'].astype('int'))
 

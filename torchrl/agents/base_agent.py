@@ -15,6 +15,7 @@ class BaseAgent(ABC):
     model: torchrl.models
         A ``torchrl.models`` instance.
     '''
+    # TODO: This is probably wrong, the model is being passed as an instance
     _model = None
 
     def __init__(self, env, model=None, gamma=0.99):
@@ -108,9 +109,7 @@ class BaseAgent(ABC):
                 raise ValueError('The env must be defined in the config '
                                  'or passed as an argument')
 
-        state_shape = env.state_info['shape']
-        action_shape = env.action_info['shape']
-        model = cls._model.from_config(config.model, state_shape, action_shape)
+        model = cls._model.from_config(config.model, env.state_info, env.action_info)
 
         return cls(env, model, **config.agent.as_dict())
 

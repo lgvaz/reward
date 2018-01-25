@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 
+from torchrl.distributions_temp.kl import kl_divergence
+
 from torchrl.models import PGModel
 
 
@@ -10,7 +12,7 @@ class SurrogatePGModel(PGModel):
         for dist in self.saved_dists:
             dist.detach()
 
-        batch['actions'] = self._to_variable(batch['actions'].astype('int'))
+        batch['actions'] = self._to_variable(batch['actions'])
         batch['advantages'] = self._to_variable(batch['advantages'])
         batch['old_log_probs'] = torch.cat([
             dist.log_prob(action)
@@ -22,8 +24,11 @@ class SurrogatePGModel(PGModel):
         self.saved_dists = []
 
     def create_new_dists(self, states):
-        new_probs = F.softmax(self.policy_nn.head(self.policy_nn.body(states)), dim=-1)
-        new_dists = [self.dist(p) for p in new_probs]
+        # new_probs = F.softmax(self.policy_nn.head(self.policy_nn.body(states)), dim=-1)
+        # new_dists = [self.dist(p) for p in new_probs]
+        new_parameters = self.forward(states)
+        new_dists = self.create_dists(new_parameters)
+        # new_dists = [self.create_dist(new_parameter) for new_parameter in new_parameters]
 
         return new_dists
 
@@ -55,7 +60,7 @@ class SurrogatePGModel(PGModel):
 
     def kl_divergence(self, new_dists):
         kl_divs = [
-            self.dist.kl_divergence(old_dist, new_dist)
+            kl_divergence(old_dist, new_dist)
             for old_dist, new_dist in zip(self.saved_dists, new_dists)
         ]
 

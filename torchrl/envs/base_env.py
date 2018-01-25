@@ -117,9 +117,9 @@ class BaseEnv(ABC):
 
         Example
         -------
-        State space containing 4 float numbers::
+        State space containing 4 continuous actions::
 
-            return dict(shape=(4,), dtype='float')
+            return dict(shape=(4,), dtype='continuous')
         '''
 
     @property

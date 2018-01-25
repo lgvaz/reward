@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from torchrl.distributions import CategoricalDist
+from torchrl.distributions import CategoricalDist, NormalDist
 from torchrl.models import BaseModel
 
 
@@ -24,6 +24,23 @@ class PGModel(BaseModel):
         else:
             self.value_nn = None
 
+    def create_dists(self, parameters):
+        if self.action_info['dtype'] == 'discrete':
+            logits = parameters
+            return CategoricalDist(logits=logits)
+
+        elif self.action_info['dtype'] == 'continuous':
+            # for mean, std in parameters:
+            # mean = parameters[0]
+            # std = parameters[1].exp()
+            # return NormalDist(loc=mean, scale=std)
+            return [
+                NormalDist(loc=mean, scale=log_std.exp()) for mean, log_std in parameters
+            ]
+
+        else:
+            raise ValueError('No distribution is defined for {} actions')
+
     def forward(self, x):
         '''
         Uses the network to compute action scores
@@ -39,10 +56,11 @@ class PGModel(BaseModel):
         numpy.ndarray
             Action probabilities
         '''
-        action_scores = self.policy_nn.head(self.policy_nn.body(x))
-        action_probs = F.softmax(action_scores, dim=1)
+        x = self.policy_nn.head(self.policy_nn.body(x))
+        # action_probs = F.softmax(action_scores, dim=1)
 
-        return action_probs
+        # return action_probs
+        return x
 
     def select_action(self, state):
         '''
@@ -64,8 +82,8 @@ class PGModel(BaseModel):
         action: int or numpy.ndarray
         '''
         # TODO: Continuous distribution
-        probs = self.forward(state)
-        dist = CategoricalDist(probs)
+        parameters = self.forward(state)
+        dist = self.create_dists(parameters)[0]
         action = dist.sample()
         self.saved_dists.append(dist)
 
@@ -100,8 +118,8 @@ class PGModel(BaseModel):
         else:
             pass
 
-    def write_logs(self, batch, logger):
-        entropy = [dist.entropy() for dist in self.saved_dists]
-        entropy = torch.cat(entropy).data[0]
+    def entropy(self):
+        return torch.cat([dist.entropy() for dist in self.saved_dists]).mean()
 
-        logger.add_log('Policy/Entropy', entropy)
+    def write_logs(self, batch, logger):
+        logger.add_log('Policy/Entropy', self.entropy().data[0])
