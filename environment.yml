@@ -1,4 +1,4 @@
-name: torchrl_docs
+# name: torchrl
 
 channels:
   - soumith
