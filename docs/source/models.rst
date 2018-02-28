@@ -18,7 +18,7 @@ BaseModel
 VanillaPGModel
 --------------
 
-.. autoclass:: VanillaPGModel
+.. autoclass:: ReinforceModel
   :show-inheritance:
   :members:
   :private-members:
