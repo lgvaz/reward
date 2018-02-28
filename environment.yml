@@ -1,10 +1,7 @@
-# name: torchrl
+name: torchrl_docs
 
 channels:
   - soumith
 
 dependencies:
   - pytorch
-
-python:
-  pip_install: true
