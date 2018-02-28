@@ -1,0 +1,7 @@
+name: torchrl_docs
+
+channels:
+  - soumith
+
+dependencies:
+  - pytorch
