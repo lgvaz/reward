@@ -9,5 +9,5 @@ dependencies:
   - numpy
   - pip
   - pip:
-      - yaml
+      - pyyaml
       - sphinx
