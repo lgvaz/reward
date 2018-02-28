@@ -1,7 +1,11 @@
-name: torchrl_docs
+name: torchrl
 
 channels:
   - soumith
 
 dependencies:
-  - pytorch
+  - python>=3.5
+  - numpy
+  - pip
+  - pip:
+      - sphinx
