@@ -5,3 +5,6 @@ channels:
 
 dependencies:
   - pytorch
+
+python:
+  pip_install: true
