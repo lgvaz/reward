@@ -7,34 +7,29 @@ from torchrl.models import PGModel
 
 
 class SurrogatePGModel(PGModel):
-    def train(self, batch, num_epochs=1, logger=None):
+    def train(self, batch, num_epochs=1):
         # .detach() is used so no gradients are computed w.r.t. to old dists
         for dist in self.saved_dists:
             dist.detach()
 
         batch['actions'] = self._to_variable(batch['actions'])
-        batch['advantages'] = self._to_variable(batch['advantages'])
-        batch['old_log_probs'] = torch.cat([
-            dist.log_prob(action)
+        batch['advantages'] = self._to_variable(batch['advantages']).view(-1, 1)
+        batch['old_log_probs'] = torch.stack([
+            dist.log_prob(action).sum()
             for dist, action in zip(self.saved_dists, batch['actions'])
         ])
 
-        super().train(batch=batch, num_epochs=num_epochs, logger=logger)
+        super().train(batch=batch, num_epochs=num_epochs)
 
         self.saved_dists = []
 
-    def create_new_dists(self, states):
-        # new_probs = F.softmax(self.policy_nn.head(self.policy_nn.body(states)), dim=-1)
-        # new_dists = [self.dist(p) for p in new_probs]
-        new_parameters = self.forward(states)
-        new_dists = self.create_dists(new_parameters)
-        # new_dists = [self.create_dist(new_parameter) for new_parameter in new_parameters]
-
-        return new_dists
-
     def calculate_prob_ratio(self, batch, new_dists):
-        new_log_probs = torch.cat([
-            new_dist.log_prob(action)
+        # new_log_probs = torch.cat([
+        #     new_dist.log_prob(action)
+        #     for new_dist, action in zip(new_dists, batch['actions'])
+        # ])
+        new_log_probs = torch.stack([
+            new_dist.log_prob(action).sum()
             for new_dist, action in zip(new_dists, batch['actions'])
         ])
 
@@ -50,7 +45,8 @@ class SurrogatePGModel(PGModel):
         self.losses.append(loss)
 
     def add_losses(self, batch):
-        new_dists = self.create_new_dists(batch['state_ts'])
+        new_parameters = self.forward(batch['state_ts'])
+        new_dists = [self.create_dist(p) for p in new_parameters]
 
         self.add_surrogate_pg_loss(batch, new_dists)
         self.add_value_nn_loss(batch)
@@ -66,9 +62,10 @@ class SurrogatePGModel(PGModel):
 
         return torch.cat(kl_divs).mean()
 
-    def write_logs(self, batch, logger):
-        new_dists = self.create_new_dists(batch['state_ts'])
+    def write_logs(self, batch):
+        new_parameters = self.forward(batch['state_ts'])
+        new_dists = [self.create_dist(p) for p in new_parameters]
 
-        logger.add_log('Policy/Entropy', self.entropy(new_dists).data[0])
-        logger.add_log(
+        self.logger.add_log('Policy/Entropy', self.entropy(new_dists).data[0])
+        self.logger.add_log(
             'Policy/KL_div', self.kl_divergence(new_dists).data[0], precision=5)

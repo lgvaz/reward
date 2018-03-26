@@ -30,9 +30,14 @@ class PPOModel(SurrogatePGModel):
         clipped_surrogate = clipped_prob_ratio * batch['advantages']
 
         losses = torch.min(surrogate, clipped_surrogate)
-        loss = -losses.sum()
-
+        loss = -losses.mean()
         self.losses.append(loss)
+
+        # Add logs
+        self.logger.add_log('Loss/policy/ppo_clip', loss.data[0])
+        self.logger.add_histogram('Policy/clipped_prob_ratio', clipped_prob_ratio.data)
+        clip_frac = torch.mean((torch.abs(prob_ratio - 1) > self.ppo_clip_range).float())
+        self.logger.add_log('Policy/clip_fraction', clip_frac.data[0])
 
     def add_ppo_adaptive_kl(self, batch, new_dists):
         prob_ratio = self.calculate_prob_ratio(batch, new_dists)
@@ -48,11 +53,12 @@ class PPOModel(SurrogatePGModel):
         self.losses.append(loss)
 
     def add_losses(self, batch):
-        new_dists = self.create_new_dists(batch['state_ts'])
+        new_parameters = self.forward(batch['state_ts'])
+        new_dists = [self.create_dist(p) for p in new_parameters]
 
         self.add_ppo_clip(batch, new_dists)
         # self.add_ppo_adaptive_kl(batch, new_dists)
         self.add_value_nn_loss(batch)
 
-    def train(self, batch, num_epochs=10, logger=None):
-        super().train(batch=batch, num_epochs=num_epochs, logger=logger)
+    def train(self, batch, num_epochs=10):
+        super().train(batch=batch, num_epochs=num_epochs)

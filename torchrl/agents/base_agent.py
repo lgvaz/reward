@@ -21,8 +21,8 @@ class BaseAgent(ABC):
     def __init__(self, env, model=None, gamma=0.99):
         self.env = env
         self.model = model or self._model
+        self.logger = self.model.logger
         self.gamma = gamma
-        self.logger = U.Logger()
         self.last_logged_ep = self.env.num_episodes
 
     def _check_termination(self):

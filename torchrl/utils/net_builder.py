@@ -24,19 +24,19 @@ def auto_input_shape(obj_config, input_shape):
         raise ValueError('Auto input for {} not supported'.format(name))
 
 
-def get_module_list(config, input_shape, action_shape):
-    module_list = []
-    for i, obj_config in enumerate(config):
-        # Calculate the input shape for the first layer
-        if i == 0:
-            auto_input_shape(obj_config, input_shape)
-        # An `Action` layer has the output shape equals to the action shape
-        if 'ActionLinear' in obj_config['func'].__name__:
-            obj_config['out_features'] = action_shape
+# def get_module_list(config, input_shape, action_shape):
+#     module_list = []
+#     for i, obj_config in enumerate(config):
+#         # Calculate the input shape for the first layer
+#         if i == 0:
+#             auto_input_shape(obj_config, input_shape)
+#         # An `Action` layer has the output shape equals to the action shape
+#         if 'ActionLinear' in obj_config['func'].__name__:
+#             obj_config['out_features'] = action_shape
 
-        module_list.append(get_obj(obj_config))
+#         module_list.append(get_obj(obj_config))
 
-    return module_list
+#     return module_list
 
 
 def get_module_list(config, input_shape, action_info):

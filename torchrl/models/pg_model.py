@@ -24,22 +24,20 @@ class PGModel(BaseModel):
         else:
             self.value_nn = None
 
-    def create_dists(self, parameters):
+    def create_dist(self, parameters):
         if self.action_info['dtype'] == 'discrete':
             logits = parameters
             return CategoricalDist(logits=logits)
 
         elif self.action_info['dtype'] == 'continuous':
-            # for mean, std in parameters:
-            # mean = parameters[0]
-            # std = parameters[1].exp()
-            # return NormalDist(loc=mean, scale=std)
-            return [
-                NormalDist(loc=mean, scale=log_std.exp()) for mean, log_std in parameters
-            ]
+            means = parameters[:, 0]
+            std_devs = parameters[:, 1].exp()
+
+            return NormalDist(loc=means, scale=std_devs)
 
         else:
-            raise ValueError('No distribution is defined for {} actions')
+            raise ValueError('No distribution is defined for {} actions'.format(
+                self.action_info['dtype']))
 
     def forward(self, x):
         '''
@@ -83,7 +81,7 @@ class PGModel(BaseModel):
         '''
         # TODO: Continuous distribution
         parameters = self.forward(state)
-        dist = self.create_dists(parameters)[0]
+        dist = self.create_dist(parameters[0])
         action = dist.sample()
         self.saved_dists.append(dist)
 
@@ -107,8 +105,19 @@ class PGModel(BaseModel):
         vtarget = self._to_variable(batch['vtarget'])
 
         loss = F.mse_loss(input=state_values, target=vtarget)
-
         self.losses.append(loss)
+
+        # Add logs
+        self.logger.add_log('Loss/value_nn/mse', loss.data[0])
+        # TODO: add explained var
+        try:
+            ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
+            self.logger.add_log('Value_NN/explained_variance', ev.data[0])
+            self.logger.add_log('vtarget_var', torch.var(vtarget).data[0])
+            self.logger.add_log('value_nn_var', torch.var(state_values).data[0])
+        except:
+            import pdb
+            pdb.set_trace()
 
     def add_state_values(self, traj):
         if self.value_nn is not None:
@@ -121,5 +130,5 @@ class PGModel(BaseModel):
     def entropy(self):
         return torch.cat([dist.entropy() for dist in self.saved_dists]).mean()
 
-    def write_logs(self, batch, logger):
-        logger.add_log('Policy/Entropy', self.entropy().data[0])
+    def write_logs(self, batch):
+        self.logger.add_log('Policy/Entropy', self.entropy().data[0])

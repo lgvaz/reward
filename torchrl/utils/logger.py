@@ -7,22 +7,17 @@ import numpy as np
 
 
 class Logger:
-    def __init__(self, debug=False):
+    def __init__(self, log_dir=None, debug=False):
         self.debug = debug
         self.logs = defaultdict(list)
+        self.histograms = dict()
         self.precision = dict()
         self.time = time.time()
-        self.tf_scalar_summary_writer = None
-        self.sess = None
         self.steps_sum = 0
         self.eta = None
         self.i_step = 0
 
-        self.add_tensorboard()
-
-    # TODO: Only testing, maybe create the writer at init? When logging add option to print
-    def add_tensorboard(self):
-        self.writer = SummaryWriter()
+        self.writer = SummaryWriter(log_dir=log_dir)
 
     def add_log(self, name, value, precision=2):
         self.logs[name].append(value)
@@ -31,6 +26,9 @@ class Logger:
     def add_debug(self, name, value, precision=2):
         if self.debug:
             self.add_log(name, value, precision)
+
+    def add_histogram(self, name, param):
+        self.histograms[name] = param.clone().cpu().numpy()
 
     def log(self, header=None):
         ''' Write the mean of the values added to each key and clear previous values '''
@@ -51,6 +49,8 @@ class Logger:
         if self.writer is not None:
             for key, value in self.logs.items():
                 self.writer.add_scalar(key, value, global_step=self.i_step)
+            for key, value in self.histograms.items():
+                self.writer.add_histogram(key, value, global_step=self.i_step)
 
         # Reset dict
         self.logs = defaultdict(list)

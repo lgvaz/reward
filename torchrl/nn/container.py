@@ -93,7 +93,8 @@ class ActionLinear(nn.Module):
         elif self.action_info['dtype'] == 'continuous':
             mean = self.linear(x)
             log_std = self.log_std.expand_as(mean)
-            return torch.cat((mean, log_std), dim=-1)
+            # return torch.cat((mean, log_std), dim=-1)
+            return torch.stack((mean, log_std), dim=-1)
 
         else:
             raise ValueError('Action space {} not implemented'.format(

@@ -22,11 +22,18 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, state_info, action_info, cuda_default=True):
+    def __init__(self,
+                 state_info,
+                 action_info,
+                 learning_rate,
+                 log_dir=None,
+                 cuda_default=True):
         super().__init__()
 
         self.state_info = state_info
         self.action_info = action_info
+        self.lr = learning_rate
+        self.logger = U.Logger(log_dir=log_dir)
         self.num_updates = 0
         self.networks = []
         self.losses = []
@@ -75,7 +82,7 @@ class BaseModel(ModuleExtended, ABC):
         For more information see
         `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
         '''
-        return torch.optim.Adam(self.parameters(), lr=1e-2)
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
         # parameters_body = [
         #     dict(params=module.parameters()) for module in self.nn_body.values()
         # ]
@@ -129,7 +136,7 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
-    def train(self, batch, num_epochs=1, logger=None):
+    def train(self, batch, num_epochs=1):
         '''
         Basic train function.
 
@@ -142,14 +149,13 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         num_epochs: int
             Number of times to fit on the same batch.
-        logger: U.Logger (optional)
-            If given, use to log information.
         '''
         for _ in range(num_epochs):
-            self.optimizer_step(batch)
+            for data in U.DataGenerator(batch, batch_size=64):
+                self.optimizer_step(data)
+            # self.optimizer_step(batch)
 
-        if logger is not None:
-            self.write_logs(batch, logger)
+        self.write_logs(batch)
 
     def optimizer_step(self, batch):
         '''
@@ -173,7 +179,7 @@ class BaseModel(ModuleExtended, ABC):
         self.losses = []
         self.num_updates += 1
 
-    def write_logs(self, batch, logger):
+    def write_logs(self, batch):
         pass
 
     def net_from_config(self, net_config, body=None, head=None):
@@ -190,7 +196,7 @@ class BaseModel(ModuleExtended, ABC):
         return nets
 
     @classmethod
-    def from_config(cls, config, state_info, action_info):
+    def from_config(cls, config, *args, **kwargs):
         '''
         Creates a model from a configuration file.
 
@@ -199,7 +205,7 @@ class BaseModel(ModuleExtended, ABC):
         torchrl.models
             A TorchRL model.
         '''
-        return cls(**config.as_dict(), state_info=state_info, action_info=action_info)
+        return cls(*args, **config.as_dict(), **kwargs)
 
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):
