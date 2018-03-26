@@ -2,7 +2,6 @@ import torch
 import torch.nn.functional as F
 from torch.distributions import Categorical, Normal
 
-# from torchrl.distributions import CategoricalDist, NormalDist
 import torchrl.utils as U
 from torchrl.models import BaseModel
 
@@ -111,12 +110,13 @@ class PGModel(BaseModel):
 
         # Add logs
         self.logger.add_log('Loss/value_nn/mse', loss.item())
-        ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
+        # ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
+        ev = U.explained_var(vtarget, state_values.view(-1))
         self.logger.add_log('Value_NN/explained_variance', ev.item())
         # self.logger.add_log('vtarget_var', torch.var(vtarget).item())
         # self.logger.add_log('value_nn_var', torch.var(state_values).item())
-        self.logger.add_log('vtarget_mean', vtarget.mean().item())
-        self.logger.add_log('value_nn_mean', state_values.mean().item())
+        # self.logger.add_log('vtarget_mean', vtarget.mean().item())
+        # self.logger.add_log('value_nn_mean', state_values.mean().item())
 
     def add_state_values(self, traj):
         if self.value_nn is not None:

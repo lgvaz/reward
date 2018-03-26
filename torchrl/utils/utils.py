@@ -20,6 +20,10 @@ def to_numpy(tensor):
     return tensor.cpu().numpy()
 
 
+def explained_var(target, preds):
+    return 1 - (target - preds).var() / target.var()
+
+
 def normalize(array):
     return (array - np.mean(array)) / (np.std(array) + EPSILON)
 
