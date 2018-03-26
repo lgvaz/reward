@@ -2,14 +2,14 @@ import numpy as np
 
 import torchrl.utils as U
 from torchrl.agents import BatchAgent
-from torchrl.models import ReinforceModel
+from torchrl.models import VanillaPGModel
 
 
 class ReinforceAgent(BatchAgent):
     '''
     REINFORCE agent.
     '''
-    _model = ReinforceModel
+    _model = VanillaPGModel
 
     def __init__(self,
                  env,

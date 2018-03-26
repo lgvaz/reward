@@ -5,9 +5,9 @@ import torchrl.utils as U
 from torchrl.models import BasePGModel
 
 
-class ReinforceModel(BasePGModel):
+class VanillaPGModel(BasePGModel):
     '''
-    REINFORCE model.
+    The classical Policy Gradient algorithm.
     '''
 
     def add_pg_loss(self, batch):
@@ -20,13 +20,7 @@ class ReinforceModel(BasePGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        log_probs = [
-            dist.log_prob(action)
-            for dist, action in zip(self.saved_dists, batch['actions'])
-        ]
-        log_probs = torch.cat(log_probs).view(-1)
-
-        objective = log_probs * batch['advantages']
+        objective = batch['log_probs'] * batch['advantages']
         loss = -objective.sum()
 
         self.losses.append(loss)
@@ -48,6 +42,11 @@ class ReinforceModel(BasePGModel):
     def train(self, batch, num_epochs=1):
         batch['advantages'] = self._to_variable(batch['advantages'])
         batch['actions'] = self._to_variable(batch['actions'].astype('int'))
+
+        batch['log_probs'] = torch.stack([
+            dist.log_prob(action).sum()
+            for dist, action in zip(self.saved_dists, batch['actions'])
+        ])
 
         super().train(batch=batch)
 
