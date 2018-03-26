@@ -56,7 +56,7 @@ class ReinforceAgent(BatchAgent):
         traj['vtarget'] = vtarget
 
     def train(self,
-              timesteps_per_batch=-1,
+              steps_per_batch=-1,
               episodes_per_batch=-1,
               max_updates=-1,
               max_episodes=-1,
@@ -66,7 +66,7 @@ class ReinforceAgent(BatchAgent):
             max_updates=max_updates, max_episodes=max_episodes, max_steps=max_steps)
 
         while True:
-            batch = self.generate_batch(timesteps_per_batch, episodes_per_batch)
+            batch = self.generate_batch(steps_per_batch, episodes_per_batch)
             self.model.train(batch=batch, **kwargs)
 
             self.write_logs()

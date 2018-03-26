@@ -110,16 +110,11 @@ class PGModel(BaseModel):
         self.losses.append(loss)
 
         # Add logs
-        self.logger.add_log('Loss/value_nn/mse', loss.data[0])
-        # TODO: add explained var
-        try:
-            ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
-            self.logger.add_log('Value_NN/explained_variance', ev.data[0])
-            self.logger.add_log('vtarget_var', torch.var(vtarget).data[0])
-            self.logger.add_log('value_nn_var', torch.var(state_values).data[0])
-        except:
-            import pdb
-            pdb.set_trace()
+        self.logger.add_log('Loss/value_nn/mse', loss.item())
+        ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
+        self.logger.add_log('Value_NN/explained_variance', ev.item())
+        # self.logger.add_log('vtarget_var', torch.var(vtarget).item())
+        # self.logger.add_log('value_nn_var', torch.var(state_values).item())
 
     def add_state_values(self, traj):
         if self.value_nn is not None:
