@@ -1,6 +1,7 @@
 import numpy as np
 from collections import OrderedDict
 from scipy.signal import lfilter
+from torch.autograd import Variable
 from torchrl.utils import EPSILON
 
 
@@ -10,6 +11,13 @@ def get_obj(config):
     config['func'] = func
 
     return obj
+
+
+def to_numpy(tensor):
+    if isinstance(tensor, Variable):
+        tensor = tensor.data
+
+    return tensor.cpu().numpy()
 
 
 def normalize(array):

@@ -12,6 +12,7 @@ class ModuleExtended(nn.Module):
     def _maybe_cuda(self, x):
         return x.cuda() if self.is_cuda and not x.is_cuda else x
 
+    # TODO: Move this function to utils
     def _to_variable(self, x):
         if isinstance(x, np.ndarray):
             # pytorch doesn't support bool

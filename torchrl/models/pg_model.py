@@ -1,7 +1,9 @@
 import torch
 import torch.nn.functional as F
+from torch.distributions import Categorical, Normal
 
-from torchrl.distributions import CategoricalDist, NormalDist
+# from torchrl.distributions import CategoricalDist, NormalDist
+import torchrl.utils as U
 from torchrl.models import BaseModel
 
 
@@ -27,13 +29,13 @@ class PGModel(BaseModel):
     def create_dist(self, parameters):
         if self.action_info['dtype'] == 'discrete':
             logits = parameters
-            return CategoricalDist(logits=logits)
+            return Categorical(logits=logits)
 
         elif self.action_info['dtype'] == 'continuous':
             means = parameters[:, 0]
             std_devs = parameters[:, 1].exp()
 
-            return NormalDist(loc=means, scale=std_devs)
+            return Normal(loc=means, scale=std_devs)
 
         else:
             raise ValueError('No distribution is defined for {} actions'.format(
@@ -85,7 +87,7 @@ class PGModel(BaseModel):
         action = dist.sample()
         self.saved_dists.append(dist)
 
-        return action.data[0]
+        return U.to_numpy(action)
 
     def add_losses(self, batch):
         '''
@@ -104,7 +106,7 @@ class PGModel(BaseModel):
         state_values = self.value_nn.head(self.value_nn.body(batch['state_ts']))
         vtarget = self._to_variable(batch['vtarget'])
 
-        loss = F.mse_loss(input=state_values, target=vtarget)
+        loss = F.mse_loss(input=state_values.view(-1), target=vtarget)
         self.losses.append(loss)
 
         # Add logs
@@ -128,7 +130,8 @@ class PGModel(BaseModel):
             pass
 
     def entropy(self):
-        return torch.cat([dist.entropy() for dist in self.saved_dists]).mean()
+        entropies = [dist.entropy() for dist in self.saved_dists]
+        return torch.cat(entropies).mean()
 
     def write_logs(self, batch):
         self.logger.add_log('Policy/Entropy', self.entropy().data[0])

@@ -1,33 +1,25 @@
 import torch
 import torch.nn.functional as F
-
-from torchrl.distributions_temp.kl import kl_divergence
+from torch.distributions import kl_divergence
 
 from torchrl.models import PGModel
 
 
 class SurrogatePGModel(PGModel):
     def train(self, batch, num_epochs=1):
-        # .detach() is used so no gradients are computed w.r.t. to old dists
-        for dist in self.saved_dists:
-            dist.detach()
-
         batch['actions'] = self._to_variable(batch['actions'])
         batch['advantages'] = self._to_variable(batch['advantages']).view(-1, 1)
-        batch['old_log_probs'] = torch.stack([
-            dist.log_prob(action).sum()
-            for dist, action in zip(self.saved_dists, batch['actions'])
-        ])
+        with torch.no_grad():
+            batch['old_log_probs'] = torch.stack([
+                dist.log_prob(action).sum()
+                for dist, action in zip(self.saved_dists, batch['actions'])
+            ])
 
         super().train(batch=batch, num_epochs=num_epochs)
 
         self.saved_dists = []
 
     def calculate_prob_ratio(self, batch, new_dists):
-        # new_log_probs = torch.cat([
-        #     new_dist.log_prob(action)
-        #     for new_dist, action in zip(new_dists, batch['actions'])
-        # ])
         new_log_probs = torch.stack([
             new_dist.log_prob(action).sum()
             for new_dist, action in zip(new_dists, batch['actions'])
@@ -52,7 +44,8 @@ class SurrogatePGModel(PGModel):
         self.add_value_nn_loss(batch)
 
     def entropy(self, dists):
-        return torch.cat([dist.entropy() for dist in dists]).mean()
+        entropies = [dist.entropy() for dist in dists]
+        return torch.cat(entropies).mean()
 
     def kl_divergence(self, new_dists):
         kl_divs = [
@@ -66,6 +59,6 @@ class SurrogatePGModel(PGModel):
         new_parameters = self.forward(batch['state_ts'])
         new_dists = [self.create_dist(p) for p in new_parameters]
 
-        self.logger.add_log('Policy/Entropy', self.entropy(new_dists).data[0])
+        self.logger.add_log('Policy/Entropy', self.entropy(new_dists).item())
         self.logger.add_log(
-            'Policy/KL_div', self.kl_divergence(new_dists).data[0], precision=5)
+            'Policy/KL_div', self.kl_divergence(new_dists).item(), precision=5)

@@ -153,7 +153,6 @@ class BaseModel(ModuleExtended, ABC):
         for _ in range(num_epochs):
             for data in U.DataGenerator(batch, batch_size=64):
                 self.optimizer_step(data)
-            # self.optimizer_step(batch)
 
         self.write_logs(batch)
 

@@ -34,10 +34,10 @@ class PPOModel(SurrogatePGModel):
         self.losses.append(loss)
 
         # Add logs
-        self.logger.add_log('Loss/policy/ppo_clip', loss.data[0])
+        self.logger.add_log('Loss/policy/ppo_clip', loss.item())
         self.logger.add_histogram('Policy/clipped_prob_ratio', clipped_prob_ratio.data)
         clip_frac = torch.mean((torch.abs(prob_ratio - 1) > self.ppo_clip_range).float())
-        self.logger.add_log('Policy/clip_fraction', clip_frac.data[0])
+        self.logger.add_log('Policy/clip_fraction', clip_frac.item())
 
     def add_ppo_adaptive_kl(self, batch, new_dists):
         prob_ratio = self.calculate_prob_ratio(batch, new_dists)
