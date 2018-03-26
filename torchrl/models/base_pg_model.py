@@ -6,7 +6,7 @@ import torchrl.utils as U
 from torchrl.models import BaseModel
 
 
-class PGModel(BaseModel):
+class BasePGModel(BaseModel):
     '''
     Base class for all Policy Gradient Models, has some basic functionalities.
 
@@ -81,8 +81,7 @@ class PGModel(BaseModel):
         numpy.ndarray
             Action probabilities
         '''
-        x = self.policy_nn.head(self.policy_nn.body(x))
-        return x
+        return self.policy_nn.head(self.policy_nn.body(x))
 
     def select_action(self, state):
         '''
@@ -110,19 +109,6 @@ class PGModel(BaseModel):
 
         return U.to_numpy(action)
 
-    def add_losses(self, batch):
-        '''
-        Define all losses used for calculating the gradient.
-
-        Parameters
-        ----------
-        batch: dict
-            The batch should contain all the necessary information
-            to compute the gradients.
-        '''
-        self.add_pg_loss(batch)
-        self.add_value_nn_loss(batch)
-
     def add_value_nn_loss(self, batch):
         '''
         Adds the loss of the value network to internal list of losses.
@@ -143,8 +129,8 @@ class PGModel(BaseModel):
         ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
         # ev = U.explained_var(vtarget, state_values.view(-1))
         self.logger.add_log('Value_NN/explained_variance', ev.item())
-        # self.logger.add_log('vtarget_var', torch.var(vtarget).item())
-        # self.logger.add_log('value_nn_var', torch.var(state_values).item())
+        self.logger.add_log('vtarget_var', torch.var(vtarget).item())
+        self.logger.add_log('value_nn_var', torch.var(state_values).item())
         self.logger.add_log('vtarget_mean', vtarget.mean().item())
         self.logger.add_log('value_nn_mean', state_values.mean().item())
 

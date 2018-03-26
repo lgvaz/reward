@@ -2,10 +2,10 @@ import torch
 import torch.nn.functional as F
 from torch.distributions import kl_divergence
 
-from torchrl.models import PGModel
+from torchrl.models import BasePGModel
 
 
-class SurrogatePGModel(PGModel):
+class SurrogatePGModel(BasePGModel):
     def train(self, batch, num_epochs=1):
         batch['actions'] = self._to_variable(batch['actions'])
         batch['advantages'] = self._to_variable(batch['advantages']).view(-1, 1)

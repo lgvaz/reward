@@ -2,10 +2,10 @@ import torch
 import torch.nn.functional as F
 
 import torchrl.utils as U
-from torchrl.models import PGModel
+from torchrl.models import BasePGModel
 
 
-class ReinforceModel(PGModel):
+class ReinforceModel(BasePGModel):
     '''
     REINFORCE model.
     '''
