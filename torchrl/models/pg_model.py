@@ -115,6 +115,8 @@ class PGModel(BaseModel):
         self.logger.add_log('Value_NN/explained_variance', ev.item())
         # self.logger.add_log('vtarget_var', torch.var(vtarget).item())
         # self.logger.add_log('value_nn_var', torch.var(state_values).item())
+        self.logger.add_log('vtarget_mean', vtarget.mean().item())
+        self.logger.add_log('value_nn_mean', state_values.mean().item())
 
     def add_state_values(self, traj):
         if self.value_nn is not None:
@@ -124,9 +126,9 @@ class PGModel(BaseModel):
         else:
             pass
 
-    def entropy(self):
-        entropies = [dist.entropy() for dist in self.saved_dists]
-        return torch.cat(entropies).mean()
+    def entropy(self, dists):
+        entropies = [dist.entropy().sum() for dist in dists]
+        return torch.stack(entropies).mean()
 
     def write_logs(self, batch):
-        self.logger.add_log('Policy/Entropy', self.entropy().data[0])
+        self.logger.add_log('Policy/Entropy', self.entropy(self.saved_dists).item())

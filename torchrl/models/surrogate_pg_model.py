@@ -43,17 +43,13 @@ class SurrogatePGModel(PGModel):
         self.add_surrogate_pg_loss(batch, new_dists)
         self.add_value_nn_loss(batch)
 
-    def entropy(self, dists):
-        entropies = [dist.entropy() for dist in dists]
-        return torch.cat(entropies).mean()
-
     def kl_divergence(self, new_dists):
         kl_divs = [
-            kl_divergence(old_dist, new_dist)
+            kl_divergence(old_dist, new_dist).sum()
             for old_dist, new_dist in zip(self.saved_dists, new_dists)
         ]
 
-        return torch.cat(kl_divs).mean()
+        return torch.stack(kl_divs).mean()
 
     def write_logs(self, batch):
         new_parameters = self.forward(batch['state_ts'])
