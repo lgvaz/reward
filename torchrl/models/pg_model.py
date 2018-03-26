@@ -7,6 +7,21 @@ from torchrl.models import BaseModel
 
 
 class PGModel(BaseModel):
+    '''
+    Base class for all Policy Gradient Models, has some basic functionalities.
+
+    Parameters
+    ----------
+    policy_nn_config: Config
+        Config object specifying the network structure.
+    value_nn_config: Config
+        Config object specifying the network structure
+        (Default is None, meaning no value network is used).
+    share_body: bool
+        If True, use the same body for the policy and value
+        networks (Default is False).
+    '''
+
     def __init__(self, policy_nn_config, value_nn_config=None, share_body=False,
                  **kwargs):
         self.policy_nn_config = policy_nn_config
@@ -17,6 +32,10 @@ class PGModel(BaseModel):
         super().__init__(**kwargs)
 
     def create_networks(self):
+        '''
+        This function is called by the base class. Creates the policy and
+        the value networks specified by the configs passed in ``__init__``.
+        '''
         self.policy_nn = self.net_from_config(self.policy_nn_config)
 
         if self.value_nn_config is not None:
@@ -26,6 +45,14 @@ class PGModel(BaseModel):
             self.value_nn = None
 
     def create_dist(self, parameters):
+        '''
+        Specify how the policy distributions should be created.
+        The type of the distribution depends on the environment.
+
+        Parameters
+        ----------
+        parameters
+        '''
         if self.action_info['dtype'] == 'discrete':
             logits = parameters
             return Categorical(logits=logits)
@@ -42,8 +69,7 @@ class PGModel(BaseModel):
 
     def forward(self, x):
         '''
-        Uses the network to compute action scores
-        and apply softmax to obtain action probabilities.
+        Forward the policy network
 
         Parameters
         ----------
@@ -56,9 +82,6 @@ class PGModel(BaseModel):
             Action probabilities
         '''
         x = self.policy_nn.head(self.policy_nn.body(x))
-        # action_probs = F.softmax(action_scores, dim=1)
-
-        # return action_probs
         return x
 
     def select_action(self, state):
@@ -80,7 +103,6 @@ class PGModel(BaseModel):
         -------
         action: int or numpy.ndarray
         '''
-        # TODO: Continuous distribution
         parameters = self.forward(state)
         dist = self.create_dist(parameters[0])
         action = dist.sample()
@@ -95,13 +117,21 @@ class PGModel(BaseModel):
         Parameters
         ----------
         batch: dict
-            The batch should contain all the information necessary
+            The batch should contain all the necessary information
             to compute the gradients.
         '''
         self.add_pg_loss(batch)
         self.add_value_nn_loss(batch)
 
     def add_value_nn_loss(self, batch):
+        '''
+        Adds the loss of the value network to internal list of losses.
+
+        Parameters
+        ----------
+        batch: dict
+            Should contain all the necessary information for computing the loss.
+        '''
         state_values = self.value_nn.head(self.value_nn.body(batch['state_ts']))
         vtarget = self._to_variable(batch['vtarget'])
 
@@ -110,15 +140,24 @@ class PGModel(BaseModel):
 
         # Add logs
         self.logger.add_log('Loss/value_nn/mse', loss.item())
-        # ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
-        ev = U.explained_var(vtarget, state_values.view(-1))
+        ev = 1 - torch.var(vtarget - state_values.view(-1)) / torch.var(vtarget)
+        # ev = U.explained_var(vtarget, state_values.view(-1))
         self.logger.add_log('Value_NN/explained_variance', ev.item())
         # self.logger.add_log('vtarget_var', torch.var(vtarget).item())
         # self.logger.add_log('value_nn_var', torch.var(state_values).item())
-        # self.logger.add_log('vtarget_mean', vtarget.mean().item())
-        # self.logger.add_log('value_nn_mean', state_values.mean().item())
+        self.logger.add_log('vtarget_mean', vtarget.mean().item())
+        self.logger.add_log('value_nn_mean', state_values.mean().item())
 
     def add_state_values(self, traj):
+        '''
+        Adds to the trajectory the state values estimated by the value network.
+
+        Parameters
+        ----------
+        traj: dict
+            A dictionary with the transitions. Should contain a key named
+            ``state_ts`` that will be used to feed the value network.
+        '''
         if self.value_nn is not None:
             state_values = self.value_nn.head(self.value_nn.body(traj['state_ts']))
             state_values = state_values.data.view(-1).cpu().numpy()
@@ -127,8 +166,19 @@ class PGModel(BaseModel):
             pass
 
     def entropy(self, dists):
+        '''
+        Calculates the mean entropy of the distributions.
+
+        Parameters
+        ----------
+        dists: list
+            List of distributions.
+        '''
         entropies = [dist.entropy().sum() for dist in dists]
         return torch.stack(entropies).mean()
 
     def write_logs(self, batch):
+        '''
+        Uses the current logger to write to the console.
+        '''
         self.logger.add_log('Policy/Entropy', self.entropy(self.saved_dists).item())

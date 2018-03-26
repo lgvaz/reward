@@ -94,6 +94,11 @@ class BaseModel(ModuleExtended, ABC):
 
     @abstractmethod
     def create_networks(self):
+        '''
+        This method should be overwritten by a subclass.
+
+        Should define the creation of the networks.
+        '''
         pass
 
     @abstractmethod
