@@ -177,7 +177,8 @@ class BaseModel(ModuleExtended, ABC):
 
         self.opt.zero_grad()
         loss = sum(self.losses)
-        loss.backward()
+        # TODO: Test speed with retain_graph=False
+        loss.backward(retain_graph=True)
         self.opt.step()
 
         self.losses = []
