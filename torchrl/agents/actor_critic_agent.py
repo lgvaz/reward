@@ -1,10 +1,10 @@
 import numpy as np
 
 import torchrl.utils as U
-from torchrl.agents import ReinforceAgent
+from torchrl.agents import VanillaPGAgent
 
 
-class ActorCriticAgent(ReinforceAgent):
+class ActorCriticAgent(VanillaPGAgent):
     '''
     Actor-critic agent.
     '''

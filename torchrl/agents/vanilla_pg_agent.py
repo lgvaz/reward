@@ -5,7 +5,7 @@ from torchrl.agents import BatchAgent
 from torchrl.models import VanillaPGModel
 
 
-class ReinforceAgent(BatchAgent):
+class VanillaPGAgent(BatchAgent):
     '''
     REINFORCE agent.
     '''
