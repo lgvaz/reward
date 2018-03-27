@@ -40,8 +40,8 @@ class VanillaPGModel(BasePGModel):
             self.add_value_nn_loss(batch)
 
     def train(self, batch, num_epochs=1):
-        batch['advantages'] = self._to_variable(batch['advantages'])
-        batch['actions'] = self._to_variable(batch['actions'].astype('int'))
+        batch['advantages'] = self._to_tensor(batch['advantages'])
+        batch['actions'] = self._to_tensor(batch['actions'].astype('int'))
 
         batch['log_probs'] = torch.stack([
             dist.log_prob(action).sum()

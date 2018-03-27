@@ -7,8 +7,8 @@ from torchrl.models import BasePGModel
 
 class SurrogatePGModel(BasePGModel):
     def train(self, batch, num_epochs=1):
-        batch['actions'] = self._to_variable(batch['actions'])
-        batch['advantages'] = self._to_variable(batch['advantages']).view(-1, 1)
+        batch['actions'] = self._to_tensor(batch['actions'])
+        batch['advantages'] = self._to_tensor(batch['advantages']).view(-1, 1)
         with torch.no_grad():
             batch['old_log_probs'] = torch.stack([
                 dist.log_prob(action).sum()

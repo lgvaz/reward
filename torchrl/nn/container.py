@@ -12,8 +12,7 @@ class ModuleExtended(nn.Module):
     def _maybe_cuda(self, x):
         return x.cuda() if self.is_cuda and not x.is_cuda else x
 
-    # TODO: Move this function to utils
-    def _to_variable(self, x):
+    def _to_tensor(self, x):
         if isinstance(x, np.ndarray):
             # pytorch doesn't support bool
             if x.dtype == 'bool':
@@ -23,9 +22,6 @@ class ModuleExtended(nn.Module):
                 x = x.astype('float32')
 
             x = torch.from_numpy(x)
-
-        if not isinstance(x, Variable):
-            x = Variable(x)
 
         return self._maybe_cuda(x)
 
@@ -47,7 +43,7 @@ class SequentialExtended(ModuleExtended):
         self.layers = nn.Sequential(*args, **kwargs)
 
     def forward(self, x):
-        return self.layers(self._to_variable(x))
+        return self.layers(self._to_tensor(x))
 
     @classmethod
     def from_config(cls, config, kwargs):

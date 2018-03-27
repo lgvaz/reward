@@ -119,7 +119,7 @@ class BasePGModel(BaseModel):
             Should contain all the necessary information for computing the loss.
         '''
         state_values = self.value_nn.head(self.value_nn.body(batch['state_ts']))
-        vtarget = self._to_variable(batch['vtarget'])
+        vtarget = self._to_tensor(batch['vtarget'])
 
         loss = F.mse_loss(input=state_values.view(-1), target=vtarget)
         self.losses.append(loss)
