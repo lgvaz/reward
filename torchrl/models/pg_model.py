@@ -24,6 +24,7 @@ class PGModel(BaseModel):
     def pg_loss(self, batch):
         objective = batch.log_probs * batch.advantages
         loss = -objective.mean()
+        print('Policy loss: {}'.format(loss))
 
         self.losses.append(loss)
 

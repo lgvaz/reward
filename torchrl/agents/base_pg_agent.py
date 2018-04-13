@@ -20,8 +20,8 @@ class BasePGAgent(BatchAgent):
         self.add_advantages(batch)
 
         # Train models
-        self.value_model.train(batch)
         self.policy_model.train(batch)
+        self.value_model.train(batch)
 
     def train(self,
               steps_per_batch=-1,

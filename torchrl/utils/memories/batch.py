@@ -1,12 +1,13 @@
 import numpy as np
+from torch.utils.data import Dataset
 
 
-class Batch:
+class Batch(Dataset):
     def __init__(self, batch):
         self.batch = batch
 
     def __len__(self):
-        return len(self.batch['rewards'])
+        return len(self.batch['state_ts'])
 
     def __setattr__(self, name, value):
         if name == 'batch':

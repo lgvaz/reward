@@ -22,11 +22,10 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, model, learning_rate=1e-3, log_dir=None, cuda_default=True):
+    def __init__(self, model, opt=None, log_dir=None, cuda_default=True):
         super().__init__()
 
         self.model = model
-        self.lr = learning_rate
         self.logger = U.Logger(log_dir=log_dir)
         self.num_updates = 0
         self.losses = []
@@ -39,48 +38,49 @@ class BaseModel(ModuleExtended, ABC):
         # # This is needed for pytorch to register this modules as part of this class
         # self.nn_modules = nn.ModuleList(self.networks)
 
-        self.opt = self._create_optimizer()
+        # TODO: Rework opt design
+        self.opt = opt or torch.optim.Adam(self.parameters())
 
-    def _create_optimizer(self):
-        '''
-        Creates an optimizer for the model.
+    # def _create_optimizer(self, lr=1e-3, **kwargs):
+    #     '''
+    #     Creates an optimizer for the model.
 
-        Returns
-        -------
-        torch.optim
-            A pytorch optimizer.
+    #     Returns
+    #     -------
+    #     torch.optim
+    #         A pytorch optimizer.
 
-        Examples
-        --------
-        It's possible to create an optimizer with the same
-        configurations for all the model::
+    #     Examples
+    #     --------
+    #     It's possible to create an optimizer with the same
+    #     configurations for all the model::
 
-            opt = torch.optim.Adam(self.parameters(), lr=1e-2)
+    #         opt = torch.optim.Adam(self.parameters(), lr=1e-2)
 
-        Or use a different configuration for different parts of the model::
+    #     Or use a different configuration for different parts of the model::
 
-            parameters_body = [
-                dict(params=module.parameters()) for module in self.nn_body.values()
-            ]
-            parameters_head = [
-                dict(params=module.parameters()) for module in self.nn_head.values()
-            ]
-            parameters_total = parameters_body + parameters_head
+    #         parameters_body = [
+    #             dict(params=module.parameters()) for module in self.nn_body.values()
+    #         ]
+    #         parameters_head = [
+    #             dict(params=module.parameters()) for module in self.nn_head.values()
+    #         ]
+    #         parameters_total = parameters_body + parameters_head
 
-            opt = torch.optim.Adam(parameters_total, lr=1e-2)
+    #         opt = torch.optim.Adam(parameters_total, lr=1e-2)
 
-        For more information see
-        `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
-        '''
-        return torch.optim.Adam(self.parameters(), lr=self.lr)
-        # parameters_body = [
-        #     dict(params=module.parameters()) for module in self.nn_body.values()
-        # ]
-        # parameters_head = [
-        #     dict(params=module.parameters()) for module in self.nn_head.values()
-        # ]
-        # parameters_total = parameters_body + parameters_head
-        # return torch.optim.Adam(parameters_total, lr=1e-2)
+    #     For more information see
+    #     `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
+    #     '''
+    #     return torch.optim.Adam(self.parameters(), lr=lr, **kwargs)
+    # parameters_body = [
+    #     dict(params=module.parameters()) for module in self.nn_body.values()
+    # ]
+    # parameters_head = [
+    #     dict(params=module.parameters()) for module in self.nn_head.values()
+    # ]
+    # parameters_total = parameters_body + parameters_head
+    # return torch.optim.Adam(parameters_total, lr=1e-2)
 
     # @abstractmethod
     # def create_networks(self):
@@ -152,7 +152,7 @@ class BaseModel(ModuleExtended, ABC):
 
         # self.write_logs(batch)
 
-    def optimizer_step(self, batch):
+    def optimizer_step(self, *args, **kwargs):
         '''
         Apply the gradients in respect to the losses defined by :func:`add_losses`_.
 
@@ -164,7 +164,7 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        self.add_losses(batch)
+        self.add_losses(*args, **kwargs)
 
         self.opt.zero_grad()
         loss = sum(self.losses)
@@ -175,6 +175,8 @@ class BaseModel(ModuleExtended, ABC):
 
         self.losses = []
         self.num_updates += 1
+
+        return loss
 
     def write_logs(self, batch):
         pass
