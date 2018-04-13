@@ -64,6 +64,9 @@ class Config:
     def pop(self, key):
         return self.as_dict().pop(key)
 
+    def get(self, *args, **kwargs):
+        return self.as_dict().get(*args, **kwargs)
+
     def as_dict(self):
         '''
         Returns all object attributes as a nested OrderedDict.

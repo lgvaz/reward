@@ -67,4 +67,5 @@ def nn_from_config(config, state_info, action_info, body=None, head=None):
             action_info=action_info)
         head = SequentialExtended(*head_list)
 
-    return Config(body=body, head=head)
+    # return Config(body=body, head=head)
+    return SequentialExtended(body, head)

@@ -1,5 +1,6 @@
 import numpy as np
 
+import torchrl.utils as U
 from torchrl.agents import BaseAgent
 
 
@@ -49,15 +50,8 @@ class BatchAgent(BaseAgent):
 
     def generate_batch(self, steps_per_batch, episodes_per_batch):
         trajs = self.generate_trajectories(steps_per_batch, episodes_per_batch)
-        batch = self.concat_trajectories(trajs)
+        batch = U.Batch.from_trajs(trajs)
         self.add_to_batch(batch)
-
-        return batch
-
-    def concat_trajectories(self, trajs):
-        batch = dict()
-        for key in trajs[0]:
-            batch[key] = np.concatenate([t[key] for t in trajs])
 
         return batch
 

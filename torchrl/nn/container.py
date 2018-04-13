@@ -69,6 +69,7 @@ class FlattenLinear(nn.Linear):
         return super().forward(x)
 
 
+# TODO: This can be only an action layer, no need Linear
 class ActionLinear(nn.Module):
     def __init__(self, in_features, action_info, **kwargs):
         super().__init__()

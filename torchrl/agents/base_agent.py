@@ -15,23 +15,25 @@ class BaseAgent(ABC):
     model: torchrl.models
         A ``torchrl.models`` instance.
     '''
-    # TODO: This is probably wrong, the model is being passed as an instance
-    _model = None
 
-    def __init__(self, env, model=None, gamma=0.99):
+    def __init__(self, env, gamma=0.99, logdir='test'):
         self.env = env
-        self.model = model or self._model
-        self.logger = self.model.logger
+        self.logger = U.Logger(logdir)
         self.gamma = gamma
         self.last_logged_ep = self.env.num_episodes
+        self.create_models()
 
     def _check_termination(self):
-        if (self.model.num_updates // self.max_updates >= 1
+        if (self.policy_model.num_updates // self.max_updates >= 1
                 or self.env.num_episodes // self.max_episodes >= 1
                 or self.env.num_steps // self.max_steps >= 1):
             return True
 
         return False
+
+    @abstractmethod
+    def create_models(self):
+        pass
 
     @abstractmethod
     def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
@@ -67,7 +69,7 @@ class BaseAgent(ABC):
         action: int or numpy.ndarray
             The selected action.
         '''
-        return self.model.select_action(state[None])
+        return self.policy_model.select_action(state[None])
 
     def run_one_episode(self):
         '''
@@ -88,7 +90,7 @@ class BaseAgent(ABC):
         self.logger.add_log('Reward/Episode', np.mean(rewards))
 
         self.logger.log('Update {} | Episode {} | Step {}'.format(
-            self.model.num_updates, self.env.num_episodes, self.env.num_steps))
+            self.policy_model.num_updates, self.env.num_episodes, self.env.num_steps))
 
         self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
 

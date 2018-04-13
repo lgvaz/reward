@@ -22,32 +22,22 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self,
-                 state_info,
-                 action_info,
-                 learning_rate,
-                 log_dir=None,
-                 cuda_default=True):
+    def __init__(self, model, learning_rate=1e-3, log_dir=None, cuda_default=True):
         super().__init__()
 
-        self.state_info = state_info
-        self.action_info = action_info
+        self.model = model
         self.lr = learning_rate
         self.logger = U.Logger(log_dir=log_dir)
         self.num_updates = 0
-        self.networks = []
         self.losses = []
-
-        self.create_networks()
 
         # Enable cuda if wanted
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
-            for network in self.networks:
-                network.cuda()
+            self.model.cuda()
 
         # # This is needed for pytorch to register this modules as part of this class
-        self.nn_modules = nn.ModuleList(self.networks)
+        # self.nn_modules = nn.ModuleList(self.networks)
 
         self.opt = self._create_optimizer()
 
@@ -92,16 +82,15 @@ class BaseModel(ModuleExtended, ABC):
         # parameters_total = parameters_body + parameters_head
         # return torch.optim.Adam(parameters_total, lr=1e-2)
 
-    @abstractmethod
-    def create_networks(self):
-        '''
-        This method should be overwritten by a subclass.
+    # @abstractmethod
+    # def create_networks(self):
+    #     '''
+    #     This method should be overwritten by a subclass.
 
-        Should define the creation of the networks.
-        '''
-        pass
+    #     Should define the creation of the networks.
+    #     '''
+    #     pass
 
-    @abstractmethod
     def forward(self, x):
         '''
         This method should be overwritten by a subclass.
@@ -113,19 +102,19 @@ class BaseModel(ModuleExtended, ABC):
         x: numpy.ndarray
             The environment state.
         '''
-        # return self.nn_head(self.nn_body(x))
+        return self.model(x)
 
-    @abstractmethod
-    def select_action(self, state):
-        '''
-        This method should be overwritten by a subclass.
+    # @abstractmethod
+    # def select_action(self, state):
+    #     '''
+    #     This method should be overwritten by a subclass.
 
-        It should receive the state and select an action based on it.
+    #     It should receive the state and select an action based on it.
 
-        Returns
-        -------
-        action: int or numpy.ndarray
-        '''
+    #     Returns
+    #     -------
+    #     action: int or numpy.ndarray
+    #     '''
 
     @abstractmethod
     def add_losses(self, batch):
@@ -141,6 +130,7 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
+    @abstractmethod
     def train(self, batch, num_epochs=1):
         '''
         Basic train function.
@@ -155,11 +145,12 @@ class BaseModel(ModuleExtended, ABC):
         num_epochs: int
             Number of times to fit on the same batch.
         '''
-        for _ in range(num_epochs):
-            for data in U.DataGenerator(batch, batch_size=64):
-                self.optimizer_step(data)
+        pass
+        # for _ in range(num_epochs):
+        #     for data in U.DataGenerator(batch, batch_size=64):
+        #         self.optimizer_step(data)
 
-        self.write_logs(batch)
+        # self.write_logs(batch)
 
     def optimizer_step(self, batch):
         '''
@@ -178,7 +169,8 @@ class BaseModel(ModuleExtended, ABC):
         self.opt.zero_grad()
         loss = sum(self.losses)
         # TODO: Test speed with retain_graph=False
-        loss.backward(retain_graph=True)
+        # loss.backward(retain_graph=True)
+        loss.backward()
         self.opt.step()
 
         self.losses = []
@@ -187,18 +179,18 @@ class BaseModel(ModuleExtended, ABC):
     def write_logs(self, batch):
         pass
 
-    def net_from_config(self, net_config, body=None, head=None):
-        nets = U.nn_from_config(
-            config=net_config,
-            state_info=self.state_info,
-            action_info=self.action_info,
-            body=body,
-            head=head)
+    # def net_from_config(self, net_config, body=None, head=None):
+    #     nets = U.nn_from_config(
+    #         config=net_config,
+    #         state_info=self.state_info,
+    #         action_info=self.action_info,
+    #         body=body,
+    #         head=head)
 
-        for net in nets.values():
-            self.networks.append(net)
+    #     for net in nets.values():
+    #         self.networks.append(net)
 
-        return nets
+    #     return nets
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
