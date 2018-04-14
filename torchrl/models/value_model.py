@@ -13,7 +13,7 @@ class ValueModel(BaseModel):
 
     def add_losses(self, states, vtargets):
         preds = self.forward(states).view(-1)
-        loss = self.loss_fn(preds, self._to_tensor(vtargets))
+        loss = self.loss_fn(preds, vtargets)
         self.losses.append(loss)
 
     def train(self, batch, batch_size=64, num_epochs=10):
