@@ -39,7 +39,7 @@ class BatchAgent(BaseAgent):
             traj = self.env.run_one_episode(select_action_fn=self.select_action)
             trajs.append(traj)
 
-            total_steps += len(traj['rewards'])
+            total_steps += len(traj['reward'])
 
             if (total_steps // steps_per_batch >= 1
                     or len(trajs) // episodes_per_batch >= 1):

@@ -19,7 +19,7 @@ class ValueModel(BaseModel):
     def train(self, batch, batch_size=64, num_epochs=10):
         batch = batch.apply_to_all(self._to_tensor)
 
-        dataset = TensorDataset(batch.state_ts, batch.vtargets)
+        dataset = TensorDataset(batch.state_t, batch.vtarget)
         data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
         for _ in range(num_epochs):
@@ -29,6 +29,6 @@ class ValueModel(BaseModel):
                 loss_sum += loss
             print('Value Loss: {}'.format(loss))
 
-        vtargets_mean = batch.vtargets.mean()
-        preds_mean = self.forward(batch.state_ts).mean()
+        vtargets_mean = batch.vtarget.mean()
+        preds_mean = self.forward(batch.state_t).mean()
         print('vtargets mean: {} | NN mean: {}'.format(vtargets_mean, preds_mean))

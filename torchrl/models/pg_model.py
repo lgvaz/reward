@@ -22,7 +22,7 @@ class PGModel(BaseModel):
         self.pg_loss(batch)
 
     def pg_loss(self, batch):
-        objective = batch.log_probs * batch.advantages
+        objective = batch.log_prob * batch.advantage
         loss = -objective.mean()
         print('Policy loss: {}'.format(loss))
 
@@ -31,9 +31,9 @@ class PGModel(BaseModel):
     def train(self, batch):
         batch = batch.apply_to_all(self._to_tensor)
 
-        batch.log_probs = torch.stack([
+        batch.log_prob = torch.stack([
             dist.log_prob(action).sum()
-            for dist, action in zip(self.saved_dists, batch.actions)
+            for dist, action in zip(self.saved_dists, batch.action)
         ])
 
         self.optimizer_step(batch)

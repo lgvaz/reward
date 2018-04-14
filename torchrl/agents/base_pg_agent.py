@@ -21,43 +21,51 @@ class BasePGAgent(BatchAgent):
             self.value_model = None
 
     def step(self, batch):
-        self.add_returns(batch)
-        self.add_state_values(batch)
-        self.add_vtargets(batch)
-        self.add_advantages(batch)
+        self.add_state_value(batch)
+        self.add_advantage(batch)
+        self.add_vtarget(batch)
 
         # Train models
         self.policy_model.train(batch)
         self.value_model.train(batch)
 
-    def add_returns(self, batch):
-        batch.returns = U.discounted_sum_rewards(batch.rewards, batch.dones, self.gamma)
-
-    def add_state_values(self, batch):
+    def add_state_value(self, batch):
         if self.value_model is not None:
-            batch.state_values = self.value_model(batch.state_ts).view(-1).detach()
+            batch.state_value = U.to_numpy(self.value_model(batch.state_t).view(-1))
 
-    def add_vtargets(self, batch):
-        # TODO: More vtargets modes
-        if self.vtarget_mode == 'td_target':
-            batch.vtargets = batch.rewards + (
-                1 - batch.dones) * self.gamma * np.append(batch.state_values[1:], 0)
+    def add_advantage(self, batch):
+        batch.advantage = self.advantage(batch)
 
-        elif self.vtarget_mode == 'return':
-            batch.vtargets = batch.returns
+    def add_vtarget(self, batch):
+        batch.vtarget = self.vtarget(batch)
 
-    def add_advantages(self, batch):
-        if self.value_model is not None:
-            batch.advantages = (batch.returns - batch.state_values).float()
-        # batch.advantages = batch.returns
+    # def add_advantages(self, batch):
+    #     if self.advantages_mode == 'return':
+    #         batch.advantage = batch.return_
+    #     elif self.advantages_mode == 'baseline':
+    #         batch.advantage = (batch.return_ - batch.state_value).float()
+    #     elif self.advantages_mode == 'gae':
+    #         # TODO: pass gae_lambda
+    #         batch.advantage = U.gae_estimation(
+    #             batch.reward, batch.done, batch.state_value, gamma=self.gamma)
+
+    # def add_vtargets(self, batch):
+    #     if self.vtarget_mode == 'return':
+    #         batch.vtarget = batch.return_
+    #     elif self.vtarget_mode == 'td_target':
+    #         batch.vtarget = U.td_target(
+    #             batch.reward, batch.done, batch.state_value, gamma=self.gamma)
+    #     elif self.vtarget_mode == 'gae':
+    #         assert self.advantages_mode == 'gae'
+    #         batch.vtarget = batch.advantage + batch.state_value
 
     @classmethod
-    def from_config(cls, config, env=None):
+    def from_config(cls, config, env=None, **kwargs):
         if env is None:
             env = U.env_from_config(config)
 
-        policy_nn_config = config.get('policy_nn_config')
-        value_nn_config = config.get('value_nn_config')
+        policy_nn_config = config.pop('policy_nn_config')
+        value_nn_config = config.pop('value_nn_config', None)
 
         policy_nn = U.nn_from_config(policy_nn_config, env.state_info, env.action_info)
         if value_nn_config is not None:
@@ -72,4 +80,4 @@ class BasePGAgent(BatchAgent):
         else:
             value_nn = None
 
-        return cls(env, policy_nn, value_nn)
+        return cls(env, policy_nn, value_nn, **config.as_dict(), **kwargs)

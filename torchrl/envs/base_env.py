@@ -263,7 +263,7 @@ class BaseEnv(ABC):
             done = transition['done']
 
         trajectory = {
-            key + 's': np.array([t[key] for t in transitions])
+            key: np.array([t[key] for t in transitions])
             for key in transitions[0]
         }
 
