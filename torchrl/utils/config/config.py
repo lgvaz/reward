@@ -61,8 +61,8 @@ class Config:
     def values(self):
         return self.as_dict().values()
 
-    def pop(self, key):
-        return self.as_dict().pop(key)
+    def pop(self, *args, **kwargs):
+        return self.as_dict().pop(*args, **kwargs)
 
     def get(self, *args, **kwargs):
         return self.as_dict().get(*args, **kwargs)
