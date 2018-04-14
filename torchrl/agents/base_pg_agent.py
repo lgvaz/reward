@@ -5,10 +5,17 @@ from torchrl.models import ValueModel, PGModel
 
 
 class BasePGAgent(BatchAgent):
-    def __init__(self, env, policy_nn, value_nn=None, vtarget_mode='td_target', **kwargs):
+    def __init__(self,
+                 env,
+                 policy_nn,
+                 value_nn=None,
+                 advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
+                 vtarget=U.estimators.value.GAE(),
+                 **kwargs):
         self.policy_nn = policy_nn
         self.value_nn = value_nn
-        self.vtarget_mode = vtarget_mode
+        self.advantage = advantage
+        self.vtarget = vtarget
 
         super().__init__(env, **kwargs)
 
@@ -38,26 +45,6 @@ class BasePGAgent(BatchAgent):
 
     def add_vtarget(self, batch):
         batch.vtarget = self.vtarget(batch)
-
-    # def add_advantages(self, batch):
-    #     if self.advantages_mode == 'return':
-    #         batch.advantage = batch.return_
-    #     elif self.advantages_mode == 'baseline':
-    #         batch.advantage = (batch.return_ - batch.state_value).float()
-    #     elif self.advantages_mode == 'gae':
-    #         # TODO: pass gae_lambda
-    #         batch.advantage = U.gae_estimation(
-    #             batch.reward, batch.done, batch.state_value, gamma=self.gamma)
-
-    # def add_vtargets(self, batch):
-    #     if self.vtarget_mode == 'return':
-    #         batch.vtarget = batch.return_
-    #     elif self.vtarget_mode == 'td_target':
-    #         batch.vtarget = U.td_target(
-    #             batch.reward, batch.done, batch.state_value, gamma=self.gamma)
-    #     elif self.vtarget_mode == 'gae':
-    #         assert self.advantages_mode == 'gae'
-    #         batch.vtarget = batch.advantage + batch.state_value
 
     @classmethod
     def from_config(cls, config, env=None, **kwargs):

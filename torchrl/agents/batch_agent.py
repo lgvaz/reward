@@ -2,6 +2,7 @@ import numpy as np
 
 import torchrl.utils as U
 from torchrl.agents import BaseAgent
+from torchrl.utils.estimators.estimation_funcs import discounted_sum_rewards
 
 
 class BatchAgent(BaseAgent):
@@ -50,8 +51,12 @@ class BatchAgent(BaseAgent):
     def generate_batch(self, steps_per_batch, episodes_per_batch):
         trajs = self.generate_trajectories(steps_per_batch, episodes_per_batch)
         batch = U.Batch.from_trajs(trajs)
+        self.add_return(batch)
 
         return batch
+
+    def add_return(self, batch):
+        batch.return_ = discounted_sum_rewards(batch.reward, batch.done, self.gamma)
 
     def train(self,
               steps_per_batch=-1,
