@@ -37,7 +37,6 @@ class BatchAgent(BaseAgent):
 
         while True:
             traj = self.env.run_one_episode(select_action_fn=self.select_action)
-            self.add_to_trajectory(traj)
             trajs.append(traj)
 
             total_steps += len(traj['rewards'])
@@ -51,12 +50,23 @@ class BatchAgent(BaseAgent):
     def generate_batch(self, steps_per_batch, episodes_per_batch):
         trajs = self.generate_trajectories(steps_per_batch, episodes_per_batch)
         batch = U.Batch.from_trajs(trajs)
-        self.add_to_batch(batch)
 
         return batch
 
-    def add_to_trajectory(self, traj):
-        pass
+    def train(self,
+              steps_per_batch=-1,
+              episodes_per_batch=-1,
+              max_updates=-1,
+              max_episodes=-1,
+              max_steps=-1,
+              **kwargs):
+        super().train(
+            max_updates=max_updates, max_episodes=max_episodes, max_steps=max_steps)
 
-    def add_to_batch(self, batch):
-        pass
+        while True:
+            batch = self.generate_batch(steps_per_batch, episodes_per_batch)
+            self.step(batch)
+
+            self.write_logs()
+            if self._check_termination():
+                break

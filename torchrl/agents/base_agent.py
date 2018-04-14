@@ -36,6 +36,10 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
+    def step(self, batch):
+        pass
+
+    @abstractmethod
     def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
         '''
         This method should be overwritten by a subclass.

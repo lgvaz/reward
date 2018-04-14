@@ -30,24 +30,6 @@ class BasePGAgent(BatchAgent):
         self.policy_model.train(batch)
         self.value_model.train(batch)
 
-    def train(self,
-              steps_per_batch=-1,
-              episodes_per_batch=-1,
-              max_updates=-1,
-              max_episodes=-1,
-              max_steps=-1,
-              **kwargs):
-        super().train(
-            max_updates=max_updates, max_episodes=max_episodes, max_steps=max_steps)
-
-        while True:
-            batch = self.generate_batch(steps_per_batch, episodes_per_batch)
-            self.step(batch)
-
-            self.write_logs()
-            if self._check_termination():
-                break
-
     def add_returns(self, batch):
         batch.returns = U.discounted_sum_rewards(batch.rewards, batch.dones, self.gamma)
 
