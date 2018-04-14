@@ -40,7 +40,7 @@ class BatchAgent(BaseAgent):
             self.add_to_trajectory(traj)
             trajs.append(traj)
 
-            total_steps += traj['rewards'].shape[0]
+            total_steps += len(traj['rewards'])
 
             if (total_steps // steps_per_batch >= 1
                     or len(trajs) // episodes_per_batch >= 1):

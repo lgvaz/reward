@@ -1,12 +1,14 @@
+import numpy as np
 import torchrl.utils as U
 from torchrl.agents import BatchAgent
 from torchrl.models import ValueModel, PGModel
 
 
 class BasePGAgent(BatchAgent):
-    def __init__(self, env, policy_nn, value_nn=None, **kwargs):
+    def __init__(self, env, policy_nn, value_nn=None, vtarget_mode='td_target', **kwargs):
         self.policy_nn = policy_nn
         self.value_nn = value_nn
+        self.vtarget_mode = vtarget_mode
 
         super().__init__(env, **kwargs)
 
@@ -20,6 +22,7 @@ class BasePGAgent(BatchAgent):
 
     def step(self, batch):
         self.add_returns(batch)
+        self.add_state_values(batch)
         self.add_vtargets(batch)
         self.add_advantages(batch)
 
@@ -48,14 +51,22 @@ class BasePGAgent(BatchAgent):
     def add_returns(self, batch):
         batch.returns = U.discounted_sum_rewards(batch.rewards, batch.dones, self.gamma)
 
+    def add_state_values(self, batch):
+        if self.value_model is not None:
+            batch.state_values = self.value_model(batch.state_ts).view(-1).detach()
+
     def add_vtargets(self, batch):
         # TODO: More vtargets modes
-        batch.vtargets = batch.returns
+        if self.vtarget_mode == 'td_target':
+            batch.vtargets = batch.rewards + (
+                1 - batch.dones) * self.gamma * np.append(batch.state_values[1:], 0)
+
+        elif self.vtarget_mode == 'return':
+            batch.vtargets = batch.returns
 
     def add_advantages(self, batch):
         if self.value_model is not None:
-            state_values = self.value_model(batch.state_ts).view(-1).detach()
-            batch.advantages = (batch.returns - state_values).float()
+            batch.advantages = (batch.returns - batch.state_values).float()
         # batch.advantages = batch.returns
 
     @classmethod
