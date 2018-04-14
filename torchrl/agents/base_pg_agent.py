@@ -12,7 +12,11 @@ class BasePGAgent(BatchAgent):
 
     def create_models(self):
         self.policy_model = PGModel(self.policy_nn, self.env.action_info)
-        self.value_model = ValueModel(self.value_nn)
+
+        if self.value_nn is not None:
+            self.value_model = ValueModel(self.value_nn)
+        else:
+            self.value_model = None
 
     def step(self, batch):
         self.add_returns(batch)
@@ -49,7 +53,10 @@ class BasePGAgent(BatchAgent):
         batch.vtargets = batch.returns
 
     def add_advantages(self, batch):
-        batch.advantages = batch.returns
+        if self.value_model is not None:
+            state_values = self.value_model(batch.state_ts).view(-1).detach()
+            batch.advantages = (batch.returns - state_values).float()
+        # batch.advantages = batch.returns
 
     @classmethod
     def from_config(cls, config, env=None):
