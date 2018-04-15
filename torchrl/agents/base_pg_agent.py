@@ -1,7 +1,7 @@
 import numpy as np
 import torchrl.utils as U
 from torchrl.agents import BatchAgent
-from torchrl.models import ValueModel, PGModel
+from torchrl.models import ValueModel, VanillaPGModel
 
 
 class BasePGAgent(BatchAgent):
@@ -20,7 +20,7 @@ class BasePGAgent(BatchAgent):
         super().__init__(env, **kwargs)
 
     def create_models(self):
-        self.policy_model = PGModel(self.policy_nn, self.env.action_info)
+        self.policy_model = VanillaPGModel(self.policy_nn, self.env.action_info)
 
         if self.value_nn is not None:
             self.value_model = ValueModel(self.value_nn)

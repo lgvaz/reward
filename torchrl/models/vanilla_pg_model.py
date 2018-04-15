@@ -10,44 +10,42 @@ class VanillaPGModel(BasePGModel):
     The classical Policy Gradient algorithm.
     '''
 
-    def add_pg_loss(self, batch):
-        '''
-        Compute loss based on the policy gradient theorem.
-
-        Parameters
-        ----------
-        batch: dict
-            The batch should contain all the information necessary
-            to compute the gradients.
-        '''
-        objective = batch['log_probs'] * batch['advantages']
-        loss = -objective.sum()
-
-        self.losses.append(loss)
-
     def add_losses(self, batch):
         '''
         Define all losses used for calculating the gradient.
 
         Parameters
         ----------
-        batch: dict
+        batch: Batch
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        self.add_pg_loss(batch)
-        if self.value_nn is not None:
-            self.add_value_nn_loss(batch)
+        self.pg_loss(batch)
 
-    def train(self, batch, num_epochs=1):
-        batch['advantages'] = self._to_tensor(batch['advantages'])
-        batch['actions'] = self._to_tensor(batch['actions'].astype('int'))
+    def pg_loss(self, batch):
+        '''
+        Compute loss based on the policy gradient theorem.
 
-        batch['log_probs'] = torch.stack([
+        Parameters
+        ----------
+        batch: Batch
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        objective = batch.log_prob * batch.advantage
+        loss = -objective.mean()
+        print('Policy loss: {}'.format(loss))
+
+        self.losses.append(loss)
+
+    def train(self, batch):
+        batch = batch.apply_to_all(self._to_tensor)
+
+        batch.log_prob = torch.stack([
             dist.log_prob(action).sum()
-            for dist, action in zip(self.saved_dists, batch['actions'])
+            for dist, action in zip(self.saved_dists, batch.action)
         ])
 
-        super().train(batch=batch)
+        self.optimizer_step(batch)
 
         self.saved_dists = []
