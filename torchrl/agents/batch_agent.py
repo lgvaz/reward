@@ -63,15 +63,8 @@ class BatchAgent(BaseAgent):
               episodes_per_batch=-1,
               max_updates=-1,
               max_episodes=-1,
-              max_steps=-1,
-              **kwargs):
+              max_steps=-1):
+        self.steps_per_batch = steps_per_batch
+        self.episodes_per_batch = episodes_per_batch
         super().train(
             max_updates=max_updates, max_episodes=max_episodes, max_steps=max_steps)
-
-        while True:
-            batch = self.generate_batch(steps_per_batch, episodes_per_batch)
-            self.step(batch)
-
-            self.write_logs()
-            if self._check_termination():
-                break

@@ -36,14 +36,17 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    def step(self, batch):
-        pass
-
-    @abstractmethod
-    def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
+    def step(self):
         '''
         This method should be overwritten by a subclass.
 
+        This method is called at each interaction of the training loop,
+        and should define the training procedure.
+        '''
+        pass
+
+    def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
+        '''
         It should define the training loop of the algorithm.
 
         Parameters
@@ -58,6 +61,13 @@ class BaseAgent(ABC):
         self.max_updates = max_updates
         self.max_episodes = max_episodes
         self.max_steps = max_steps
+
+        while True:
+            self.step()
+            self.write_logs()
+
+            if self._check_termination():
+                break
 
     def select_action(self, state):
         '''

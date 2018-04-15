@@ -27,12 +27,13 @@ class BasePGAgent(BatchAgent):
         else:
             self.value_model = None
 
-    def step(self, batch):
+    def step(self):
+        batch = self.generate_batch(self.steps_per_batch, self.episodes_per_batch)
+
         self.add_state_value(batch)
         self.add_advantage(batch)
         self.add_vtarget(batch)
 
-        # Train models
         self.policy_model.train(batch)
         self.value_model.train(batch)
 
