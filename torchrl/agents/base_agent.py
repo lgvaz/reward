@@ -20,6 +20,7 @@ class BaseAgent(ABC):
         self.env = env
         self.logger = U.Logger(logdir)
         self.gamma = gamma
+
         self.last_logged_ep = self.env.num_episodes
         self.create_models()
 
