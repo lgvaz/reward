@@ -40,12 +40,8 @@ class VanillaPGModel(BasePGModel):
 
     def train(self, batch):
         batch = batch.apply_to_all(self._to_tensor)
-
-        batch.log_prob = torch.stack([
-            dist.log_prob(action).sum()
-            for dist, action in zip(self.saved_dists, batch.action)
-        ])
+        batch.log_prob = self.extract_log_probs(batch.action, self.memory.dists)
 
         self.optimizer_step(batch)
 
-        self.saved_dists = []
+        self.memory.clear()

@@ -27,6 +27,8 @@ class BaseModel(ModuleExtended, ABC):
 
         self.model = model
         self.logger = U.Logger(log_dir=log_dir)
+
+        self.memory = U.SimpleMemory()
         self.num_updates = 0
         self.losses = []
 
