@@ -3,62 +3,25 @@ from torchrl.models import SurrogatePGModel
 
 
 class PPOModel(SurrogatePGModel):
-    def __init__(self,
-                 policy_nn_config,
-                 value_nn_config=None,
-                 share_body=False,
-                 ppo_clip_range=0.2,
-                 kl_penalty_coef=1,
-                 kl_target=0.01,
-                 **kwargs):
+    def __init__(self, model, action_info, ppo_clip_range=0.2, **kwargs):
+        super().__init__(model=model, action_info=action_info, **kwargs)
         self.ppo_clip_range = ppo_clip_range
-        self.kl_penalty_coef = kl_penalty_coef
-        self.kl_target = kl_target
 
-        super().__init__(
-            policy_nn_config=policy_nn_config,
-            value_nn_config=value_nn_config,
-            share_body=share_body,
-            **kwargs)
+    def add_losses(self, batch):
+        self.ppo_clip_loss(batch)
 
-    def add_ppo_clip(self, batch, new_dists):
-        prob_ratio = self.calculate_prob_ratio(batch, new_dists)
-        surrogate = prob_ratio * batch['advantages']
+    def ppo_clip_loss(self, batch):
+        prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
+        clipped_prob_ratio = prob_ratio.clamp(1 - self.ppo_clip_range,
+                                              1 + self.ppo_clip_range)
 
-        clipped_prob_ratio = prob_ratio.clamp(
-            min=1 - self.ppo_clip_range, max=1 + self.ppo_clip_range)
-        clipped_surrogate = clipped_prob_ratio * batch['advantages']
+        surrogate = prob_ratio * batch.advantage
+        clipped_surrogate = clipped_prob_ratio * batch.advantage
 
         losses = torch.min(surrogate, clipped_surrogate)
         loss = -losses.mean()
-        self.losses.append(loss)
-
-        # Add logs
-        self.logger.add_log('Loss/policy/ppo_clip', loss.item())
-        self.logger.add_histogram('Policy/clipped_prob_ratio', clipped_prob_ratio.data)
-        clip_frac = torch.mean((torch.abs(prob_ratio - 1) > self.ppo_clip_range).float())
-        self.logger.add_log('Policy/clip_fraction', clip_frac.item())
-
-    def add_ppo_adaptive_kl(self, batch, new_dists):
-        prob_ratio = self.calculate_prob_ratio(batch, new_dists)
-        surrogate = prob_ratio * batch['advantages']
-
-        kl_div = self.kl_divergence(new_dists)
-        kl_loss = self.kl_penalty_coef * kl_div
-        hinge_loss = 1000 * torch.clamp(kl_div - 2 * self.kl_target, min=0)**2
-
-        losses = surrogate - kl_loss - hinge_loss
-        loss = -losses.sum()
 
         self.losses.append(loss)
-
-    def add_losses(self, batch):
-        new_parameters = self.forward(batch['state_ts'])
-        new_dists = [self.create_dist(p) for p in new_parameters]
-
-        self.add_ppo_clip(batch, new_dists)
-        # self.add_ppo_adaptive_kl(batch, new_dists)
-        self.add_value_nn_loss(batch)
 
     def train(self, batch, num_epochs=10):
         super().train(batch=batch, num_epochs=num_epochs)

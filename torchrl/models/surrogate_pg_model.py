@@ -6,19 +6,20 @@ from torchrl.models import BasePGModel
 
 
 class SurrogatePGModel(BasePGModel):
-    def train(self, batch, num_epochs=10):
+    def train(self, batch, num_epochs=1):
         batch = batch.apply_to_all(self._to_tensor)
 
         with torch.no_grad():
             batch.log_prob = self.extract_log_probs(batch.action, self.memory.dists)
 
-        for _ in range(1):
+        for _ in range(num_epochs):
             parameters = self.forward(batch.state_t)
             self.memory.new_dists = [self.create_dist(p) for p in parameters]
             batch.new_log_prob = self.extract_log_probs(batch.action,
                                                         self.memory.new_dists)
 
-            self.optimizer_step(batch)
+            loss = self.optimizer_step(batch)
+            print('Policy loss: {}'.format(loss))
 
         self.memory.clear()
 
@@ -26,14 +27,13 @@ class SurrogatePGModel(BasePGModel):
         self.surrogate_pg_loss(batch)
 
     def surrogate_pg_loss(self, batch):
-        prob_ratio = self.calculate_prob_ratio(batch)
+        prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
         surrogate = prob_ratio * batch.advantage
 
         loss = -surrogate.mean()
-        print('Policy loss: {}'.format(loss))
 
         self.losses.append(loss)
 
-    def calculate_prob_ratio(self, batch):
-        prob_ratio = (batch.new_log_prob - batch.log_prob).exp()
+    def calculate_prob_ratio(self, new_log_probs, old_log_probs):
+        prob_ratio = (new_log_probs - old_log_probs).exp()
         return prob_ratio
