@@ -30,7 +30,7 @@ def to_numpy(tensor):
 
 
 def explained_var(target, preds):
-    return 1 - (target - preds).var() / target.var()
+    return 1 - (target.view(-1) - preds.view(-1)).var() / target.view(-1).var()
 
 
 def normalize(array):
