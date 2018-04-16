@@ -24,10 +24,12 @@ class BasePGAgent(BatchAgent):
     def create_models(self):
         assert issubclass(self.policy_model_class, BasePGModel), \
             'Policy Model class must be subclass of BasePGModel'
-        self.policy_model = self.policy_model_class(self.policy_nn, self.env.action_info)
+        # TODO: Some models might need additional parameters
+        self.policy_model = self.policy_model_class(
+            model=self.policy_nn, action_info=self.env.action_info, logger=self.logger)
 
         if self.value_nn is not None:
-            self.value_model = ValueModel(self.value_nn)
+            self.value_model = ValueModel(self.value_nn, logger=self.logger)
         else:
             self.value_model = None
 

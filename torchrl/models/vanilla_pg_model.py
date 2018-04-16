@@ -44,6 +44,7 @@ class VanillaPGModel(BasePGModel):
         dists = self.create_dist(parameters)
         batch.log_prob = dists.log_prob(batch.action).sum(-1)
 
-        self.optimizer_step(batch)
+        loss = self.optimizer_step(batch)
+        self.logger.add_log('Policy NN Loss', loss.item(loss), precision=3)
 
         self.memory.clear()

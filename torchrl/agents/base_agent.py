@@ -16,9 +16,9 @@ class BaseAgent(ABC):
         A ``torchrl.models`` instance.
     '''
 
-    def __init__(self, env, gamma=0.99, logdir='test'):
+    def __init__(self, env, gamma=0.99, log_dir='runs'):
         self.env = env
-        self.logger = U.Logger(logdir)
+        self.logger = U.Logger(log_dir)
         self.gamma = gamma
 
         self.last_logged_ep = self.env.num_episodes

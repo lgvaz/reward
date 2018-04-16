@@ -20,7 +20,7 @@ class SurrogatePGModel(BasePGModel):
             batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
 
             loss = self.optimizer_step(batch)
-            print('Policy loss: {}'.format(loss))
+            self.logger.add_log('Policy NN Loss', loss.item(), precision=3)
 
         self.memory.clear()
 

@@ -22,11 +22,11 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, model, opt=None, log_dir=None, cuda_default=True):
+    def __init__(self, model, opt=None, logger=None, cuda_default=True):
         super().__init__()
 
         self.model = model
-        self.logger = U.Logger(log_dir=log_dir)
+        self.logger = logger
 
         self.memory = U.SimpleMemory()
         self.num_updates = 0
@@ -37,11 +37,8 @@ class BaseModel(ModuleExtended, ABC):
         if self.cuda_enabled:
             self.model.cuda()
 
-        # # This is needed for pytorch to register this modules as part of this class
-        # self.nn_modules = nn.ModuleList(self.networks)
-
         # TODO: Rework opt design
-        self.opt = opt or torch.optim.Adam(self.parameters())
+        self.opt = opt or torch.optim.Adam(self.parameters(), lr=3e-4)
 
     # def _create_optimizer(self, lr=1e-3, **kwargs):
     #     '''
@@ -83,15 +80,6 @@ class BaseModel(ModuleExtended, ABC):
     # ]
     # parameters_total = parameters_body + parameters_head
     # return torch.optim.Adam(parameters_total, lr=1e-2)
-
-    # @abstractmethod
-    # def create_networks(self):
-    #     '''
-    #     This method should be overwritten by a subclass.
-
-    #     Should define the creation of the networks.
-    #     '''
-    #     pass
 
     def forward(self, x):
         '''
@@ -148,11 +136,6 @@ class BaseModel(ModuleExtended, ABC):
             Number of times to fit on the same batch.
         '''
         pass
-        # for _ in range(num_epochs):
-        #     for data in U.DataGenerator(batch, batch_size=64):
-        #         self.optimizer_step(data)
-
-        # self.write_logs(batch)
 
     def optimizer_step(self, *args, **kwargs):
         '''
@@ -170,8 +153,6 @@ class BaseModel(ModuleExtended, ABC):
 
         self.opt.zero_grad()
         loss = sum(self.losses)
-        # TODO: Test speed with retain_graph=False
-        # loss.backward(retain_graph=True)
         loss.backward()
         self.opt.step()
 
@@ -182,19 +163,6 @@ class BaseModel(ModuleExtended, ABC):
 
     def write_logs(self, batch):
         pass
-
-    # def net_from_config(self, net_config, body=None, head=None):
-    #     nets = U.nn_from_config(
-    #         config=net_config,
-    #         state_info=self.state_info,
-    #         action_info=self.action_info,
-    #         body=body,
-    #         head=head)
-
-    #     for net in nets.values():
-    #         self.networks.append(net)
-
-    #     return nets
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
