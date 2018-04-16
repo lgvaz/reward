@@ -10,5 +10,5 @@ import torchrl.utils.estimators
 __all__ = [
     'EPSILON', 'Config', 'Logger', 'get_obj', 'env_from_config', 'to_numpy',
     'explained_var', 'normalize', 'auto_input_shape', 'get_module_list', 'nn_from_config',
-    'BasicDataset', 'DataGenerator', 'Batch', 'SimpleMemory'
+    'Batch', 'SimpleMemory'
 ]
