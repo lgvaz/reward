@@ -10,13 +10,14 @@ class SurrogatePGModel(BasePGModel):
         batch = batch.apply_to_all(self._to_tensor)
 
         with torch.no_grad():
-            batch.log_prob = self.extract_log_probs(batch.action, self.memory.dists)
+            parameters = self.forward(batch.state_t)
+            self.memory.old_dists = self.create_dist(parameters)
+            batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
         for _ in range(num_epochs):
             parameters = self.forward(batch.state_t)
-            self.memory.new_dists = [self.create_dist(p) for p in parameters]
-            batch.new_log_prob = self.extract_log_probs(batch.action,
-                                                        self.memory.new_dists)
+            self.memory.new_dists = self.create_dist(parameters)
+            batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
 
             loss = self.optimizer_step(batch)
             print('Policy loss: {}'.format(loss))

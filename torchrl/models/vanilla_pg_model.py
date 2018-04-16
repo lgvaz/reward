@@ -40,7 +40,9 @@ class VanillaPGModel(BasePGModel):
 
     def train(self, batch):
         batch = batch.apply_to_all(self._to_tensor)
-        batch.log_prob = self.extract_log_probs(batch.action, self.memory.dists)
+        parameters = self.forward(batch.state_t)
+        dists = self.create_dist(parameters)
+        batch.log_prob = dists.log_prob(batch.action).sum(-1)
 
         self.optimizer_step(batch)
 

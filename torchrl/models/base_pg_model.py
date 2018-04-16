@@ -23,7 +23,6 @@ class BasePGModel(BaseModel):
     def select_action(self, state):
         parameters = self.forward(state)
         dist = self.create_dist(parameters[0])
-        self.memory.dists.append(dist)
         action = dist.sample()
 
         return U.to_numpy(action)
@@ -42,14 +41,11 @@ class BasePGModel(BaseModel):
             return Categorical(logits=logits)
 
         elif self.action_info['dtype'] == 'continuous':
-            means = parameters[:, 0]
-            std_devs = parameters[:, 1].exp()
+            means = parameters[..., 0]
+            std_devs = parameters[..., 1].exp()
 
             return Normal(loc=means, scale=std_devs)
 
         else:
             raise ValueError('No distribution is defined for {} actions'.format(
                 self.action_info['dtype']))
-
-    def extract_log_probs(self, actions, dists):
-        return torch.stack([d.log_prob(a).sum() for d, a in zip(dists, actions)])
