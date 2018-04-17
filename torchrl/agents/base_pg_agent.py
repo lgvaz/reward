@@ -7,31 +7,20 @@ from torchrl.models import BasePGModel, ValueModel
 class BasePGAgent(BatchAgent):
     def __init__(self,
                  env,
-                 policy_model_class,
-                 policy_nn,
-                 value_nn=None,
+                 policy_model,
+                 value_model=None,
+                 normalize_advantages=True,
                  advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
                  vtarget=U.estimators.value.GAE(),
                  **kwargs):
-        self.policy_model_class = policy_model_class
-        self.policy_nn = policy_nn
-        self.value_nn = value_nn
+        super().__init__(env, **kwargs)
+
+        self.normalize_advantages = normalize_advantages
         self.advantage = advantage
         self.vtarget = vtarget
 
-        super().__init__(env, **kwargs)
-
-    def create_models(self):
-        assert issubclass(self.policy_model_class, BasePGModel), \
-            'Policy Model class must be subclass of BasePGModel'
-        # TODO: Some models might need additional parameters
-        self.policy_model = self.policy_model_class(
-            model=self.policy_nn, action_info=self.env.action_info, logger=self.logger)
-
-        if self.value_nn is not None:
-            self.value_model = ValueModel(self.value_nn, logger=self.logger)
-        else:
-            self.value_model = None
+        self._register_model('policy', policy_model)
+        self._register_model('value', value_model)
 
     def step(self):
         batch = self.generate_batch(self.steps_per_batch, self.episodes_per_batch)
@@ -39,13 +28,15 @@ class BasePGAgent(BatchAgent):
         self.add_state_value(batch)
         self.add_advantage(batch)
         self.add_vtarget(batch)
+        if self.normalize_advantages:
+            batch.advantage = U.normalize(batch.advantage)
 
-        self.policy_model.train(batch)
-        self.value_model.train(batch)
+        self.models.policy.train(batch)
+        self.models.value.train(batch)
 
     def add_state_value(self, batch):
-        if self.value_model is not None:
-            batch.state_value = U.to_numpy(self.value_model(batch.state_t).view(-1))
+        if self.models.value is not None:
+            batch.state_value = U.to_numpy(self.models.value(batch.state_t).view(-1))
 
     def add_advantage(self, batch):
         batch.advantage = self.advantage(batch)
@@ -53,6 +44,7 @@ class BasePGAgent(BatchAgent):
     def add_vtarget(self, batch):
         batch.vtarget = self.vtarget(batch)
 
+    # TODO: Reimplement this method
     @classmethod
     def from_config(cls, config, env=None, policy_model_class=None, **kwargs):
         if env is None:

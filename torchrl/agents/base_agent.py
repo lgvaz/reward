@@ -21,20 +21,20 @@ class BaseAgent(ABC):
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
 
+        self.models = U.SimpleMemory()
         self.last_logged_ep = self.env.num_episodes
-        self.create_models()
 
     def _check_termination(self):
-        if (self.policy_model.num_updates // self.max_updates >= 1
+        if (self.models.policy.num_updates // self.max_updates >= 1
                 or self.env.num_episodes // self.max_episodes >= 1
                 or self.env.num_steps // self.max_steps >= 1):
             return True
 
         return False
 
-    @abstractmethod
-    def create_models(self):
-        pass
+    def _register_model(self, name, model):
+        setattr(self.models, name, model)
+        model.attach_logger(self.logger)
 
     @abstractmethod
     def step(self):
@@ -84,7 +84,7 @@ class BaseAgent(ABC):
         action: int or numpy.ndarray
             The selected action.
         '''
-        return self.policy_model.select_action(state[None])
+        return self.models.policy.select_action(state[None])
 
     def run_one_episode(self):
         '''
@@ -105,7 +105,7 @@ class BaseAgent(ABC):
         self.logger.add_log('Reward/Episode', np.mean(rewards))
 
         self.logger.log('Update {} | Episode {} | Step {}'.format(
-            self.policy_model.num_updates, self.env.num_episodes, self.env.num_steps))
+            self.models.policy.num_updates, self.env.num_episodes, self.env.num_steps))
 
         self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
 

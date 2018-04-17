@@ -34,7 +34,6 @@ class VanillaPGModel(BasePGModel):
         '''
         objective = batch.log_prob * batch.advantage
         loss = -objective.mean()
-        print('Policy loss: {}'.format(loss))
 
         self.losses.append(loss)
 
@@ -45,6 +44,7 @@ class VanillaPGModel(BasePGModel):
         batch.log_prob = dists.log_prob(batch.action).sum(-1)
 
         loss = self.optimizer_step(batch)
-        self.logger.add_log('Policy NN Loss', loss.item(loss), precision=3)
+        if self.logger is not None:
+            self.logger.add_log('Policy NN Loss', loss.item(loss), precision=3)
 
         self.memory.clear()

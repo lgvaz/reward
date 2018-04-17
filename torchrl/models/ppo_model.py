@@ -3,8 +3,8 @@ from torchrl.models import SurrogatePGModel
 
 
 class PPOModel(SurrogatePGModel):
-    def __init__(self, model, action_info, ppo_clip_range=0.2, **kwargs):
-        super().__init__(model=model, action_info=action_info, **kwargs)
+    def __init__(self, model, env, ppo_clip_range=0.2, **kwargs):
+        super().__init__(model=model, env=env, **kwargs)
         self.ppo_clip_range = ppo_clip_range
 
     def add_losses(self, batch):
@@ -22,6 +22,10 @@ class PPOModel(SurrogatePGModel):
         loss = -losses.mean()
 
         self.losses.append(loss)
+
+        if self.logger is not None:
+            clip_frac = ((1 - prob_ratio).abs() > self.ppo_clip_range).float().mean()
+            self.logger.add_log('PPO Clip Fraction', clip_frac)
 
     def train(self, batch, num_epochs=10):
         super().train(batch=batch, num_epochs=num_epochs)

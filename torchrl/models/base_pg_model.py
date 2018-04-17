@@ -16,9 +16,8 @@ class BasePGModel(BaseModel):
         Dict containing information about the action space.
     '''
 
-    def __init__(self, model, action_info, **kwargs):
-        super().__init__(model, **kwargs)
-        self.action_info = action_info
+    def __init__(self, model, env, **kwargs):
+        super().__init__(model, env, **kwargs)
 
     def select_action(self, state):
         parameters = self.forward(state)
@@ -36,11 +35,11 @@ class BasePGModel(BaseModel):
         ----------
         parameters
         '''
-        if self.action_info['dtype'] == 'discrete':
+        if self.env.action_info['dtype'] == 'discrete':
             logits = parameters
             return Categorical(logits=logits)
 
-        elif self.action_info['dtype'] == 'continuous':
+        elif self.env.action_info['dtype'] == 'continuous':
             means = parameters[..., 0]
             std_devs = parameters[..., 1].exp()
 
@@ -48,4 +47,4 @@ class BasePGModel(BaseModel):
 
         else:
             raise ValueError('No distribution is defined for {} actions'.format(
-                self.action_info['dtype']))
+                self.env.action_info['dtype']))

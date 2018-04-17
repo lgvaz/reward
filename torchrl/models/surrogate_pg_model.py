@@ -20,8 +20,12 @@ class SurrogatePGModel(BasePGModel):
             batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
 
             loss = self.optimizer_step(batch)
-            self.logger.add_log('Policy NN Loss', loss.item(), precision=3)
+            if self.logger is not None:
+                self.logger.add_log('Policy NN Loss', loss.item(), precision=3)
 
+        if self.logger is not None:
+            entropy = self.memory.new_dists.entropy().mean()
+            self.logger.add_log('Policy Entropy', entropy.item(), precision=3)
         self.memory.clear()
 
     def add_losses(self, batch):

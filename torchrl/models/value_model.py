@@ -25,7 +25,10 @@ class ValueModel(BaseModel):
         for _ in range(num_epochs):
             for states, vtargets in data_loader:
                 loss = self.optimizer_step(states=states, vtargets=vtargets)
-                self.logger.add_log('Value NN Loss', loss.item(), precision=3)
+                if self.logger is not None:
+                    self.logger.add_log('Value NN Loss', loss.item(), precision=3)
 
-        preds = self.forward(batch.state_t)
-        self.logger.add_log('Value NN EV', U.explained_var(batch.vtarget, preds).item())
+        if self.logger is not None:
+            preds = self.forward(batch.state_t)
+            self.logger.add_log('Value NN EV',
+                                U.explained_var(batch.vtarget, preds).item())

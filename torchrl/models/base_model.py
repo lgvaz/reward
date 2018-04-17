@@ -22,23 +22,31 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it.
     '''
 
-    def __init__(self, model, opt=None, logger=None, cuda_default=True):
+    def __init__(self,
+                 model,
+                 env,
+                 opt_fn=None,
+                 opt_params=dict(),
+                 logger=None,
+                 cuda_default=True):
         super().__init__()
 
         self.model = model
+        self.env = env
         self.logger = logger
 
         self.memory = U.SimpleMemory()
         self.num_updates = 0
         self.losses = []
 
+        # Create optimizer
+        opt_fn = opt_fn or torch.optim.Adam
+        self.opt = opt_fn(self.parameters(), **opt_params)
+
         # Enable cuda if wanted
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
             self.model.cuda()
-
-        # TODO: Rework opt design
-        self.opt = opt or torch.optim.Adam(self.parameters(), lr=3e-4)
 
     # def _create_optimizer(self, lr=1e-3, **kwargs):
     #     '''
@@ -161,11 +169,14 @@ class BaseModel(ModuleExtended, ABC):
 
         return loss
 
+    def attach_logger(self, logger):
+        self.logger = logger
+
     def write_logs(self, batch):
         pass
 
     @classmethod
-    def from_config(cls, config, *args, **kwargs):
+    def from_config(cls, config, env=None, **kwargs):
         '''
         Creates a model from a configuration file.
 
@@ -174,7 +185,13 @@ class BaseModel(ModuleExtended, ABC):
         torchrl.models
             A TorchRL model.
         '''
-        return cls(*args, **config.as_dict(), **kwargs)
+        env = env or U.env_from_config(config)
+        config.pop('env', None)
+
+        nn_config = config.pop('nn_config')
+        model = U.nn_from_config(nn_config, env.state_info, env.action_info)
+
+        return cls(model=model, env=env, **config.as_dict(), **kwargs)
 
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):
