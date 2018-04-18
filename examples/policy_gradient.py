@@ -2,8 +2,8 @@ import torch.nn as nn
 
 import torchrl.utils as U
 from torchrl.utils import Config
-from torchrl.models import VanillaPGModel, SurrogatePGModel, BasePGModel, PPOModel, ValueModel
-from torchrl.agents import VanillaPGAgent, ActorCriticAgent, BasePGAgent
+from torchrl.models import VanillaPGModel, SurrogatePGModel, PPOModel, ValueModel
+from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv
 from torchrl.nn import ActionLinear
 
@@ -65,10 +65,11 @@ value_model = ValueModel.from_config(
     config=value_model_config, env=env, opt_params=dict(lr=1e-3))
 
 # Create agent
-agent = BasePGAgent(
+agent = PGAgent(
     env,
     policy_model,
     value_model,
-    log_dir='logs/hopper/relu-1e3lr-gradnorm-v1',
+    # log_dir='logs/hopper/relu-1e3lr-gradnorm-v1',
+    log_dir='tests/hopper/relu-1e3lr-gradnorm-v1',
     normalize_advantages=True)
 agent.train(max_steps=1e6, steps_per_batch=2048)

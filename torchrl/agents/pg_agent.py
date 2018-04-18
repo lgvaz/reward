@@ -4,7 +4,7 @@ from torchrl.agents import BatchAgent
 from torchrl.models import BasePGModel, ValueModel
 
 
-class BasePGAgent(BatchAgent):
+class PGAgent(BatchAgent):
     def __init__(self,
                  env,
                  policy_model,
