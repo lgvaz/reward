@@ -27,17 +27,18 @@ class BaseModel(ModuleExtended, ABC):
                  env,
                  opt_fn=None,
                  opt_params=dict(),
-                 logger=None,
+                 clip_grad_norm=None,
                  cuda_default=True):
         super().__init__()
 
         self.model = model
         self.env = env
-        self.logger = logger
+        self.clip_grad_norm = clip_grad_norm
 
         self.memory = U.SimpleMemory()
         self.num_updates = 0
         self.losses = []
+        self.logger = None
 
         # Create optimizer
         opt_fn = opt_fn or torch.optim.Adam
@@ -47,72 +48,6 @@ class BaseModel(ModuleExtended, ABC):
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
             self.model.cuda()
-
-    # def _create_optimizer(self, lr=1e-3, **kwargs):
-    #     '''
-    #     Creates an optimizer for the model.
-
-    #     Returns
-    #     -------
-    #     torch.optim
-    #         A pytorch optimizer.
-
-    #     Examples
-    #     --------
-    #     It's possible to create an optimizer with the same
-    #     configurations for all the model::
-
-    #         opt = torch.optim.Adam(self.parameters(), lr=1e-2)
-
-    #     Or use a different configuration for different parts of the model::
-
-    #         parameters_body = [
-    #             dict(params=module.parameters()) for module in self.nn_body.values()
-    #         ]
-    #         parameters_head = [
-    #             dict(params=module.parameters()) for module in self.nn_head.values()
-    #         ]
-    #         parameters_total = parameters_body + parameters_head
-
-    #         opt = torch.optim.Adam(parameters_total, lr=1e-2)
-
-    #     For more information see
-    #     `here <http://pytorch.org/docs/0.3.0/optim.html#per-parameter-options>`_.
-    #     '''
-    #     return torch.optim.Adam(self.parameters(), lr=lr, **kwargs)
-    # parameters_body = [
-    #     dict(params=module.parameters()) for module in self.nn_body.values()
-    # ]
-    # parameters_head = [
-    #     dict(params=module.parameters()) for module in self.nn_head.values()
-    # ]
-    # parameters_total = parameters_body + parameters_head
-    # return torch.optim.Adam(parameters_total, lr=1e-2)
-
-    def forward(self, x):
-        '''
-        This method should be overwritten by a subclass.
-
-        Should define how the networks are connected.
-
-        Parameters
-        ----------
-        x: numpy.ndarray
-            The environment state.
-        '''
-        return self.model(x)
-
-    # @abstractmethod
-    # def select_action(self, state):
-    #     '''
-    #     This method should be overwritten by a subclass.
-
-    #     It should receive the state and select an action based on it.
-
-    #     Returns
-    #     -------
-    #     action: int or numpy.ndarray
-    #     '''
 
     @abstractmethod
     def add_losses(self, batch):
@@ -162,12 +97,27 @@ class BaseModel(ModuleExtended, ABC):
         self.opt.zero_grad()
         loss = sum(self.losses)
         loss.backward()
+        if self.clip_grad_norm is not None:
+            torch.nn.utils.clip_grad_norm(self.parameters(), self.clip_grad_norm)
         self.opt.step()
 
         self.losses = []
         self.num_updates += 1
 
         return loss
+
+    def forward(self, x):
+        '''
+        This method should be overwritten by a subclass.
+
+        Should define how the networks are connected.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            The environment state.
+        '''
+        return self.model(x)
 
     def attach_logger(self, logger):
         self.logger = logger
