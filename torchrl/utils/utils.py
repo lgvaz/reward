@@ -14,7 +14,7 @@ def get_obj(config):
 
 def env_from_config(config):
     try:
-        env = get_obj(config.env.obj)
+        env = get_obj(config.env.as_dict())
     except AttributeError:
         raise ValueError('The env must be defined in the config '
                          'or passed as an argument')
