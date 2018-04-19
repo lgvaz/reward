@@ -45,6 +45,6 @@ class VanillaPGModel(BasePGModel):
 
         loss = self.optimizer_step(batch)
         if self.logger is not None:
-            self.logger.add_log('Policy NN Loss', loss.item(), precision=3)
+            self.logger.add_log('Policy/Loss', loss.item(), precision=3)
 
         self.memory.clear()

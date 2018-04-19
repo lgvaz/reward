@@ -6,6 +6,11 @@ from torch.utils.data import TensorDataset, DataLoader
 
 
 class ValueModel(BaseModel):
+    def __init__(self, model, env, batch_size=128, num_epochs=7, **kwargs):
+        super().__init__(model=model, env=env, **kwargs)
+        self.batch_size = batch_size
+        self.num_epochs = num_epochs
+
     @property
     def loss_fn(self):
         # return F.mse_loss
@@ -16,19 +21,19 @@ class ValueModel(BaseModel):
         loss = self.loss_fn(preds, vtargets)
         self.losses.append(loss)
 
-    def train(self, batch, batch_size=128, num_epochs=7):
+    def train(self, batch):
         batch = batch.apply_to_all(self._to_tensor)
 
         dataset = TensorDataset(batch.state_t, batch.vtarget)
-        data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
-        for _ in range(num_epochs):
+        for _ in range(self.num_epochs):
             for states, vtargets in data_loader:
                 loss = self.optimizer_step(states=states, vtargets=vtargets)
                 if self.logger is not None:
-                    self.logger.add_log('Value NN Loss', loss.item(), precision=3)
+                    self.logger.add_log('Value NN/Loss', loss.item(), precision=3)
 
         if self.logger is not None:
             preds = self.forward(batch.state_t)
-            self.logger.add_log('Value NN EV',
+            self.logger.add_log('Value NN/Explained Var',
                                 U.explained_var(batch.vtarget, preds).item())
