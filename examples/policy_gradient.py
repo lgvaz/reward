@@ -7,47 +7,30 @@ from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv
 from torchrl.nn import ActionLinear
 
+activation = nn.ReLU
 # Define networks configs
 policy_nn_config = Config(
     body=[
         dict(func=nn.Linear, out_features=64),
-        dict(func=nn.ReLU),
+        dict(func=activation),
         dict(func=nn.Linear, in_features=64, out_features=64),
-        dict(func=nn.ReLU)
+        dict(func=activation)
     ],
     head=[dict(func=ActionLinear)])
 value_nn_config = Config(
     body=[
         dict(func=nn.Linear, out_features=64),
-        dict(func=nn.ReLU),
+        dict(func=activation),
         dict(func=nn.Linear, in_features=64, out_features=64),
-        dict(func=nn.ReLU)
+        dict(func=activation)
     ],
     head=[dict(func=nn.Linear, out_features=1)])
-
-# # Define networks configs
-# policy_nn_config = Config(
-#     body=[
-#         dict(func=nn.Linear, out_features=64),
-#         dict(func=nn.Tanh),
-#         dict(func=nn.Linear, in_features=64, out_features=64),
-#         dict(func=nn.Tanh)
-#     ],
-#     head=[dict(func=ActionLinear)])
-# value_nn_config = Config(
-#     body=[
-#         dict(func=nn.Linear, out_features=64),
-#         dict(func=nn.Tanh),
-#         dict(func=nn.Linear, in_features=64, out_features=64),
-#         dict(func=nn.Tanh)
-#     ],
-#     head=[dict(func=nn.Linear, out_features=1)])
 
 # Create environment
 # env = GymEnv('InvertedPendulum-v1', normalize_states=False)
 # env = GymEnv('InvertedDoublePendulum-v1', normalize_states=False)
 # env = GymEnv('Pendulum-v0', normalize_states=False)
-env = GymEnv('Hopper-v1', normalize_states=True)
+env = GymEnv('Hopper-v1', normalize_states=True, scale_rewards=True)
 # env = GymEnv('HalfCheetah-v1', normalize_states=True)
 # env = GymEnv('CartPole-v0', normalize_states=False)
 # env_config = Config(func=GymEnv, env_name='Pendulum-v0', normalize_states=False)
@@ -69,7 +52,8 @@ agent = PGAgent(
     env,
     policy_model,
     value_model,
-    # log_dir='logs/hopper/relu-1e3lr-gradnorm-v1',
-    log_dir='tests/hopper/relu-1e3lr-gradnorm-v1',
+    # advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.98),
+    log_dir='logs/hopper/relu-1e3lr-rewscale-v0',
+    # log_dir='tests/hopper/relu-1e3lr-gradnorm-v1',
     normalize_advantages=True)
 agent.train(max_steps=1e6, steps_per_batch=2048)

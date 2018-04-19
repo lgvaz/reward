@@ -18,12 +18,13 @@ class BaseEnv(ABC):
         If True, normalize the states (Default is True).
     '''
 
-    def __init__(self, normalize_states=False):
+    def __init__(self, normalize_states=False, scale_rewards=False):
         self.normalize_states = normalize_states
-        if normalize_states:
-            self.normalizer = Normalizer(self.state_info['shape'])
-        else:
-            self.normalizer = None
+        self.scale_rewards = scale_rewards
+
+        self.state_normalizer = Normalizer(
+            self.state_info['shape']) if normalize_states else None
+        self.reward_scaler = Normalizer(1) if scale_rewards else None
 
         self.num_episodes = 0
         self.num_steps = 0
@@ -83,8 +84,8 @@ class BaseEnv(ABC):
         state: numpy.ndarray
             The transformed state.
         '''
-        if self.normalizer is not None:
-            state = self.normalizer.normalize(state)
+        if self.state_normalizer is not None:
+            state = self.state_normalizer.normalize(state)
 
         return state
 
@@ -102,6 +103,8 @@ class BaseEnv(ABC):
         reward: float
             The transformed reward.
         '''
+        if self.reward_scaler is not None:
+            reward = self.reward_scaler.scale(reward).squeeze()
         return reward
 
     @property
@@ -173,8 +176,10 @@ class BaseEnv(ABC):
         state = self._reset()
         state = self._preprocess_state(state)
 
-        if self.normalizer is not None:
-            self.normalizer.update()
+        if self.state_normalizer is not None:
+            self.state_normalizer.update()
+        if self.reward_scaler is not None and self.num_episodes > 1:
+            self.reward_scaler.update()
 
         self.num_episodes += 1
 
@@ -287,4 +292,5 @@ class BaseEnv(ABC):
             state_info=dict((key, value) for key, value in self.state_info.items()
                             if key not in ('low_bound', 'high_bound')),
             action_info=self.action_info,
-            normalize_states=self.normalize_states)
+            normalize_states=self.normalize_states,
+            scale_rewards=self.scale_rewards)

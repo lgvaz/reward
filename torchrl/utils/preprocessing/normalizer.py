@@ -77,6 +77,11 @@ class Normalizer(object):
         scale, offset = self.get()
         return (x - offset) * scale
 
+    def scale(self, x):
+        self.xs.append(x)
+        scale, _ = self.get()
+        return x * scale
+
     # TODO: Re-work this
     def save(self):
         assert self.path is not None, 'You must define a path when creating this object'
