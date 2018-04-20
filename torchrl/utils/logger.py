@@ -27,8 +27,8 @@ class Logger:
         if self.debug:
             self.add_log(name, value, precision)
 
-    def add_histogram(self, name, param):
-        self.histograms[name] = param.clone().cpu().numpy()
+    def add_histogram(self, name, values):
+        self.histograms[name] = np.array(values)
 
     def log(self, header=None):
         ''' Write the mean of the values added to each key and clear previous values '''
@@ -54,6 +54,7 @@ class Logger:
 
         # Reset dict
         self.logs = defaultdict(list)
+        self.histograms = dict()
 
     def timeit(self, i_step, max_steps=-1):
         steps, self.i_step = i_step - self.i_step, i_step
