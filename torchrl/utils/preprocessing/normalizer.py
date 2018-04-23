@@ -62,7 +62,7 @@ class Normalizer(object):
         offset: numpy.ndarray
             The current offset.
         '''
-        return 1 / (np.sqrt(self.vars) + 0.1) / 3, self.means
+        return 1 / np.maximum(0.1, np.sqrt(self.vars)), self.means
 
     def normalize(self, x):
         '''

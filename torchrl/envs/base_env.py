@@ -103,6 +103,8 @@ class BaseEnv(ABC):
         reward: float
             The transformed reward.
         '''
+        # TODO: Atari rewards are clipped, we want the unclipped rewards
+        self.ep_reward_sum += reward
         if self.reward_scaler is not None:
             reward = self.reward_scaler.scale(reward).squeeze()
         return reward
@@ -205,8 +207,6 @@ class BaseEnv(ABC):
         reward = self._preprocess_reward(reward)
 
         self.num_steps += 1
-        # TODO: Atari rewards are clipped, we want the unclipped rewards
-        self.ep_reward_sum += reward
         if done:
             self.rewards.append(self.ep_reward_sum)
             self.ep_reward_sum = 0
