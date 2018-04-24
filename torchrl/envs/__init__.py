@@ -6,5 +6,6 @@ action and return to the agent the next observation and a reward.
 
 from .base_env import BaseEnv
 from .gym_env import GymEnv
+from .roboschool_env import RoboschoolEnv
 
-__all__ = ['BaseEnv', 'GymEnv']
+__all__ = ['BaseEnv', 'GymEnv', 'RoboschoolEnv']
