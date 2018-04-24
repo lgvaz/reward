@@ -43,7 +43,7 @@ class Config:
     def __setattr__(self, key, value):
         self.__dict__['_attrs'][key] = value
 
-    def __str__(self):
+    def __repr__(self):
         return yaml.dump(self.as_dict(), default_flow_style=False)
 
     def __iter__(self):
@@ -66,6 +66,9 @@ class Config:
 
     def get(self, *args, **kwargs):
         return self.as_dict().get(*args, **kwargs)
+
+    def update(self, config):
+        self.as_dict().update(config.as_dict())
 
     def as_dict(self):
         '''

@@ -1,17 +1,19 @@
 from pathlib import Path
 
+import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from matplotlib import style
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+import torchrl.utils as U
 
 style.use('ggplot')
 
 
 def read_tf_event(file_path):
-
+    print('Reading: {}'.format(file_path))
     event_acc = EventAccumulator(str(file_path))
     event_acc.Reload()
     data = {}
@@ -65,3 +67,40 @@ def plot_logs(log_dir, tags):
 
         for i, column in enumerate(columns):
             plot_panel(panel, column=column, ax=axs.flat[i], label=tag)
+
+
+def get_initials(s):
+    if s == 'lr' or s == 'eps':
+        return s
+    else:
+        return ''.join(w[0] for w in s.split('_'))
+
+
+def bool2str(x, suffix):
+    return ['d', ''][int(x)] + get_initials(suffix)
+
+
+def dict2str(d):
+    return '_'.join(get_initials(k) + str(v) for k, v in d.items())
+
+
+def config2str(config):
+    tags = []
+    trial = config.pop('trial')
+
+    for k, v in config.items():
+        if k == 'env_name':
+            continue
+        elif isinstance(v, bool):
+            tags.append(bool2str(v, k))
+        elif isinstance(v, dict):
+            tags.append('{}({})'.format(get_initials(k), dict2str(v)))
+        elif isinstance(v, U.estimators.BaseEstimator):
+            tags.append('{}({})'.format(v.__class__.__name__, dict2str(v.__dict__)))
+        elif k == 'activation':
+            tags.append(v.__name__)
+        else:
+            tags.append(get_initials(k) + str(v))
+    tags.append('t{}'.format(trial))
+
+    return '-'.join(tags)

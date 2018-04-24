@@ -1,17 +1,18 @@
 from torchrl.utils.estimators.estimation_funcs import gae_estimation
+from torchrl.utils.estimators import BaseEstimator
 
 
-class CompleteReturn:
+class CompleteReturn(BaseEstimator):
     def __call__(self, batch):
         return batch.return_
 
 
-class Baseline:
+class Baseline(BaseEstimator):
     def __call__(self, batch):
         return batch.return_ - batch.state_value
 
 
-class GAE:
+class GAE(BaseEstimator):
     def __init__(self, gamma=0.99, gae_lambda=0.95):
         self.gamma = gamma
         self.gae_lambda = gae_lambda

@@ -17,6 +17,7 @@ class Logger:
         self.eta = None
         self.i_step = 0
 
+        print('Writing logs to: {}'.format(log_dir))
         self.writer = SummaryWriter(log_dir=log_dir)
 
     def add_log(self, name, value, precision=2):
