@@ -104,10 +104,9 @@ class BaseAgent(ABC):
 
         self.logger.add_log('Reward/Episode', np.mean(rewards))
 
+        self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
         self.logger.log('Update {} | Episode {} | Step {}'.format(
             self.models.policy.num_updates, self.env.num_episodes, self.env.num_steps))
-
-        self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
 
     @classmethod
     def from_config(cls, config, env=None):
