@@ -8,6 +8,7 @@ from torchrl.envs import GymEnv
 from torchrl.nn import ActionLinear
 
 activation = nn.ReLU
+# activation = nn.Tanh
 # Define networks configs
 policy_nn_config = Config(
     body=[
@@ -31,7 +32,7 @@ value_nn_config = Config(
 # env = GymEnv('InvertedDoublePendulum-v1', normalize_states=False)
 # env = GymEnv('Pendulum-v0', normalize_states=False)
 env = GymEnv('Hopper-v1', normalize_states=True, scale_rewards=True)
-# env = GymEnv('HalfCheetah-v1', normalize_states=True)
+# env = GymEnv('HalfCheetah-v1', normalize_states=True, scale_rewards=True)
 # env = GymEnv('CartPole-v0', normalize_states=False)
 # env_config = Config(func=GymEnv, env_name='Pendulum-v0', normalize_states=False)
 
@@ -53,7 +54,8 @@ agent = PGAgent(
     policy_model,
     value_model,
     # advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.98),
-    log_dir='logs/hopper/relu-1e3lr-rewscale-v0',
+    # vtarget=U.estimators.value.TDTarget(gamma=0.999),
+    log_dir='logs/hopper/relu-1e3lr-pgae-vgae-95lambda-ns-sr-na-2048s-v2',
     # log_dir='tests/hopper/relu-1e3lr-gradnorm-v1',
     normalize_advantages=True)
 agent.train(max_steps=1e6, steps_per_batch=2048)
