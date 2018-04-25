@@ -24,6 +24,9 @@ CONFIG = Config(
     value_opt_params=dict(lr=1e-3, eps=1e-5),
     clip_grad_norm=0.5)
 
+TASK = MUJOCO_SIMPLE_BENCH
+NUM_WORKERS = 5
+
 
 def run_bench(config):
     CONFIG.update(config)
@@ -84,5 +87,5 @@ def run_bench(config):
 
 if __name__ == '__main__':
     import multiprocessing
-    p = multiprocessing.Pool(1)
-    p.map_async(run_bench, task_gen(ROBOSCHOOL_SIMPLE_BENCH)).get()
+    p = multiprocessing.Pool(NUM_WORKERS)
+    p.map_async(run_bench, task_gen(TASK)).get()

@@ -12,7 +12,7 @@ def task_gen(tasks):
 
 
 mujoco_simple_envs = [
-    'InvertedPendulum-v2', 'InvertedDoublePendulum-v2', 'Hopper-v2', 'HalfCheetah-v2',
+    'Hopper-v2', 'HalfCheetah-v2', 'InvertedPendulum-v2', 'InvertedDoublePendulum-v2',
     'Walker2d-v2', 'Reacher-v2', 'Swimmer-v2'
 ]
 
