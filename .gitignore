@@ -3,6 +3,7 @@ tests/
 scratch/
 logs/
 runs/
+logs*/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -104,3 +105,21 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+torchrl/cscope\.out
+
+torchrl/GPATH
+
+torchrl/GRTAGS
+
+torchrl/GSYMS
+
+torchrl/GTAGS
+
+torchrl/models/base_pg_model_deprecated\.py
+
+torchrl/models/ppo_model_deprecated\.py
+
+torchrl/models/surrogate_pg_model_deprecated\.py
+
+torchrl/models/vanilla_pg_model_deprecated\.py
