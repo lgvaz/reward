@@ -12,8 +12,10 @@ class BaseAgent(ABC):
     ----------
     env: torchrl.envs
         A ``torchrl.envs`` instance.
-    model: torchrl.models
-        A ``torchrl.models`` instance.
+    gamma: float
+        Discount factor on future rewards (Default is 0.99).
+    log_dir: string
+        Directory where logs will be written (Default is `runs`).
     '''
 
     def __init__(self, env, gamma=0.99, log_dir='runs'):

@@ -1,10 +1,26 @@
-import numpy as np
 import torchrl.utils as U
 from torchrl.agents import BatchAgent
-from torchrl.models import BasePGModel, ValueModel
 
 
 class PGAgent(BatchAgent):
+    '''
+    Policy Gradient Agent, compatible with all PG models.
+
+    This agent encapsulates a policy_model and optionally a value_model,
+    it defines the steps needed for the training loop (see ``step()``),
+    and calculates all the necessary values to train the model(s).
+
+    Parameters
+    ----------
+    env: torchrl.envs
+        A ``torchrl.envs`` instance.
+    policy_model: ``torchrl.models``
+        Should be a subclass of ``torchrl.models.BasePGModel``
+    value_model: ``torchrl.models``
+        Should be an instance of ``torchrl.models.ValueModel`` (Default is None)
+    normalize_advantages: bool
+    '''
+
     def __init__(self,
                  env,
                  policy_model,
