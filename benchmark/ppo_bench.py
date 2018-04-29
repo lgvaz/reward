@@ -25,7 +25,7 @@ CONFIG = Config(
     clip_grad_norm=None)
 
 TASK = MUJOCO_ESSENTIAL_BENCH
-NUM_WORKERS = 2
+NUM_WORKERS = None
 
 
 def run_bench(config):
