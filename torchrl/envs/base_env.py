@@ -18,9 +18,12 @@ class BaseEnv(ABC):
         If True, normalize the states (Default is True).
     '''
 
-    def __init__(self, normalize_states=False, scale_rewards=False):
+    def __init__(self, env_name, normalize_states=False, scale_rewards=False):
+        self.env_name = env_name
         self.normalize_states = normalize_states
         self.scale_rewards = scale_rewards
+
+        self._create_env()
 
         self.state_normalizer = Normalizer(
             self.state_info['shape']) if normalize_states else None
@@ -31,6 +34,10 @@ class BaseEnv(ABC):
         self.ep_reward_sum = 0
         self.rewards = []
         self._state = self.reset()
+
+    @abstractmethod
+    def _create_env(self):
+        pass
 
     @abstractmethod
     def _reset(self):
@@ -154,15 +161,6 @@ class BaseEnv(ABC):
         This method should be overwritten by a subclass.
 
         Should return the name of the simulator being used as a string.
-        '''
-
-    @property
-    @abstractmethod
-    def env_name(self):
-        '''
-        This method should be overwritten by a subclass.
-
-        Should return the name of the environment.
         '''
 
     def reset(self):

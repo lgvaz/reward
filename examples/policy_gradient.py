@@ -31,7 +31,7 @@ value_nn_config = Config(
 # env = GymEnv('InvertedPendulum-v1', normalize_states=False)
 # env = GymEnv('InvertedDoublePendulum-v1', normalize_states=False)
 # env = GymEnv('Pendulum-v0', normalize_states=False)
-env = GymEnv('Hopper-v1', normalize_states=True, scale_rewards=True)
+env = GymEnv('Hopper-v2', normalize_states=True, scale_rewards=True)
 # env = GymEnv('HalfCheetah-v1', normalize_states=True, scale_rewards=True)
 # env = GymEnv('CartPole-v0', normalize_states=False)
 # env_config = Config(func=GymEnv, env_name='Pendulum-v0', normalize_states=False)

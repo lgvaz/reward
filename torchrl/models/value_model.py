@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 
 class ValueModel(BaseModel):
-    def __init__(self, model, env, batch_size=128, num_epochs=7, **kwargs):
+    def __init__(self, model, env, batch_size=64, num_epochs=10, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.batch_size = batch_size
         self.num_epochs = num_epochs

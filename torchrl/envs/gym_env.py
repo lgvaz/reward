@@ -17,13 +17,13 @@ class GymEnv(BaseEnv):
     '''
 
     def __init__(self, env_name, wrappers=[], **kwargs):
-        self._env_name = env_name
         self.wrappers = wrappers
-        self.env = gym.make(env_name)
-        # self.env._max_timesteps = 5000
+        super().__init__(env_name, **kwargs)
+
+    def _create_env(self):
+        self.env = gym.make(self.env_name)
         for wrapper in self.wrappers:
             self.env = wrapper(self.env)
-        super().__init__(**kwargs)
 
     def _reset(self):
         '''
@@ -79,10 +79,6 @@ class GymEnv(BaseEnv):
     @property
     def simulator(self):
         return GymEnv
-
-    @property
-    def env_name(self):
-        return self._env_name
 
     def update_config(self, config):
         super().update_config(config)

@@ -1,15 +1,18 @@
 from torchrl.utils import Config
 
 
-def task_gen(tasks):
+def task_gen(tasks, config):
     for task in tasks:
-        trials = task.pop('trials')
+        trials = task.get('trials')
 
         for i in range(trials):
-            config = Config(**task)
-            config.trial = i
-            yield config
+            new_config = Config(**task)
+            new_config.update(config)
+            new_config.trial = i
+            yield new_config
 
+
+mujoco_essential_envs = ['Hopper-v2', 'HalfCheetah-v2', 'Walker2d-v2']
 
 mujoco_simple_envs = [
     'Hopper-v2', 'HalfCheetah-v2', 'InvertedPendulum-v2', 'InvertedDoublePendulum-v2',
@@ -23,6 +26,11 @@ roboschool_simple_envs = [
     'RoboschoolInvertedDoublePendulum-v1',
     'RoboschoolWalker2d-v1',
     'RoboschoolReacher-v1',
+]
+
+MUJOCO_ESSENTIAL_BENCH = [
+    dict(env_name=en, trials=6, max_steps=1e6, steps_per_batch=2048)
+    for en in mujoco_essential_envs
 ]
 
 MUJOCO_SIMPLE_BENCH = [

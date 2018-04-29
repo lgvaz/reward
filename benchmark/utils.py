@@ -52,7 +52,7 @@ def plot_panel(panel, column, ax=None, label=None, window=10):
     panel_max = panel.max(0)[column].rolling(window).mean()
 
     ax.plot(steps, panel_mean, label=label)
-    ax.fill_between(steps, panel_min, panel_max, alpha=0.3)
+    ax.fill_between(steps, panel_min, panel_max, alpha=0.1)
     ax.set_title(column)
     ax.legend()
 
