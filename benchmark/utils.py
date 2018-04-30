@@ -13,7 +13,7 @@ style.use('ggplot')
 
 
 def read_tf_event(file_path):
-    print('Reading: {}'.format(file_path))
+    # print('Reading: {}'.format(file_path))
     event_acc = EventAccumulator(str(file_path))
     event_acc.Reload()
     data = {}
@@ -54,10 +54,11 @@ def plot_panel(panel, column, ax=None, label=None, window=10):
     ax.plot(steps, panel_mean, label=label)
     ax.fill_between(steps, panel_min, panel_max, alpha=0.1)
     ax.set_title(column)
-    ax.legend()
+    leg = ax.legend(fancybox=True)
+    leg.get_frame().set_alpha(0.3)
 
 
-def plot_logs(log_dir, tags):
+def plot_logs(log_dir, tags, window=10):
     fig = None
     for tag in tags:
         panel = get_logs(log_dir=log_dir, tag=tag)
@@ -66,12 +67,15 @@ def plot_logs(log_dir, tags):
         if fig is None:
             fig, axs = plt.subplots(
                 len(columns) - 1, 1, figsize=(16, (len(columns) - 1) * 10))
+            # Set non-repeating colors
+            for ax in axs.flat:
+                ax.set_prop_cycle('color', plt.cm.gist_ncar(np.linspace(0, 1, len(tags))))
 
         i = 0
         for column in columns:
             if column == 'Steps':
                 continue
-            plot_panel(panel, column=column, ax=axs.flat[i], label=tag)
+            plot_panel(panel, column=column, ax=axs.flat[i], label=tag, window=window)
             i += 1
 
 
