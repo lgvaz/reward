@@ -1,3 +1,3 @@
-from .estimators import CompleteReturn, Baseline, GAE
+from .estimators import CompleteReturn, Baseline, TD, GAE
 
-__all__ = ['CompleteReturn', 'Baseline', 'GAE']
+__all__ = ['CompleteReturn', 'Baseline', 'TD', 'GAE']

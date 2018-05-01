@@ -39,7 +39,7 @@ class PGAgent(BatchAgent):
         self._register_model('value', value_model)
 
     def step(self):
-        trajs = self.generate_trajs(self.steps_per_batch, self.episodes_per_batch)
+        trajs = self.generate_trajectories(self.steps_per_batch, self.episodes_per_batch)
 
         for traj in trajs:
             self.add_state_value(traj)

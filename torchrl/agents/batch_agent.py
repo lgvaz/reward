@@ -51,17 +51,6 @@ class BatchAgent(BaseAgent):
 
         return trajs
 
-    def generate_trajs(self, steps_per_batch, episodes_per_batch):
-        trajs = self.generate_trajectories(steps_per_batch, episodes_per_batch)
-
-        for traj in trajs:
-            self.add_return(traj)
-
-        return trajs
-
-    def add_return(self, traj):
-        traj.return_ = discounted_sum_rewards(traj.reward, traj.done, self.gamma)
-
     def train(self,
               steps_per_batch=-1,
               episodes_per_batch=-1,
