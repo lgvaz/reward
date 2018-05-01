@@ -22,6 +22,7 @@ class BaseAgent(ABC):
         self.env = env
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
+        self.rewards = [0]
 
         self.models = U.SimpleMemory()
         self.last_logged_ep = self.env.num_episodes
@@ -86,7 +87,9 @@ class BaseAgent(ABC):
         action: int or numpy.ndarray
             The selected action.
         '''
-        return self.models.policy.select_action(state[None])
+        # TODO: One env needs additional dimension on first (batch) axis
+        # return self.models.policy.select_action(state[None])
+        return self.models.policy.select_action(state)
 
     def run_one_episode(self):
         '''
@@ -101,10 +104,11 @@ class BaseAgent(ABC):
 
     def write_logs(self):
         new_eps = abs(self.last_logged_ep - self.env.num_episodes)
+        if new_eps != 0:
+            self.rewards = self.env.rewards[-new_eps:]
         self.last_logged_ep = self.env.num_episodes
-        rewards = self.env.rewards[-new_eps:]
 
-        self.logger.add_log('Reward/Episode', np.mean(rewards))
+        self.logger.add_log('Reward/Episode', np.mean(self.rewards))
 
         self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
         self.logger.log('Update {} | Episode {} | Step {}'.format(

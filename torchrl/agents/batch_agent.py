@@ -34,29 +34,33 @@ class BatchAgent(BaseAgent):
         'You must define how many timesteps or episodes will be in each batch'
 
         total_steps = 0
-        trajs = []
+        # trajs = []
 
-        while True:
-            traj = self.env.run_one_episode(select_action_fn=self.select_action)
-            trajs.append(traj)
+        # while True:
+        # TODO: Episode way
+        # traj = self.env.run_one_episode(select_action_fn=self.select_action)
+        # trajs.append(traj)
 
-            total_steps += len(traj['reward'])
+        # total_steps += len(traj['reward'])
+        trajs = self.env.run_n_steps(
+            select_action_fn=self.select_action, num_steps=steps_per_batch)
 
-            if (total_steps // steps_per_batch >= 1
-                    or len(trajs) // episodes_per_batch >= 1):
-                break
+        # if (total_steps // steps_per_batch >= 1
+        #         or len(trajs) // episodes_per_batch >= 1):
+        #     break
 
         return trajs
 
-    def generate_batch(self, steps_per_batch, episodes_per_batch):
+    def generate_trajs(self, steps_per_batch, episodes_per_batch):
         trajs = self.generate_trajectories(steps_per_batch, episodes_per_batch)
-        batch = U.Batch.from_trajs(trajs)
-        self.add_return(batch)
 
-        return batch
+        for traj in trajs:
+            self.add_return(traj)
 
-    def add_return(self, batch):
-        batch.return_ = discounted_sum_rewards(batch.reward, batch.done, self.gamma)
+        return trajs
+
+    def add_return(self, traj):
+        traj.return_ = discounted_sum_rewards(traj.reward, traj.done, self.gamma)
 
     def train(self,
               steps_per_batch=-1,

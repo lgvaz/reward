@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+import torchrl.utils as U
 from torchrl.utils.preprocessing import Normalizer
 
 
@@ -213,7 +214,7 @@ class BaseEnv(ABC):
 
     def run_one_step(self, select_action_fn):
         '''
-        Performs a single action on the environment.
+        Performs a single action on the environment and automatically reset if needed.
 
         Parameters
         ----------
@@ -229,7 +230,7 @@ class BaseEnv(ABC):
         action = select_action_fn(self._state)
         next_state, reward, done = self.step(action)
 
-        transition = dict(
+        transition = U.SimpleMemory(
             state_t=self._state,
             state_tp1=next_state,
             action=action,
@@ -265,12 +266,21 @@ class BaseEnv(ABC):
             transitions.append(transition)
             done = transition['done']
 
+        return U.join_transitions(transitions)
+
+    def run_n_steps(self, select_action_fn, num_steps):
+        transitions = []
+
+        for _ in range(num_steps):
+            transition = self.run_one_step(select_action_fn)
+            transitions.append(transition)
+
         trajectory = {
             key: np.array([t[key] for t in transitions])
             for key in transitions[0]
         }
 
-        return trajectory
+        return U.join_transitions(transitions)
 
     def record(self, path):
         raise NotImplementedError

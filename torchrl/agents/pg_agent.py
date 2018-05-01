@@ -39,26 +39,30 @@ class PGAgent(BatchAgent):
         self._register_model('value', value_model)
 
     def step(self):
-        batch = self.generate_batch(self.steps_per_batch, self.episodes_per_batch)
+        trajs = self.generate_trajs(self.steps_per_batch, self.episodes_per_batch)
 
-        self.add_state_value(batch)
-        self.add_advantage(batch)
-        self.add_vtarget(batch)
+        for traj in trajs:
+            self.add_state_value(traj)
+            self.add_advantage(traj)
+            self.add_vtarget(traj)
+
+        batch = U.Batch.from_trajs(trajs)
+        # TODO: per traj or batch?
         if self.normalize_advantages:
             batch.advantage = U.normalize(batch.advantage)
 
         self.models.policy.train(batch)
         self.models.value.train(batch)
 
-    def add_state_value(self, batch):
+    def add_state_value(self, traj):
         if self.models.value is not None:
-            batch.state_value = U.to_numpy(self.models.value(batch.state_t).view(-1))
+            traj.state_value = U.to_numpy(self.models.value(traj.state_t).view(-1))
 
-    def add_advantage(self, batch):
-        batch.advantage = self.advantage(batch)
+    def add_advantage(self, traj):
+        traj.advantage = self.advantage(traj)
 
-    def add_vtarget(self, batch):
-        batch.vtarget = self.vtarget(batch)
+    def add_vtarget(self, traj):
+        traj.vtarget = self.vtarget(traj)
 
     # TODO: Reimplement this method
     @classmethod

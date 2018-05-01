@@ -21,7 +21,9 @@ class BasePGModel(BaseModel):
 
     def select_action(self, state):
         parameters = self.forward(state)
-        dist = self.create_dist(parameters[0])
+        # TODO: Fix for single env
+        # dist = self.create_dist(parameters[0])
+        dist = self.create_dist(parameters)
         action = dist.sample()
 
         return U.to_numpy(action)

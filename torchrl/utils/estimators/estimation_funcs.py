@@ -12,12 +12,13 @@ def discounted_sum_rewards_single(rewards, gamma=0.99):
 
 
 def discounted_sum_rewards(rewards, dones=None, gamma=0.99):
-    cuts = np.argwhere(dones == 1)
-    cuts = np.concatenate((-1 * np.ones((1, 1)), cuts, -1 * np.ones(
-        (1, 1)))).squeeze().astype(int)
+    cuts = (np.argwhere(dones == 1).ravel() + 1).tolist()
+    cuts.insert(0, 0)
+    if not dones[-1]:
+        cuts.append(None)
 
     returns = [
-        discounted_sum_rewards_single(rewards[start + 1:end + 1], gamma=gamma)
+        discounted_sum_rewards_single(rewards[start:end], gamma=gamma)
         for start, end in zip(cuts[:-1], cuts[1:])
     ]
 
