@@ -39,7 +39,11 @@ def gae_estimation(rewards, dones, state_values, gamma=0.99, gae_lambda=0.95):
     td_target_value = td_target(rewards, dones, state_values, gamma)
     td_residual = td_target_value - state_values
 
-    advantages = discounted_sum_rewards(td_residual, dones, gamma * gae_lambda)
+    advantages = discounted_sum_rewards(
+        rewards=td_residual,
+        dones=dones,
+        last_state_value=state_values[-1],
+        gamma=gamma * gae_lambda)
     # vtarget = advantages + state_values
 
     return advantages
