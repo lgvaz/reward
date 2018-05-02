@@ -20,7 +20,7 @@ class Normalizer(object):
 
     def __init__(self, shape, path=None):
         self.path = path
-        self.vars = np.ones(shape)
+        self.vars = np.zeros(shape)
         self.means = np.zeros(shape)
         self.xs = []
         self.m = 0

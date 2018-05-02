@@ -227,7 +227,7 @@ class BaseEnv(ABC):
             A dictionary containing the transition information.
         '''
         # Choose and execute action
-        action = select_action_fn(self._state)
+        action = select_action_fn(self._state[None]).squeeze()
         next_state, reward, done = self.step(action)
 
         transition = U.SimpleMemory(
@@ -266,7 +266,7 @@ class BaseEnv(ABC):
             transitions.append(transition)
             done = transition['done']
 
-        return U.join_transitions(transitions)
+        return [U.join_transitions(transitions)]
 
     def run_n_steps(self, select_action_fn, num_steps):
         transitions = []
@@ -275,12 +275,10 @@ class BaseEnv(ABC):
             transition = self.run_one_step(select_action_fn)
             transitions.append(transition)
 
-        trajectory = {
-            key: np.array([t[key] for t in transitions])
-            for key in transitions[0]
-        }
+        trajectory = U.SimpleMemory(
+            (key, np.array([t[key] for t in transitions])) for key in transitions[0])
 
-        return U.join_transitions(transitions)
+        return [U.join_transitions(transitions)]
 
     def record(self, path):
         raise NotImplementedError
