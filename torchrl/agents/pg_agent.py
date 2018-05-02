@@ -47,7 +47,6 @@ class PGAgent(BatchAgent):
             self.add_vtarget(traj)
 
         batch = U.Batch.from_trajs(trajs)
-        # TODO: per traj or batch?
         if self.normalize_advantages:
             batch.advantage = U.normalize(batch.advantage)
 

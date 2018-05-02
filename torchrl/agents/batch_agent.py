@@ -33,21 +33,9 @@ class BatchAgent(BaseAgent):
         assert steps_per_batch > -1 or episodes_per_batch > -1, \
         'You must define how many timesteps or episodes will be in each batch'
 
-        total_steps = 0
-        # trajs = []
-
-        # while True:
-        # TODO: Episode way
-        # traj = self.env.run_one_episode(select_action_fn=self.select_action)
-        # trajs.append(traj)
-
-        # total_steps += len(traj['reward'])
+        # TODO: episodes per batch
         trajs = self.env.run_n_steps(
             select_action_fn=self.select_action, num_steps=steps_per_batch)
-
-        # if (total_steps // steps_per_batch >= 1
-        #         or len(trajs) // episodes_per_batch >= 1):
-        #     break
 
         return trajs
 

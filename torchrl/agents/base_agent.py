@@ -87,8 +87,6 @@ class BaseAgent(ABC):
         action: int or numpy.ndarray
             The selected action.
         '''
-        # TODO: One env needs additional dimension on first (batch) axis
-        # return self.models.policy.select_action(state[None])
         return self.models.policy.select_action(state)
 
     def run_one_episode(self):

@@ -24,7 +24,6 @@ def env_from_config(config):
 def join_transitions(transitions):
     trajectory = SimpleMemory(
         (key, np.array([t[key] for t in transitions])) for key in transitions[0])
-    # trajectory = {key: np.array([t[key] for t in transitions]) for key in transitions[0]}
 
     return trajectory
 

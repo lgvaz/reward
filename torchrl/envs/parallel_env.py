@@ -72,8 +72,23 @@ class ParallelEnv:
             self.workers.append(WorkerNTuple(process=process, connection=parent_conn))
 
     @property
+    def state_info(self):
+        return self.info_env.state_info
+
+    @property
+    def action_info(self):
+        return self.info_env.action_info
+
+    @property
+    def simulator(self):
+        return self.info_env.simulator
+
+    @property
     def num_episodes(self):
         return len(self.rewards)
+
+    def record(self, path):
+        return self.info_env.record(path)
 
     def reset(self):
         # Send signal to reset
@@ -130,3 +145,6 @@ class ParallelEnv:
             array[i * q + min(i, r):(i + 1) * q + min(i + 1, r)]
             for i in range(self.num_workers)
         ]
+
+    def update_config(self, config):
+        return self.info_env.update_config(config)
