@@ -13,3 +13,6 @@ dependencies:
       - pyyaml
       - sphinx
       - gym
+      - pandas
+      - tensorflow
+      - tensorboardX
