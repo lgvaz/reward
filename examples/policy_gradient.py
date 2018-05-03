@@ -7,11 +7,11 @@ from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv
 from torchrl.envs import GymEnv, ParallelEnv
 from torchrl.nn import ActionLinear
-# from torchrl.utils.estimators.advantage.estimators import TD
 
 activation = nn.ReLU
 # activation = nn.Tanh
 # Define networks configs
+# The input_features of the first layer will be automatically added.
 policy_nn_config = Config(
     body=[
         dict(func=nn.Linear, out_features=64),
@@ -29,17 +29,11 @@ value_nn_config = Config(
     ],
     head=[dict(func=nn.Linear, out_features=1)])
 
-# Create environment
-# env = GymEnv('InvertedPendulum-v1', normalize_states=False)
-# env = GymEnv('InvertedDoublePendulum-v1', normalize_states=False)
-# env = GymEnv('Pendulum-v0', normalize_states=False)
-# env = GymEnv('Hopper-v2', normalize_states=True, scale_rewards=True)
+# Single env
 # env = GymEnv('HalfCheetah-v2', normalize_states=True, scale_rewards=True)
-# env = GymEnv('CartPole-v0', normalize_states=False)
-# env_config = Config(func=GymEnv, env_name='Pendulum-v0', normalize_states=False)
-# envs = [GymEnv('Hopper-v2', normalize_states=True, scale_rewards=True) for _ in range(1)]
+# Parallel envs
 envs = [GymEnv('Hopper-v2', normalize_states=True, scale_rewards=True) for _ in range(32)]
-env = ParallelEnv(envs, num_workers=1)
+env = ParallelEnv(envs)
 
 # TODO: actual method can't share bodies
 policy_model_config = Config(nn_config=policy_nn_config)
@@ -61,9 +55,8 @@ agent = PGAgent(
     env,
     policy_model,
     value_model,
-    # advantage=TD(gamma=0.99),
+    # advantage=U.estimators.advantage.TD(gamma=0.99),
     # vtarget=U.estimators.value.TDTarget(gamma=0.99),
     log_dir='logs/hopper/parallel/32parallel-relu-2',
-    # log_dir='tests/hopper/relu-1e3lr-gradnorm-v1',
     normalize_advantages=True)
 agent.train(max_steps=1e6, steps_per_batch=2048)
