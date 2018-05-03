@@ -15,6 +15,16 @@ Config
   :show-inheritance:
   :members:           
 
+Memories
+--------
+
+.. automodule:: torchrl.utils.memories
+
+:hidden:`SimpleMemory`
+~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: SimpleMemory
+  :show-inheritance:
+  :members:
 
 Preprocessing
 -------------
