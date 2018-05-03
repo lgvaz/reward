@@ -50,7 +50,9 @@ class BaseAgent(ABC):
         Parameters
         ----------
         name: str
+            Desired name for the model.
         model: torchrl.models
+            The model to register.
         '''
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
