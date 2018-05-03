@@ -40,6 +40,20 @@ class EnvWorker(Process):
 
 
 class ParallelEnv:
+    r'''
+    The parallelization is done as described in
+    [this paper](https://arxiv.org/pdf/1705.04862.pdf).
+
+    Each worker will hold :math:`\frac{num_envs}{num_workers}` envs.
+
+    Parameters
+    ----------
+    envs: list
+        A list of all the torchrl envs.
+    num_workers: int
+        How many process to spawn (Default is available number of CPU cores).
+    '''
+
     def __init__(self, envs, num_workers=None):
         self.num_envs = len(envs)
         self.num_workers = num_workers or multiprocessing.cpu_count()
