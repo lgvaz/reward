@@ -138,6 +138,8 @@ class ActionLinear(nn.Module):
 
         if action_info['dtype'] == 'continuous':
             self.log_std = nn.Parameter(torch.zeros(1, out_features))
+            # Tiny layer for maximizing exploration
+            self.linear.weight.data.normal_(std=0.01)
 
     def forward(self, x):
         if self.action_info['dtype'] == 'discrete':
