@@ -1,11 +1,11 @@
 name: torchrl
 
 channels:
-  - soumith
+  - pytorch
 
 dependencies:
   - python>=3.5
-  - pytorch
+  - pytorch>=0.4
   - numpy
   - scipy
   - pip
