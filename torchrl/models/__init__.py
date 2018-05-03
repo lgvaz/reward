@@ -9,8 +9,9 @@ from .base_pg_model import BasePGModel
 from .vanilla_pg_model import VanillaPGModel
 from .surrogate_pg_model import SurrogatePGModel
 from .ppo_model import PPOModel
+from .ppo_adaptive_model import PPOAdaptiveModel
 
 __all__ = [
     'BaseModel', 'ValueModel', 'BasePGModel', 'VanillaPGModel', 'SurrogatePGModel',
-    'PPOModel'
+    'PPOModel', 'PPOAdaptiveModel'
 ]
