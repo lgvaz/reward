@@ -3,6 +3,6 @@ TorchRL
 
 |docs|
 
-.. |docs| image:: https://readthedocs.org/projects/torchrl/badge/?version=latest
-  :target: http://torchrl.readthedocs.io/en/latest/?badge=latest
+.. |docs| image:: https://readthedocs.org/projects/torchrl/badge/?version=master
+  :target: http://torchrl.readthedocs.io/en/master/?badge=master
   :alt: Documentation Status
