@@ -10,6 +10,7 @@ TorchRL Documentation
    torchrl.agents <agents>
    torchrl.models <models>
    envs
+   torchrl.nn <nn>
    torchrl.utils <utils>
 
 

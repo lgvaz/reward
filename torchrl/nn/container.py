@@ -9,7 +9,24 @@ from torchrl.utils import get_obj
 
 
 class ModuleExtended(nn.Module):
+    '''
+    A torch module with added functionalities.
+    '''
+
     def _maybe_cuda(self, x):
+        '''
+        Convert input tensor to cuda if available.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            A pytorch tensor.
+
+        Returns
+        -------
+        torch.Tensor
+            A pytorch tensor.
+        '''
         return x.cuda() if self.is_cuda and not x.is_cuda else x
 
     def _to_tensor(self, x):
@@ -30,6 +47,19 @@ class ModuleExtended(nn.Module):
         return next(self.parameters()).is_cuda
 
     def get_output_shape(self, input_shape):
+        '''
+        Feed forward the current module to find out the output shape.
+
+        Parameters
+        ----------
+        input_shape: list
+            The input dimensions.
+
+        Returns
+        -------
+        torch.IntTensor
+            The dimensions of the output.
+        '''
         fake_input = Variable(self._maybe_cuda(torch.zeros(input_shape)[None]))
         out = self.layers(fake_input)
         shape = out.shape[1:]
@@ -38,6 +68,10 @@ class ModuleExtended(nn.Module):
 
 
 class SequentialExtended(ModuleExtended):
+    '''
+    A torch sequential module with added functionalities.
+    '''
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.layers = nn.Sequential(*args, **kwargs)
@@ -55,6 +89,17 @@ class SequentialExtended(ModuleExtended):
 
 
 class FlattenLinear(nn.Linear):
+    '''
+    Flatten the input and apply a linear layer.
+
+    Parameters
+    ----------
+    in_features: list
+        Size of each input sample.
+    out_features: list
+        Size of each output sample.
+    '''
+
     def __init__(self, in_features, out_features, **kwargs):
         if isinstance(in_features, torch.IntTensor):
             in_features = in_features.prod()
@@ -71,6 +116,17 @@ class FlattenLinear(nn.Linear):
 
 # TODO: This can be only an action layer, no need Linear
 class ActionLinear(nn.Module):
+    '''
+    A linear layer that automatically calculates the output shape based on the action_info.
+
+    Parameters
+    ----------
+    in_features: list
+        Size of each input sample
+    action_info: dict
+        Dict containing information about the environment actions (e.g. shape).
+    '''
+
     def __init__(self, in_features, action_info, **kwargs):
         super().__init__()
 
