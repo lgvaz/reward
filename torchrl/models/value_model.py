@@ -6,6 +6,17 @@ from torch.utils.data import TensorDataset, DataLoader
 
 
 class ValueModel(BaseModel):
+    '''
+    A standard regression model, can be used to estimate the value of states or Q values.
+
+    Parameters
+    ----------
+    batch_size: int
+        The mini-batch size (Default is 64).
+    num_epochs: int
+        How many times to train over the entire dataset.
+    '''
+
     def __init__(self, model, env, batch_size=64, num_epochs=10, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.batch_size = batch_size

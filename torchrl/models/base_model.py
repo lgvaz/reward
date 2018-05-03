@@ -14,10 +14,17 @@ class BaseModel(ModuleExtended, ABC):
 
     Parameters
     ----------
-    nn_body: Config
-        A configuration object containing sections with pytorch networks.
-    nn_head: Config
-        A configuration object containing sections with pytorch networks.
+    model: nn.Module
+        A pytorch model.
+    env: torchrl.envs
+            A torchrl environment.
+    opt_fn: torch.optim
+        The optimizer reference function (the constructor, not the instance)
+        (Default is Adam).
+    opt_params: dict
+        Parameters for the optimizer (Default is empty dict).
+    clip_grad_norm: float
+        Clip norm for the gradients, if `None` gradients will not be clipped.
     cuda_default: bool
         If True and cuda is supported, use it.
     '''
@@ -64,31 +71,29 @@ class BaseModel(ModuleExtended, ABC):
         '''
 
     @abstractmethod
-    def train(self, batch, num_epochs=1):
+    def train(self, batch):
         '''
-        Basic train function.
+        This method should be overwritten by a subclass.
 
-        Perform a optimizer step and write logs
+        Should define the training procedure and call :meth:`optimizer_step`.
 
         Parameters
         ----------
-        batch: dict
+        batch: torchrl.utils.Batch
             The batch should contain all the information necessary
             to compute the gradients.
-        num_epochs: int
-            Number of times to fit on the same batch.
         '''
         pass
 
     def optimizer_step(self, *args, **kwargs):
         '''
-        Apply the gradients in respect to the losses defined by :func:`add_losses`_.
+        Apply the gradients in respect to the losses defined by :meth:`add_losses`.
 
         Should use the batch to compute and apply gradients to the network.
 
         Parameters
         ----------
-        batch: dict
+        batch: torchrl.utils.Batch
             The batch should contain all the information necessary
             to compute the gradients.
         '''
@@ -120,6 +125,13 @@ class BaseModel(ModuleExtended, ABC):
         return self.model(x)
 
     def attach_logger(self, logger):
+        '''
+        Register a logger to this model.
+
+        Parameters
+        ----------
+        logger: torchrl.utils.logger
+        '''
         self.logger = logger
 
     def write_logs(self, batch):
@@ -129,6 +141,15 @@ class BaseModel(ModuleExtended, ABC):
     def from_config(cls, config, env=None, **kwargs):
         '''
         Creates a model from a configuration file.
+
+        Parameters
+        ----------
+        config: Config
+            Should contatin at least a network definition (``nn_config`` section).
+        env: torchrl.envs
+            A torchrl environment (Default is None and must be present in the config).
+        kwargs: key-word arguments
+            Extra arguments that will be passed to the class constructor.
 
         Returns
         -------

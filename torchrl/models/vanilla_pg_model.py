@@ -11,15 +11,6 @@ class VanillaPGModel(BasePGModel):
     '''
 
     def add_losses(self, batch):
-        '''
-        Define all losses used for calculating the gradient.
-
-        Parameters
-        ----------
-        batch: Batch
-            The batch should contain all the information necessary
-            to compute the gradients.
-        '''
         self.pg_loss(batch)
 
     def pg_loss(self, batch):

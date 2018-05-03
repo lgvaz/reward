@@ -6,6 +6,17 @@ from torchrl.models import BasePGModel
 
 
 class SurrogatePGModel(BasePGModel):
+    '''
+    The Surrogate Policy Gradient algorithm instead maximizes a "surrogate" objective, given by:
+
+    .. math::
+        :nowrap:
+
+        \begin{allign}
+            L^{CPI}({\alpha}) = \hat{E}_t
+        \end{allign}
+    '''
+
     def __init__(self, model, env, num_epochs=1, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.num_epochs = num_epochs

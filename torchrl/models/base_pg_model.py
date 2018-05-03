@@ -7,19 +7,18 @@ from torchrl.models import BaseModel
 class BasePGModel(BaseModel):
     '''
     Base class for all Policy Gradient Models.
-
-    Parameters
-    ----------
-    model: torch model
-        A pytorch neural network.
-    action_info: dict
-        Dict containing information about the action space.
     '''
 
-    def __init__(self, model, env, **kwargs):
-        super().__init__(model, env, **kwargs)
-
     def select_action(self, state):
+        '''
+        Define how the actions are selected, in this case the actions
+        are sampled from a distribution which values are given be a NN.
+
+        Parameters
+        ----------
+        state: np.array
+            The state of the environment (can be a batch of states).
+        '''
         parameters = self.forward(state)
         dist = self.create_dist(parameters)
         action = dist.sample()
@@ -33,7 +32,9 @@ class BasePGModel(BaseModel):
 
         Parameters
         ----------
-        parameters
+        parameters: np.array
+        The parameters are used to create a distribution
+        (continuous or discrete depending on the type of the environment).
         '''
         if self.env.action_info['dtype'] == 'discrete':
             logits = parameters

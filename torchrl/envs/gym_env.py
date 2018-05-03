@@ -21,9 +21,11 @@ class GymEnv(BaseEnv):
         super().__init__(env_name, **kwargs)
 
     def _create_env(self):
-        self.env = gym.make(self.env_name)
+        env = gym.make(self.env_name)
         for wrapper in self.wrappers:
-            self.env = wrapper(self.env)
+            env = wrapper(env)
+
+        return env
 
     def _reset(self):
         '''
@@ -81,6 +83,14 @@ class GymEnv(BaseEnv):
         return GymEnv
 
     def update_config(self, config):
+        '''
+        Updates a Config object to include information about the environment.
+
+        Parameters
+        ----------
+        config: Config
+            Object used for storing configuration.
+        '''
         super().update_config(config)
         config.env.obj.update(dict(wrappers=self.wrappers))
 

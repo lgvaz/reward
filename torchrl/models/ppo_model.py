@@ -3,6 +3,16 @@ from torchrl.models import SurrogatePGModel
 
 
 class PPOModel(SurrogatePGModel):
+    '''
+    Proximal Policy Optimization as described in https://arxiv.org/pdf/1707.06347.pdf.
+
+
+    Parameters
+    ----------
+    ppo_clip_range: float
+        Clipping value for the probability ratio.
+    '''
+
     def __init__(self, model, env, ppo_clip_range=0.2, num_epochs=10, **kwargs):
         super().__init__(model=model, env=env, num_epochs=num_epochs, **kwargs)
         self.ppo_clip_range = ppo_clip_range
@@ -11,6 +21,9 @@ class PPOModel(SurrogatePGModel):
         self.ppo_clip_loss(batch)
 
     def ppo_clip_loss(self, batch):
+        '''
+        Test
+        '''
         prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
         clipped_prob_ratio = prob_ratio.clamp(1 - self.ppo_clip_range,
                                               1 + self.ppo_clip_range)

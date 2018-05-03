@@ -24,7 +24,7 @@ class BaseEnv(ABC):
         self.normalize_states = normalize_states
         self.scale_rewards = scale_rewards
 
-        self._create_env()
+        self.env = self._create_env()
 
         self.state_normalizer = Normalizer(
             self.state_info['shape']) if normalize_states else None
@@ -38,6 +38,15 @@ class BaseEnv(ABC):
 
     @abstractmethod
     def _create_env(self):
+        '''
+        This method should be overwritten by a subclass.
+
+        It should create and return the environment.
+
+        Returns
+        -------
+            Environment object.
+        '''
         pass
 
     @abstractmethod
@@ -251,12 +260,12 @@ class BaseEnv(ABC):
         Parameters
         ----------
         select_action_fn: function
-            A function that receives the state and returns an action.
+            A function that receives a state and returns an action.
 
         Returns
         -------
-        dict
-            A dictionary containing information about the trajectory.
+        SimpleMemory
+            A ``SimpleMemory`` obj containing information about the trajectory.
         '''
         done = False
         transitions = []
@@ -269,6 +278,22 @@ class BaseEnv(ABC):
         return [U.join_transitions(transitions)]
 
     def run_n_steps(self, select_action_fn, num_steps):
+        '''
+        Runs the enviroment for ``num_steps`` steps,
+        sampling actions from select_action_fn.
+
+        Parameters
+        ----------
+        select_action_fn: function
+            A function that receives a state and returns an action.
+        num_steps: int
+            Number of steps to run.
+
+        Returns
+        -------
+        SimpleMemory
+            A ``SimpleMemory`` obj containing information about the trajectory.
+        '''
         transitions = []
 
         for _ in range(num_steps):
