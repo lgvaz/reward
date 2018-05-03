@@ -82,19 +82,13 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
-    def optimizer_step(self, batch):
+    def optimizer_step(self, *args, **kwargs):
         '''
         Apply the gradients in respect to the losses defined by :meth:`add_losses`.
 
         Should use the batch to compute and apply gradients to the network.
-
-        Parameters
-        ----------
-        batch: torchrl.utils.Batch
-            The batch should contain all the information necessary
-            to compute the gradients.
         '''
-        self.add_losses(batch)
+        self.add_losses(*args, **kwargs)
 
         self.opt.zero_grad()
         loss = sum(self.losses)
