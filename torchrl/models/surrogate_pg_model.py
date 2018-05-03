@@ -8,8 +8,12 @@ from torchrl.models import BasePGModel
 class SurrogatePGModel(BasePGModel):
     '''
     The Surrogate Policy Gradient algorithm instead maximizes a "surrogate" objective, given by:
+    ADD EQUATION
 
-    .. math:: L^{CPI}(\theta) = test
+    Parameters
+    ----------
+    num_epochs: int
+        How many times to train over the entire dataset (Default is 10).
     '''
 
     def __init__(self, model, env, num_epochs=1, **kwargs):

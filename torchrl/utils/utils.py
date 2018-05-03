@@ -5,6 +5,19 @@ from torchrl.utils import EPSILON, SimpleMemory
 
 
 def get_obj(config):
+    '''
+    Creates an object based on the given config.
+
+    Parameters
+    ----------
+    config: dict
+        A dict containing the function and the parameters for creating the object.
+
+    Returns
+    -------
+    obj
+        The created object.
+    '''
     func = config.pop('func')
     obj = func(**config)
     config['func'] = func
@@ -13,6 +26,24 @@ def get_obj(config):
 
 
 def env_from_config(config):
+    '''
+    Tries to create an environment from a configuration obj.
+
+    Parameters
+    ----------
+    config: Config
+        Configuration file containing the environment function.
+
+    Returns
+    -------
+    env: torchrl.envs
+        A torchrl environment.
+
+    Raises
+    ------
+    AttributeError
+        If no env is defined in the config obj.
+    '''
     try:
         env = get_obj(config.env.as_dict())
     except AttributeError:
@@ -22,23 +53,44 @@ def env_from_config(config):
 
 
 def join_transitions(transitions):
+    '''
+    Joins a list of transitions into a single trajectory.
+    '''
     trajectory = SimpleMemory(
         (key, np.array([t[key] for t in transitions])) for key in transitions[0])
 
     return trajectory
 
 
-# TODO: Variable deprecated
 def to_numpy(tensor):
-    # if isinstance(tensor, Variable):
-    #     tensor = tensor.data
-
+    '''
+    Convert a tensor to a numpy array.
+    '''
     return tensor.detach().cpu().numpy()
 
 
 def explained_var(target, preds):
+    '''
+    Calculates the explained variance between two datasets.
+    Useful for estimating the quality of the value function
+
+    Parameters
+    ----------
+    target: np.array
+        Target dataset.
+    preds: np.array
+        Predictions array.
+
+    Returns
+    -------
+    float
+        The explained variance.
+    '''
     return 1 - (target.view(-1) - preds.view(-1)).var() / target.view(-1).var()
 
 
 def normalize(array):
+    '''
+    Normalize an array by subtracting the mean and diving by the std dev.
+    '''
     return (array - np.mean(array)) / (np.std(array) + EPSILON)

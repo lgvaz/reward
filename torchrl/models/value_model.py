@@ -14,7 +14,7 @@ class ValueModel(BaseModel):
     batch_size: int
         The mini-batch size (Default is 64).
     num_epochs: int
-        How many times to train over the entire dataset.
+        How many times to train over the entire dataset (Default is 10).
     '''
 
     def __init__(self, model, env, batch_size=64, num_epochs=10, **kwargs):

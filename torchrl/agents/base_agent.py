@@ -11,7 +11,7 @@ class BaseAgent(ABC):
     Parameters
     ----------
     env: torchrl.envs
-        A ``torchrl.envs`` instance.
+        A torchrl environment.
     gamma: float
         Discount factor on future rewards (Default is 0.99).
     log_dir: string
@@ -28,6 +28,14 @@ class BaseAgent(ABC):
         self.last_logged_ep = self.env.num_episodes
 
     def _check_termination(self):
+        '''
+        Check if the training loop reached the end.
+
+        Returns
+        -------
+        bool
+        True if done, False otherwise.
+        '''
         if (self.models.policy.num_updates // self.max_updates >= 1
                 or self.env.num_episodes // self.max_episodes >= 1
                 or self.env.num_steps // self.max_steps >= 1):
@@ -36,22 +44,28 @@ class BaseAgent(ABC):
         return False
 
     def _register_model(self, name, model):
+        '''
+        Save a torchrl model to the internal memory.
+
+        Parameters
+        ----------
+        name: str
+        model: torchrl.models
+        '''
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
 
     @abstractmethod
     def step(self):
         '''
-        This method should be overwritten by a subclass.
-
         This method is called at each interaction of the training loop,
-        and should define the training procedure.
+        and defines the training procedure.
         '''
         pass
 
     def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
         '''
-        It should define the training loop of the algorithm.
+        Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
 
         Parameters
         ----------
@@ -101,6 +115,9 @@ class BaseAgent(ABC):
         return self.env.run_one_episode(select_action_fn=self.select_action)
 
     def write_logs(self):
+        '''
+        Use the logger to write general information about the training process.
+        '''
         new_eps = abs(self.last_logged_ep - self.env.num_episodes)
         if new_eps != 0:
             self.rewards = self.env.rewards[-new_eps:]

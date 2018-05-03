@@ -10,7 +10,9 @@ class PPOModel(SurrogatePGModel):
     Parameters
     ----------
     ppo_clip_range: float
-        Clipping value for the probability ratio.
+        Clipping value for the probability ratio (Default is 0.2).
+    num_epochs: int
+        How many times to train over the entire dataset (Default is 10).
     '''
 
     def __init__(self, model, env, ppo_clip_range=0.2, num_epochs=10, **kwargs):
@@ -22,7 +24,11 @@ class PPOModel(SurrogatePGModel):
 
     def ppo_clip_loss(self, batch):
         '''
-        Test
+        Calculate the PPO Clip loss as described in the paper.
+
+        Parameters
+        ----------
+            batch: Batch
         '''
         prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
         clipped_prob_ratio = prob_ratio.clamp(1 - self.ppo_clip_range,

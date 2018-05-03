@@ -7,6 +7,15 @@ import numpy as np
 
 
 class Logger:
+    '''
+    Common logger used by all agents, aggregates values and print a nice table.
+
+    Parameters
+    ----------
+    log_dir: str
+        Path to write logs file.
+    '''
+
     def __init__(self, log_dir=None, debug=False):
         self.debug = debug
         self.logs = defaultdict(list)
@@ -21,6 +30,19 @@ class Logger:
         self.writer = SummaryWriter(log_dir=log_dir)
 
     def add_log(self, name, value, precision=2):
+        '''
+        Register a value to a name, this function can be called
+        multiple times and the values will be averaged when logging.
+
+        Parameters
+        ----------
+        name: str
+            Name displayed when printing the table.
+        value: float
+            Value to log.
+        precision: int
+            Decimal points displayed for the value (Default is 2).
+        '''
         self.logs[name].append(value)
         self.precision[name] = precision
 
@@ -29,10 +51,27 @@ class Logger:
             self.add_log(name, value, precision)
 
     def add_histogram(self, name, values):
+        '''
+        Register a histogram that can be seen at tensorboard.
+
+        Parameters
+        ----------
+        name: str
+            Name displayed when printing the table.
+        value: torch.Tensor
+            Value to log.
+        '''
         self.histograms[name] = np.array(values)
 
     def log(self, header=None):
-        ''' Write the mean of the values added to each key and clear previous values '''
+        '''
+        Use the aggregated values to print a table and write to the log file.
+
+        Parameters
+        ----------
+        header: str
+            Optional header to include at the top of the table (Default is None).
+        '''
         # Take the mean of the values
         self.logs = {key: np.mean(value) for key, value in self.logs.items()}
         # Convert values to string, with defined precision
@@ -58,6 +97,17 @@ class Logger:
         self.histograms = dict()
 
     def timeit(self, i_step, max_steps=-1):
+        '''
+        Estimates steps per second by counting how many steps
+        passed between each call of this function.
+
+        Parameters
+        ----------
+        i_step: int
+            The current time step.
+        max_steps: int
+            The maximum number of steps of the training loop (Default is -1).
+        '''
         steps, self.i_step = i_step - self.i_step, i_step
         new_time = time.time()
         steps_sec = steps / (new_time - self.time)

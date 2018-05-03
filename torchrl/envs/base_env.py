@@ -39,9 +39,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def _create_env(self):
         '''
-        This method should be overwritten by a subclass.
-
-        It should create and return the environment.
+        Creates ans returns an environment.
 
         Returns
         -------
@@ -52,9 +50,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def _reset(self):
         '''
-        This method should be overwritten by a subclass.
-
-        It should reset the environment to an initial state.
+        Resets the environment to an initial state.
 
         Returns
         -------
@@ -65,9 +61,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def _step(self, action):
         '''
-        This method should be overwritten by a subclass.
-
-        It should receive an action an execute it on the environment.
+        Receives an action and execute it on the environment.
 
         Parameters
         ----------
@@ -130,9 +124,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def state_info(self):
         '''
-        This method should be overwritten by a subclass.
-
-        Should return a dict containing information about the state space.
+        Returns a dict containing information about the state space.
 
         The dict should contain two keys: ``shape`` indicating the state shape,
         and ``dtype`` indicating the state type.
@@ -148,9 +140,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def action_info(self):
         '''
-        This method should be overwritten by a subclass.
-
-        Should return a dict containing information about the action space.
+        Returns a dict containing information about the action space.
 
         The dict should contain two keys: ``shape`` indicating the action shape,
         and ``dtype`` indicating the action type.
@@ -168,9 +158,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def simulator(self):
         '''
-        This method should be overwritten by a subclass.
-
-        Should return the name of the simulator being used as a string.
+        Returns the name of the simulator being used as a string.
         '''
 
     def reset(self):

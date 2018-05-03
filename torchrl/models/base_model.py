@@ -24,9 +24,10 @@ class BaseModel(ModuleExtended, ABC):
     opt_params: dict
         Parameters for the optimizer (Default is empty dict).
     clip_grad_norm: float
-        Clip norm for the gradients, if `None` gradients will not be clipped.
+        Clip norm for the gradients, if `None` gradients
+        will not be clipped (Default is None).
     cuda_default: bool
-        If True and cuda is supported, use it.
+        If True and cuda is supported, use it (Default is True).
     '''
 
     def __init__(self,
@@ -59,9 +60,8 @@ class BaseModel(ModuleExtended, ABC):
     @abstractmethod
     def add_losses(self, batch):
         '''
-        This method should be overwritten by a subclass.
-
-        It should append all the necessary losses to `self.losses`.
+        Append losses to ``self.losses``, the losses are used
+        at :meth:`optimizer_step` for calculating the gradients.
 
         Parameters
         ----------
@@ -73,9 +73,7 @@ class BaseModel(ModuleExtended, ABC):
     @abstractmethod
     def train(self, batch):
         '''
-        This method should be overwritten by a subclass.
-
-        Should define the training procedure and call :meth:`optimizer_step`.
+        The main training loop.
 
         Parameters
         ----------
@@ -83,9 +81,8 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        pass
 
-    def optimizer_step(self, *args, **kwargs):
+    def optimizer_step(self, batch):
         '''
         Apply the gradients in respect to the losses defined by :meth:`add_losses`.
 
@@ -97,7 +94,7 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        self.add_losses(*args, **kwargs)
+        self.add_losses(batch)
 
         self.opt.zero_grad()
         loss = sum(self.losses)
@@ -113,9 +110,7 @@ class BaseModel(ModuleExtended, ABC):
 
     def forward(self, x):
         '''
-        This method should be overwritten by a subclass.
-
-        Should define how the networks are connected.
+        Defines the computation performed at every call.
 
         Parameters
         ----------

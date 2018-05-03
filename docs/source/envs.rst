@@ -22,3 +22,11 @@ GymEnv
   :show-inheritance:
   :members:
   :inherited-members:
+
+RoboschoolEnv
+-------------
+
+.. autoclass:: RoboschoolEnv
+  :show-inheritance:
+  :members:
+  :inherited-members:

@@ -27,8 +27,7 @@ class BatchAgent(BaseAgent):
         Returns
         -------
         trajectories: list
-            A list containing all sampled trajectories,
-            each trajectory is in a ``dict``.
+            A list containing all sampled trajectories.
         '''
         assert steps_per_batch > -1 or episodes_per_batch > -1, \
         'You must define how many timesteps or episodes will be in each batch'
@@ -45,6 +44,18 @@ class BatchAgent(BaseAgent):
               max_updates=-1,
               max_episodes=-1,
               max_steps=-1):
+        '''
+        The main training loop.
+
+        Parameters
+        ----------
+        steps_per_batch: int
+            Maximum number of time steps per batch
+            (Default is -1, meaning it doesn't matter).
+        episodes_per_batch: int
+            Maximum number of episodes per batch
+            (Default is -1, meaning it doesn't matter).
+        '''
         self.steps_per_batch = steps_per_batch
         self.episodes_per_batch = episodes_per_batch
         super().train(
