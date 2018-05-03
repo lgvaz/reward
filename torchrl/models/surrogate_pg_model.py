@@ -6,9 +6,13 @@ from torchrl.models import BasePGModel
 
 
 class SurrogatePGModel(BasePGModel):
-    '''
+    r'''
     The Surrogate Policy Gradient algorithm instead maximizes a "surrogate" objective, given by:
-    ADD EQUATION
+
+    .. math::
+
+        L^{CPI}({\theta}) = \hat{E}_t \left[\frac{\pi_{\theta}(a|s)}
+        {\pi_{\theta_{old}}(a|s)} \hat{A} \right ]
 
     Parameters
     ----------
