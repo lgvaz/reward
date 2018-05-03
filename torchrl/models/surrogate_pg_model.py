@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from torch.distributions import kl_divergence
+from torch.distributions.kl import kl_divergence
 
 from torchrl.models import BasePGModel
 
@@ -8,13 +8,7 @@ from torchrl.models import BasePGModel
 class SurrogatePGModel(BasePGModel):
     '''
     The Surrogate Policy Gradient algorithm instead maximizes a "surrogate" objective, given by:
-
-    .. math::
-        :nowrap:
-
-        \begin{allign}
-            L^{CPI}({\alpha}) = \hat{E}_t
-        \end{allign}
+    ADD EQUATION
     '''
 
     def __init__(self, model, env, num_epochs=1, **kwargs):
@@ -50,6 +44,13 @@ class SurrogatePGModel(BasePGModel):
         self.surrogate_pg_loss(batch)
 
     def surrogate_pg_loss(self, batch):
+        '''
+        The surrogate pg loss, as described before.
+
+        Parameters
+        ----------
+            batch: Batch
+        '''
         prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
         surrogate = prob_ratio * batch.advantage
 
@@ -58,5 +59,13 @@ class SurrogatePGModel(BasePGModel):
         self.losses.append(loss)
 
     def calculate_prob_ratio(self, new_log_probs, old_log_probs):
+        '''
+        Calculates the probability ratio between two policies.
+
+        Parameters
+        ----------
+        new_log_probs: torch.Tensor
+        old_log_probs: torch.Tensor
+        '''
         prob_ratio = (new_log_probs - old_log_probs).exp()
         return prob_ratio
