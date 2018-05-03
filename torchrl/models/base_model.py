@@ -159,6 +159,7 @@ class BaseModel(ModuleExtended, ABC):
 
         return cls(model=model, env=env, **config.as_dict(), **kwargs)
 
+    # TODO: Reimplement method
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):
         config = U.Config.load(file_path)

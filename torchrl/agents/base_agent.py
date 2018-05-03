@@ -131,6 +131,7 @@ class BaseAgent(ABC):
         self.logger.log('Update {} | Episode {} | Step {}'.format(
             self.models.policy.num_updates, self.env.num_episodes, self.env.num_steps))
 
+    # TODO: Reimplement method
     @classmethod
     def from_config(cls, config, env=None):
         '''
@@ -152,6 +153,7 @@ class BaseAgent(ABC):
 
         return cls(env, model, **config.agent.as_dict())
 
+    # TODO: Reimplement method
     @classmethod
     def from_file(cls, file_path, env=None):
         '''
