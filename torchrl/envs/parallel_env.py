@@ -12,6 +12,7 @@ class EnvWorker(Process):
         self.envs = envs
         self.conn = conn
         self.shared_rewards = shared_rewards
+        self.reward_sum = 0
 
     def run(self):
         super().run()
@@ -20,17 +21,20 @@ class EnvWorker(Process):
     def _run(self):
         while True:
             data = self.conn.recv()
-            #             if data is None:
-            #                 break
+
             if isinstance(data, str) and data == 'reset':
                 self.conn.send([env.reset() for env in self.envs])
+
             else:
                 next_states, rewards, dones = [], [], []
                 for a, env in zip(data, self.envs):
-                    next_state, reward, done = env.step(a)
+                    next_state, reward, done = env._step(a)
+                    self.reward_sum += reward
+
                     if done:
-                        next_state = env.reset()
-                        self.shared_rewards.append(env.rewards[-1])
+                        next_state = env._reset()
+                        self.shared_rewards.append(self.reward_sum)
+                        self.reward_sum = 0
 
                     next_states.append(next_state)
                     rewards.append(reward)
@@ -64,26 +68,14 @@ class ParallelEnv:
         assert self.num_envs >= self.num_workers, \
             'Number of envs must be greater or equal the number of workers'
 
+        # Extract information from the envs
+        env = envs[0]
+        self.state_normalizer = env.state_normalizer
+        self.reward_scaler = env.reward_scaler
+        self.info_env = env
+
         self._create_workers(envs)
-        self._states = self.reset()
-        self.info_env = envs[0]
-
-    # TODO: DANGEROUS, can call wrong method
-    def __getattr__(self, attr):
-        if attr in self.__dict__:
-            return getattr(self, attr)
-        else:
-            return getattr(self.info_env, attr)
-
-    def _create_workers(self, envs):
-        WorkerNTuple = namedtuple('Worker', ['process', 'connection'])
-        self.workers = []
-        for envs in self.split(envs):
-            parent_conn, child_conn = Pipe()
-            process = EnvWorker(envs, child_conn, self.rewards)
-            process.daemon = True
-            process.start()
-            self.workers.append(WorkerNTuple(process=process, connection=parent_conn))
+        self._states = None
 
     @property
     def state_info(self):
@@ -101,36 +93,131 @@ class ParallelEnv:
     def num_episodes(self):
         return len(self.rewards)
 
+    def _create_workers(self, envs):
+        '''
+        Creates and starts each worker in a distinct process.
+
+        Parameters
+        ----------
+        envs: list
+            List of envs, each worker will have approximately the same number of envs.
+        '''
+        WorkerNTuple = namedtuple('Worker', ['process', 'connection'])
+        self.workers = []
+
+        for envs_i in self.split(envs):
+            parent_conn, child_conn = Pipe()
+            process = EnvWorker(envs_i, child_conn, self.rewards)
+            process.daemon = True
+            process.start()
+            self.workers.append(WorkerNTuple(process=process, connection=parent_conn))
+
+    def _preprocess_state(self, state):
+        '''
+        Perform transformations on the state (scaling, normalizing, cropping, etc).
+
+        Parameters
+        ----------
+        state: numpy.ndarray
+            The state to be processed.
+
+        Returns
+        -------
+        state: numpy.ndarray
+            The transformed state.
+        '''
+        if self.state_normalizer is not None:
+            state = self.state_normalizer.normalize(np.array(state))
+
+        return state
+
+    def _preprocess_reward(self, reward):
+        '''
+        Perform transformations on the reward e.g. clipping.
+
+        Parameters
+        ----------
+        reward: float
+            The reward to be processed.
+
+        Returns
+        -------
+        reward: float
+            The transformed reward.
+        '''
+        # TODO: Atari rewards are clipped, we want the unclipped rewards
+        if self.reward_scaler is not None:
+            reward = self.reward_scaler.scale(np.array(reward)).squeeze()
+        return reward
+
+    def update_normalizers(self):
+        '''
+        Update mean and var of the normalizers.
+        '''
+        if self.state_normalizer is not None:
+            self.state_normalizer.update()
+        if self.reward_scaler is not None and self.num_episodes > 1:
+            self.reward_scaler.update()
+
     def record(self, path):
         return self.info_env.record(path)
 
     def reset(self):
+        '''
+        Reset all workers in parallel, using Pipe for communication.
+        '''
         # Send signal to reset
         for worker in self.workers:
             worker.connection.send('reset')
         # Receive results
-        states = []
-        for worker in self.workers:
-            states.extend(worker.connection.recv())
+        states = np.concatenate([worker.connection.recv() for worker in self.workers])
+
+        states = self._preprocess_state(states)
         return states
 
     def step(self, actions):
+        '''
+        Step all workers in parallel, using Pipe for communication.
+
+        Parameters
+        ----------
+        action: int or float or numpy.ndarray
+            The action to be executed in the environment, it should be an ``int``
+            for discrete enviroments and ``float`` for continuous. There's also
+            the possibility of executing multiple actions (if the environment
+            supports so), in this case it should be a ``numpy.ndarray``.
+        '''
         # Send actions to worker
         for acts, worker in zip(self.split(actions), self.workers):
             worker.connection.send(acts)
         # Receive results
-        next_states, rewards, dones = [], [], []
-        for worker in self.workers:
-            next_state, reward, done = worker.connection.recv()
-            next_states.extend(next_state)
-            rewards.extend(reward)
-            dones.extend(done)
-
+        next_states, rewards, dones = map(
+            np.concatenate, zip(*[worker.connection.recv() for worker in self.workers]))
         self.num_steps += self.num_envs
+
+        next_states = self._preprocess_state(next_states)
+        rewards = self._preprocess_reward(rewards)
+        self.update_normalizers()
 
         return next_states, rewards, dones
 
     def run_one_step(self, select_action_fn):
+        '''
+        Performs a single action on each environment and automatically reset if needed.
+
+        Parameters
+        ----------
+        select_action_fn: function
+            A function that receives the states and returns the actions.
+
+        Returns
+        -------
+        torch.utils.SimpleMemory
+            A object containing the transition information.
+        '''
+        if self._states is None:
+            self._states = self.reset()
+
         actions = select_action_fn(np.array(self._states))
         next_states, rewards, dones = self.step(actions)
 
@@ -145,6 +232,22 @@ class ParallelEnv:
         return transition
 
     def run_n_steps(self, select_action_fn, num_steps):
+        '''
+        Runs the enviroments for ``num_steps`` steps,
+        sampling actions from select_action_fn.
+
+        Parameters
+        ----------
+        select_action_fn: function
+            A function that receives a state and returns an action.
+        num_steps: int
+            Number of steps to run.
+
+        Returns
+        -------
+        SimpleMemory
+            A ``SimpleMemory`` obj containing information about the trajectory.
+        '''
         transitions = []
 
         for _ in range(num_steps // self.num_envs):
@@ -154,6 +257,19 @@ class ParallelEnv:
         return [U.join_transitions(t) for t in zip(*transitions)]
 
     def split(self, array):
+        '''
+        Divide the input in approximately equal chunks for all workers.
+
+        Parameters
+        ----------
+        array: array or list
+            The object to be divided.
+
+        Returns
+        -------
+        list
+            The divided object.
+        '''
         q, r = divmod(self.num_envs, self.num_workers)
         return [
             array[i * q + min(i, r):(i + 1) * q + min(i + 1, r)]

@@ -34,7 +34,48 @@ class BaseEnv(ABC):
         self.num_steps = 0
         self.ep_reward_sum = 0
         self.rewards = []
-        self._state = self.reset()
+        self._state = None
+
+    @property
+    @abstractmethod
+    def state_info(self):
+        '''
+        Returns a dict containing information about the state space.
+
+        The dict should contain two keys: ``shape`` indicating the state shape,
+        and ``dtype`` indicating the state type.
+
+        Example
+        -------
+        State space containing 4 continuous actions::
+
+            return dict(shape=(4,), dtype='continuous')
+        '''
+
+    @property
+    @abstractmethod
+    def action_info(self):
+        '''
+        Returns a dict containing information about the action space.
+
+        The dict should contain two keys: ``shape`` indicating the action shape,
+        and ``dtype`` indicating the action type.
+
+        If dtype is ``int`` it will be assumed a discrete action space.
+
+        Example
+        -------
+        Action space containing 4 float numbers::
+
+            return dict(shape=(4,), dtype='float')
+        '''
+
+    @property
+    @abstractmethod
+    def simulator(self):
+        '''
+        Returns the name of the simulator being used as a string.
+        '''
 
     @abstractmethod
     def _create_env(self):
@@ -66,10 +107,10 @@ class BaseEnv(ABC):
         Parameters
         ----------
         action: int or float or numpy.ndarray
-            The action to be executed in the environment, it should be an ``int`` for
-            discrete enviroments and ``float`` for continuous. There's also the possibility
-            of executing multiple actions (if the environment supports so),
-            in this case it should be a ``numpy.ndarray``.
+            The action to be executed in the environment, it should be an ``int``
+            for discrete enviroments and ``float`` for continuous. There's also
+            the possibility of executing multiple actions (if the environment
+            supports so), in this case it should be a ``numpy.ndarray``.
 
         Returns
         -------
@@ -120,46 +161,14 @@ class BaseEnv(ABC):
             reward = self.reward_scaler.scale(reward).squeeze()
         return reward
 
-    @property
-    @abstractmethod
-    def state_info(self):
+    def update_normalizers(self):
         '''
-        Returns a dict containing information about the state space.
-
-        The dict should contain two keys: ``shape`` indicating the state shape,
-        and ``dtype`` indicating the state type.
-
-        Example
-        -------
-        State space containing 4 continuous actions::
-
-            return dict(shape=(4,), dtype='continuous')
+        Update mean and var of the normalizers.
         '''
-
-    @property
-    @abstractmethod
-    def action_info(self):
-        '''
-        Returns a dict containing information about the action space.
-
-        The dict should contain two keys: ``shape`` indicating the action shape,
-        and ``dtype`` indicating the action type.
-
-        If dtype is ``int`` it will be assumed a discrete action space.
-
-        Example
-        -------
-        Action space containing 4 float numbers::
-
-            return dict(shape=(4,), dtype='float')
-        '''
-
-    @property
-    @abstractmethod
-    def simulator(self):
-        '''
-        Returns the name of the simulator being used as a string.
-        '''
+        if self.state_normalizer is not None:
+            self.state_normalizer.update()
+        if self.reward_scaler is not None and self.num_episodes > 1:
+            self.reward_scaler.update()
 
     def reset(self):
         '''
@@ -174,11 +183,6 @@ class BaseEnv(ABC):
         state = self._reset()
         state = self._preprocess_state(state)
 
-        if self.state_normalizer is not None:
-            self.state_normalizer.update()
-        if self.reward_scaler is not None and self.num_episodes > 1:
-            self.reward_scaler.update()
-
         self.num_episodes += 1
 
         return state
@@ -188,6 +192,14 @@ class BaseEnv(ABC):
         Calls the :meth:`_step` method that should be implemented by a subclass.
         The :meth:`_preprocess_state` function is called at the returned state.
         The :meth:`_preprocess_reward` function is called at the returned reward.
+
+        Parameters
+        ----------
+        action: int or float or numpy.ndarray
+            The action to be executed in the environment, it should be an ``int``
+            for discrete enviroments and ``float`` for continuous. There's also
+            the possibility of executing multiple actions (if the environment
+            supports so), in this case it should be a ``numpy.ndarray``.
 
         Returns
         -------
@@ -204,6 +216,7 @@ class BaseEnv(ABC):
 
         self.num_steps += 1
         if done:
+            self.update_normalizers()
             self.rewards.append(self.ep_reward_sum)
             self.ep_reward_sum = 0
 
@@ -220,10 +233,12 @@ class BaseEnv(ABC):
 
         Returns
         -------
-        dict
-            A dictionary containing the transition information.
+        torch.utils.SimpleMemory
+            A object containing the transition information.
         '''
         # Choose and execute action
+        if self._state is None:
+            self._state = self.reset()
         action = select_action_fn(self._state[None]).squeeze()
         next_state, reward, done = self.step(action)
 

@@ -47,6 +47,7 @@ class SurrogatePGModel(BasePGModel):
                                    self.memory.new_dists).sum(-1).mean()
             self.logger.add_log('Policy/Entropy', entropy.item())
             self.logger.add_log('Policy/KL Divergence', kl_div.item(), precision=4)
+
         self.memory.clear()
 
     def add_losses(self, batch):

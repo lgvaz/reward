@@ -27,6 +27,13 @@ class BaseAgent(ABC):
         self.models = U.SimpleMemory()
         self.last_logged_ep = self.env.num_episodes
 
+    @abstractmethod
+    def step(self):
+        '''
+        This method is called at each interaction of the training loop,
+        and defines the training procedure.
+        '''
+
     def _check_termination(self):
         '''
         Check if the training loop reached the end.
@@ -56,14 +63,6 @@ class BaseAgent(ABC):
         '''
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
-
-    @abstractmethod
-    def step(self):
-        '''
-        This method is called at each interaction of the training loop,
-        and defines the training procedure.
-        '''
-        pass
 
     def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
         '''

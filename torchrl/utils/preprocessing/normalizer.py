@@ -20,7 +20,7 @@ class Normalizer(object):
 
     def __init__(self, shape, path=None):
         self.path = path
-        self.vars = np.zeros(shape)
+        self.vars = np.ones(shape)
         self.means = np.zeros(shape)
         self.xs = []
         self.m = 0
@@ -73,7 +73,7 @@ class Normalizer(object):
         numpy.ndarray
             The normalized input.
         '''
-        self.xs.append(x)
+        self.xs.extend(x)
         scale, offset = self.get()
         return (x - offset) * scale
 
