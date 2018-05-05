@@ -94,7 +94,7 @@ class BaseModel(ModuleExtended, ABC):
         loss = sum(self.losses)
         loss.backward()
         if self.clip_grad_norm is not None:
-            torch.nn.utils.clip_grad_norm(self.parameters(), self.clip_grad_norm)
+            torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
         self.opt.step()
 
         self.losses = []
