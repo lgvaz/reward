@@ -16,14 +16,32 @@ class GymEnv(BaseEnv):
         Each wrapper should be a function that receives and returns the env.
     '''
 
-    def __init__(self, env_name, wrappers=[], **kwargs):
+    def __init__(self,
+                 env_name,
+                 wrappers=[],
+                 monitor_dir=None,
+                 monitor_force=True,
+                 record_freq=None,
+                 **kwargs):
         self.wrappers = wrappers
+        self.monitor_dir = monitor_dir
+        self.monitor_force = monitor_force
+        self.record_freq = record_freq
+
         super().__init__(env_name, **kwargs)
 
     def _create_env(self):
         env = gym.make(self.env_name)
         for wrapper in self.wrappers:
             env = wrapper(env)
+
+        if self.monitor_dir is not None:
+            env = gym.wrappers.Monitor(
+                env=env,
+                directory=self.monitor_dir,
+                force=self.monitor_force,
+                video_callable=
+                lambda x: self.record_freq is not None and x % self.record_freq == True)
 
         return env
 

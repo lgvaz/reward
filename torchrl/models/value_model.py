@@ -24,8 +24,8 @@ class ValueModel(BaseModel):
 
     @property
     def loss_fn(self):
-        # return F.mse_loss
-        return F.smooth_l1_loss
+        return F.mse_loss
+        # return F.smooth_l1_loss
 
     def add_losses(self, states, vtargets):
         preds = self.forward(states).view(-1)

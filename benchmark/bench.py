@@ -29,7 +29,7 @@ roboschool_simple_envs = [
 ]
 
 MUJOCO_ESSENTIAL_BENCH = [
-    dict(env_name=en, trials=6, max_steps=1e6, steps_per_batch=2048)
+    dict(env_name=en, trials=3, max_steps=1e6, steps_per_batch=2048)
     for en in mujoco_essential_envs
 ]
 

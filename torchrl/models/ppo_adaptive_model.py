@@ -23,12 +23,21 @@ class PPOAdaptiveModel(SurrogatePGModel):
     def add_losses(self, batch):
         self.surrogate_pg_loss(batch)
         self.kl_penalty_loss(batch)
+        self.hinge_loss(batch)
 
     def kl_penalty_loss(self, batch):
         kl_div = kl_divergence(self.memory.old_dists,
                                self.memory.new_dists).sum(-1).mean()
 
         loss = self.kl_penalty * kl_div
+
+        self.losses.append(loss)
+
+    def hinge_loss(self, batch):
+        kl_div = kl_divergence(self.memory.old_dists,
+                               self.memory.new_dists).sum(-1).mean()
+
+        loss = 50 * max(0, kl_div - 2. * self.kl_target)**2
 
         self.losses.append(loss)
 
@@ -44,14 +53,20 @@ class PPOAdaptiveModel(SurrogatePGModel):
             parameters = self.forward(batch.state_t)
             self.memory.new_dists = self.create_dist(parameters)
             batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
+            # TODO: Probably calculate kl_div here
 
             loss = self.optimizer_step(batch)
+
+            # Calculate KL div, change penalty when needed
+            kl_div = kl_divergence(self.memory.old_dists,
+                                   self.memory.new_dists).sum(-1).mean()
+            if kl_div > 4 * self.kl_target:
+                print('Early stopping')
+                break
+
             if self.logger is not None:
                 self.logger.add_log('Policy/Loss', loss.item(), precision=3)
 
-        # Calculate KL div, change penalty when needed
-        kl_div = kl_divergence(self.memory.old_dists,
-                               self.memory.new_dists).sum(-1).mean()
         if kl_div < self.kl_target / 1.5:
             self.kl_penalty /= 2
         if kl_div > self.kl_target * 1.5:
