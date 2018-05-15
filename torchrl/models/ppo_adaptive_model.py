@@ -49,33 +49,30 @@ class PPOAdaptiveModel(SurrogatePGModel):
             self.memory.old_dists = self.create_dist(parameters)
             batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
-        for _ in range(self.num_epochs):
-            parameters = self.forward(batch.state_t)
-            self.memory.new_dists = self.create_dist(parameters)
-            batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
-            # TODO: Probably calculate kl_div here
-
+        self.add_new_dist(batch)
+        for i_iter in range(self.num_epochs):
             loss = self.optimizer_step(batch)
 
-            # Calculate KL div, change penalty when needed
-            kl_div = kl_divergence(self.memory.old_dists,
-                                   self.memory.new_dists).sum(-1).mean()
-            if kl_div > 4 * self.kl_target:
-                print('Early stopping')
-                break
+            # Create new policy
+            self.add_new_dist(batch)
 
             if self.logger is not None:
                 self.logger.add_log('Policy/Loss', loss.item(), precision=3)
 
-        if kl_div < self.kl_target / 1.5:
+            if batch.kl_div > 4 * self.kl_target:
+                print('Early stopping')
+                break
+
+        # Adjust KL target
+        if batch.kl_div < self.kl_target / 1.5:
             self.kl_penalty /= 2
-        if kl_div > self.kl_target * 1.5:
+        if batch.kl_div > self.kl_target * 1.5:
             self.kl_penalty *= 2
 
         if self.logger is not None:
             entropy = self.memory.new_dists.entropy().mean()
-            self.logger.add_log('Policy/KL Penalty', self.kl_penalty, precision=4)
             self.logger.add_log('Policy/Entropy', entropy.item())
-            self.logger.add_log('Policy/KL Divergence', kl_div.item(), precision=4)
+            self.logger.add_log('Policy/KL Divergence', batch.kl_div.item(), precision=4)
+            self.logger.add_log('Policy/KL Penalty', self.kl_penalty, precision=4)
 
         self.memory.clear()
