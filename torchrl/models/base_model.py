@@ -82,6 +82,10 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
+    @property
+    def lr(self):
+        return self.opt.param_groups[0]['lr']
+
     def optimizer_step(self, *args, **kwargs):
         '''
         Apply the gradients in respect to the losses defined by :meth:`add_losses`.
@@ -112,6 +116,18 @@ class BaseModel(ModuleExtended, ABC):
             The environment state.
         '''
         return self.model(x)
+
+    def set_lr(self, value):
+        '''
+        Change the learning rate of the optimizer.
+
+        Parameters
+        ----------
+        value: float
+            The new learning rate.
+        '''
+        for param_group in self.opt.param_groups:
+            param_group['lr'] = value
 
     def attach_logger(self, logger):
         '''
