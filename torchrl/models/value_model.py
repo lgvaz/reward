@@ -35,6 +35,12 @@ class ValueModel(BaseModel):
     def train(self, batch):
         batch = batch.apply_to_all(self._to_tensor)
 
+        # EV before update
+        if self.logger is not None:
+            preds = self.forward(batch.state_t)
+            self.logger.add_log('Value NN/Old Explained Var',
+                                U.explained_var(batch.vtarget, preds).item())
+
         dataset = TensorDataset(batch.state_t, batch.vtarget)
         data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
@@ -44,7 +50,8 @@ class ValueModel(BaseModel):
                 if self.logger is not None:
                     self.logger.add_log('Value NN/Loss', loss.item(), precision=3)
 
+        # Ev after update
         if self.logger is not None:
             preds = self.forward(batch.state_t)
-            self.logger.add_log('Value NN/Explained Var',
+            self.logger.add_log('Value NN/New Explained Var',
                                 U.explained_var(batch.vtarget, preds).item())
