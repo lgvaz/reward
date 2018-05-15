@@ -20,12 +20,9 @@ class SurrogatePGModel(BasePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, env, max_kl=0.03, num_epochs=1, **kwargs):
+    def __init__(self, model, env, num_epochs=1, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.num_epochs = num_epochs
-        # TODO: test
-        # self.max_kl = max_kl
-        self.max_kl = 1
 
     def add_new_dist(self, batch):
         parameters = self.forward(batch.state_t)
@@ -48,21 +45,14 @@ class SurrogatePGModel(BasePGModel):
 
             # Create new policy
             self.add_new_dist(batch)
-            if batch.kl_div > 2 * self.max_kl:
-                print('Max KL reached, breaking on iteration {}'.format(i_iter))
-                break
 
             if self.logger is not None:
                 self.logger.add_log('Policy/Loss', loss.item(), precision=3)
-
-        self.max_kl = (0.96 * self.max_kl + (1 - 0.96) * batch.kl_div).item()
 
         if self.logger is not None:
             entropy = self.memory.new_dists.entropy().mean()
             self.logger.add_log('Policy/Entropy', entropy.item())
             self.logger.add_log('Policy/KL Divergence', batch.kl_div.item(), precision=4)
-            self.logger.add_log('Policy/Max KL', self.max_kl, precision=4)
-            self.logger.add_log('Iter', i_iter + 1, precision=0)
 
         self.memory.clear()
 

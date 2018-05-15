@@ -1,8 +1,6 @@
 import torch
 from torchrl.models import SurrogatePGModel
 
-from torch.distributions.kl import kl_divergence
-
 
 class PPOModel(SurrogatePGModel):
     '''
@@ -47,11 +45,3 @@ class PPOModel(SurrogatePGModel):
         if self.logger is not None:
             clip_frac = ((1 - prob_ratio).abs() > self.ppo_clip_range).float().mean()
             self.logger.add_log('Policy/PPO Clip Fraction', clip_frac)
-
-    def hinge_loss(self, batch):
-        kl_div = kl_divergence(self.memory.old_dists,
-                               self.memory.new_dists).sum(-1).mean()
-
-        loss = 50 * max(0, kl_div - 2. * self.max_kl)**2
-
-        self.losses.append(loss)
