@@ -55,13 +55,13 @@ class SurrogatePGModel(BasePGModel):
             if self.logger is not None:
                 self.logger.add_log('Policy/Loss', loss.item(), precision=3)
 
-        self.max_kl = 0.96 * self.max_kl + (1 - 0.96) * batch.kl_div
+        self.max_kl = (0.96 * self.max_kl + (1 - 0.96) * batch.kl_div).item()
 
         if self.logger is not None:
             entropy = self.memory.new_dists.entropy().mean()
             self.logger.add_log('Policy/Entropy', entropy.item())
             self.logger.add_log('Policy/KL Divergence', batch.kl_div.item(), precision=4)
-            self.logger.add_log('Policy/Max KL', self.max_kl.item(), precision=4)
+            self.logger.add_log('Policy/Max KL', self.max_kl, precision=4)
             self.logger.add_log('Iter', i_iter + 1, precision=0)
 
         self.memory.clear()
