@@ -6,7 +6,7 @@ import torchrl.utils as U
 from bench import MUJOCO_SIMPLE_BENCH, MUJOCO_ESSENTIAL_BENCH, task_gen
 from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv, ParallelEnv
-from torchrl.models import PPOModel, ValueModel
+from torchrl.models import PPOClipModel, ValueModel
 from torchrl.nn import ActionLinear
 from torchrl.utils import Config
 from utils import config2str
@@ -65,7 +65,7 @@ def run_bench(config):
 
     # Create Models
     policy_model_config = Config(nn_config=policy_nn_config)
-    policy_model = PPOModel.from_config(
+    policy_model = PPOClipModel.from_config(
         config=policy_model_config,
         env=env,
         opt_params=config.policy_opt_params,

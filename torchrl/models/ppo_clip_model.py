@@ -2,7 +2,7 @@ import torch
 from torchrl.models import SurrogatePGModel
 
 
-class PPOModel(SurrogatePGModel):
+class PPOClipModel(SurrogatePGModel):
     '''
     Proximal Policy Optimization as described in https://arxiv.org/pdf/1707.06347.pdf.
 

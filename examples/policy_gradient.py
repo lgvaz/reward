@@ -2,7 +2,7 @@ import torch.nn as nn
 
 import torchrl.utils as U
 from torchrl.utils import Config
-from torchrl.models import VanillaPGModel, SurrogatePGModel, PPOModel, ValueModel
+from torchrl.models import VanillaPGModel, SurrogatePGModel, PPOClipModel, ValueModel
 from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv
 from torchrl.envs import GymEnv, ParallelEnv
@@ -37,7 +37,7 @@ env = ParallelEnv(envs)
 
 # TODO: actual method can't share bodies
 policy_model_config = Config(nn_config=policy_nn_config)
-policy_model = PPOModel.from_config(
+policy_model = PPOClipModel.from_config(
     config=policy_model_config,
     env=env,
     opt_params=dict(lr=1e-3, eps=1e-5),

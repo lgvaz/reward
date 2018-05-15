@@ -8,7 +8,7 @@ from .value_model import ValueModel
 from .base_pg_model import BasePGModel
 from .vanilla_pg_model import VanillaPGModel
 from .surrogate_pg_model import SurrogatePGModel
-from .ppo_model import PPOModel
+from .ppo_clip_model import PPOClipModel
 from .ppo_adaptive_model import PPOAdaptiveModel
 
 __all__ = [
