@@ -63,7 +63,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
                 print('Early stopping')
                 break
 
-        # Adjust KL target
+        # Adjust KL penalty
         if batch.kl_div < self.kl_target / 1.5:
             self.kl_penalty /= 2
         if batch.kl_div > self.kl_target * 1.5:
