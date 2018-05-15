@@ -100,6 +100,9 @@ class GymEnv(BaseEnv):
     def simulator(self):
         return GymEnv
 
+    def seed(self, value):
+        self.env.seed(value)
+
     def update_config(self, config):
         '''
         Updates a Config object to include information about the environment.
