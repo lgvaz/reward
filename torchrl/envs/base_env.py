@@ -280,6 +280,28 @@ class BaseEnv(ABC):
 
         return [U.join_transitions(transitions)]
 
+    def run_n_episodes(self, select_action_fn, num_episodes):
+        '''
+        Runs the enviroments for ``num_episodes`` episodes,
+        sampling actions from select_action_fn.
+
+        Parameters
+        ----------
+        select_action_fn: function
+            A function that receives a state and returns an action.
+        num_episodes: int
+            Number of episodes to run.
+
+        Returns
+        -------
+        SimpleMemory
+            A ``SimpleMemory`` obj containing information about the trajectory.
+        '''
+        return [
+            self.run_one_episode(select_action_fn=select_action_fn)[0]
+            for _ in range(num_episodes)
+        ]
+
     def run_n_steps(self, select_action_fn, num_steps):
         '''
         Runs the enviroment for ``num_steps`` steps,

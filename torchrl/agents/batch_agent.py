@@ -10,31 +10,27 @@ class BatchAgent(BaseAgent):
     An agent that has methods for collecting a collection of trajectories.
     '''
 
-    def generate_trajectories(self, steps_per_batch=-1, episodes_per_batch=-1):
+    def generate_trajectories(self):
         '''
         Generate a collection of trajectories, limited by
         ``timesteps_per_batch`` or ``episodes_per_batch``.
-
-        Parameters
-        ----------
-        steps_per_batch: int
-            Maximum number of time steps per batch
-            (Default is -1, meaning it doesn't matter).
-        episodes_per_batch: int
-            Maximum number of episodes per batch
-            (Default is -1, meaning it doesn't matter).
 
         Returns
         -------
         trajectories: list
             A list containing all sampled trajectories.
         '''
-        assert steps_per_batch > -1 or episodes_per_batch > -1, \
+        assert self.steps_per_batch > -1 or self.episodes_per_batch > -1, \
         'You must define how many timesteps or episodes will be in each batch'
+        assert not (self.steps_per_batch > -1 and self.episodes_per_batch > -1), \
+        'You must define either steps or episodes per batch'
 
-        # TODO: episodes per batch
-        trajs = self.env.run_n_steps(
-            select_action_fn=self.select_action, num_steps=steps_per_batch)
+        if self.steps_per_batch > -1:
+            trajs = self.env.run_n_steps(
+                select_action_fn=self.select_action, num_steps=self.steps_per_batch)
+        elif self.episodes_per_batch > -1:
+            trajs = self.env.run_n_episodes(
+                select_action_fn=self.select_action, num_episodes=self.episodes_per_batch)
 
         return trajs
 

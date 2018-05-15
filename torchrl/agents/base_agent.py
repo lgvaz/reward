@@ -113,7 +113,8 @@ class BaseAgent(ABC):
         batch: dict
             Dictionary containing information about the episode.
         '''
-        return self.env.run_one_episode(select_action_fn=self.select_action)
+        return self.env.run_n_episodes(
+            select_action_fn=self.select_action, num_episodes=1)
 
     def write_logs(self):
         '''

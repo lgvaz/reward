@@ -256,6 +256,34 @@ class ParallelEnv:
 
         return [U.join_transitions(t) for t in zip(*transitions)]
 
+    def run_n_episodes(self, select_action_fn, num_episodes):
+        '''
+        Runs the enviroments for ``num_episodes`` episodes,
+        sampling actions from select_action_fn.
+
+        Parameters
+        ----------
+        select_action_fn: function
+            A function that receives a state and returns an action.
+        num_episodes: int
+            Number of episodes to run.
+
+        Returns
+        -------
+        SimpleMemory
+            A ``SimpleMemory`` obj containing information about the trajectory.
+        '''
+        transitions = []
+        dones = 0
+
+        while dones < num_episodes:
+            transition = self.run_one_step(select_action_fn)
+            transitions.append(transition)
+
+            dones += sum(t['done'] for t in transition)
+
+        return [U.join_transitions(t) for t in zip(*transitions)]
+
     def split(self, array):
         '''
         Divide the input in approximately equal chunks for all workers.
