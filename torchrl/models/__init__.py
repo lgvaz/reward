@@ -13,5 +13,5 @@ from .ppo_adaptive_model import PPOAdaptiveModel
 
 __all__ = [
     'BaseModel', 'ValueModel', 'BasePGModel', 'VanillaPGModel', 'SurrogatePGModel',
-    'PPOModel', 'PPOAdaptiveModel'
+    'PPOClipModel', 'PPOAdaptiveModel'
 ]
