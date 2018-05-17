@@ -2,12 +2,13 @@ import numpy as np
 from torch.utils.data import Dataset
 
 
+# TODO: Inherit from dict? Is this really necessary?
 class Batch(Dataset):
     def __init__(self, batch):
         self.batch = batch
 
     def __len__(self):
-        return len(self.batch['state_ts'])
+        return len(self.batch['state_t'])
 
     def __setattr__(self, name, value):
         if name == 'batch':
