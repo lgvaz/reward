@@ -24,7 +24,7 @@ class BaseAgent(ABC):
         self.gamma = gamma
         self.rewards = [0]
 
-        self.models = U.SimpleMemory()
+        self.models = U.DefaultMemory()
         self.last_logged_ep = self.env.num_episodes
 
     @abstractmethod

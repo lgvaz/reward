@@ -60,7 +60,7 @@ class PGAgent(BatchAgent):
 
     def add_state_value(self, traj):
         if self.models.value is not None:
-            traj.state_value = U.to_numpy(self.models.value(traj.state_t).view(-1))
+            traj.state_value = U.to_np(self.models.value(traj.state_t).view(-1))
 
     def add_advantage(self, traj):
         traj.advantage = self.advantage(traj)

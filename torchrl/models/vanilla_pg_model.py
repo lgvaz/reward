@@ -29,13 +29,14 @@ class VanillaPGModel(BasePGModel):
         self.losses.append(loss)
 
     def train(self, batch):
-        batch = batch.apply_to_all(self._to_tensor)
         parameters = self.forward(batch.state_t)
         dists = self.create_dist(parameters)
         batch.log_prob = dists.log_prob(batch.action).sum(-1)
 
         loss = self.optimizer_step(batch)
-        if self.logger is not None:
-            self.logger.add_log('Policy/Loss', loss.item(), precision=3)
 
-        self.memory.clear()
+    def write_logs(self, batch):
+        super().write_logs(batch)
+
+        entropy = self.memory.new_dists.entropy().mean()
+        self.logger.add_log(self.name + '/Entropy', entropy)

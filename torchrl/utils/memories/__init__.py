@@ -1,4 +1,4 @@
-from .simple_memory import SimpleMemory
+from .common_memories import SimpleMemory, DefaultMemory
 from .batch import Batch
 
-__all__ = ['SimpleMemory', 'Batch']
+__all__ = ['SimpleMemory', 'DefaultMemory', 'Batch']

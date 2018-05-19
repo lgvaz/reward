@@ -30,11 +30,12 @@ class PPOClipModel(SurrogatePGModel):
         ----------
             batch: Batch
         '''
-        prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
-        clipped_prob_ratio = prob_ratio.clamp(1 - self.ppo_clip_range,
-                                              1 + self.ppo_clip_range)
+        self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
+                                                           batch.log_prob)
+        clipped_prob_ratio = self.memory.prob_ratio.clamp(1 - self.ppo_clip_range,
+                                                          1 + self.ppo_clip_range)
 
-        surrogate = prob_ratio * batch.advantage
+        surrogate = self.memory.prob_ratio * batch.advantage
         clipped_surrogate = clipped_prob_ratio * batch.advantage
 
         losses = torch.min(surrogate, clipped_surrogate)
@@ -42,6 +43,9 @@ class PPOClipModel(SurrogatePGModel):
 
         self.losses.append(loss)
 
-        if self.logger is not None:
-            clip_frac = ((1 - prob_ratio).abs() > self.ppo_clip_range).float().mean()
-            self.logger.add_log('Policy/PPO Clip Fraction', clip_frac)
+    def write_logs(self, batch):
+        super().write_logs(batch)
+
+        clip_frac = ((1 - self.memory.prob_ratio).abs() >
+                     self.ppo_clip_range).float().mean()
+        self.logger.add_log(self.name + '/PPO Clip Fraction', clip_frac)

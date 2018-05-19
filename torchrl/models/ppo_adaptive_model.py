@@ -42,8 +42,6 @@ class PPOAdaptiveModel(SurrogatePGModel):
         self.losses.append(loss)
 
     def train(self, batch):
-        batch = batch.apply_to_all(self._to_tensor)
-
         with torch.no_grad():
             parameters = self.forward(batch.state_t)
             self.memory.old_dists = self.create_dist(parameters)
@@ -51,13 +49,10 @@ class PPOAdaptiveModel(SurrogatePGModel):
 
         self.add_new_dist(batch)
         for i_iter in range(self.num_epochs):
-            loss = self.optimizer_step(batch)
+            self.optimizer_step(batch)
 
             # Create new policy
             self.add_new_dist(batch)
-
-            if self.logger is not None:
-                self.logger.add_log('Policy/Loss', loss.item(), precision=3)
 
             if batch.kl_div > 4 * self.kl_target:
                 print('Early stopping')
@@ -69,10 +64,8 @@ class PPOAdaptiveModel(SurrogatePGModel):
         if batch.kl_div > self.kl_target * 1.5:
             self.kl_penalty *= 2
 
-        if self.logger is not None:
-            entropy = self.memory.new_dists.entropy().mean()
-            self.logger.add_log('Policy/Entropy', entropy.item())
-            self.logger.add_log('Policy/KL Divergence', batch.kl_div.item(), precision=4)
-            self.logger.add_log('Policy/KL Penalty', self.kl_penalty, precision=4)
+    def write_logs(self, batch):
+        super().write_logs(batch)
 
-        self.memory.clear()
+        entropy = self.memory.new_dists.entropy().mean()
+        self.logger.add_log(self.name + '/KL Penalty', self.kl_penalty, precision=4)

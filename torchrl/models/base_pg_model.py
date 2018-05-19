@@ -23,7 +23,7 @@ class BasePGModel(BaseModel):
         dist = self.create_dist(parameters)
         action = dist.sample()
 
-        return U.to_numpy(action)
+        return U.to_np(action)
 
     def create_dist(self, parameters):
         '''

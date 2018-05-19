@@ -1,4 +1,5 @@
 import numpy as np
+from numbers import Number
 from collections import OrderedDict
 from torch.autograd import Variable
 from torchrl.utils import EPSILON, SimpleMemory
@@ -62,11 +63,18 @@ def join_transitions(transitions):
     return trajectory
 
 
-def to_numpy(tensor):
+def to_np(value):
     '''
-    Convert a tensor to a numpy array.
+    Convert a value to a numpy array.
     '''
-    return tensor.detach().cpu().numpy()
+    if isinstance(value, Number):
+        return np.array(value)
+    if isinstance(value, np.ndarray):
+        return value
+    if isinstance(value, (list, tuple)):
+        return np.array(value)
+
+    return value.detach().cpu().numpy()
 
 
 def explained_var(target, preds):

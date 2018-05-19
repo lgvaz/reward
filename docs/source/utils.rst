@@ -26,6 +26,12 @@ Memories
   :show-inheritance:
   :members:
 
+:hidden:`DefaultMemory`
+~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: DefaultMemory
+  :show-inheritance:
+  :members:
+
 Preprocessing
 -------------
 
@@ -82,9 +88,9 @@ Utils
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: join_transitions
 
-:hidden:`to_numpy`
+:hidden:`to_np`
 ~~~~~~~~~~~~~~~~~~
-.. autofunction:: to_numpy
+.. autofunction:: to_np
 
 :hidden:`explained_var`
 ~~~~~~~~~~~~~~~~~~~~~~~

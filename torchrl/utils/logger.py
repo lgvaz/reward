@@ -2,6 +2,7 @@ import time
 from collections import defaultdict
 from datetime import timedelta
 from tensorboardX import SummaryWriter
+from torchrl.utils import to_np
 
 import numpy as np
 
@@ -43,7 +44,7 @@ class Logger:
         precision: int
             Decimal points displayed for the value (Default is 2).
         '''
-        self.logs[name].append(value)
+        self.logs[name].append(to_np(value))
         self.precision[name] = precision
 
     def add_debug(self, name, value, precision=2):

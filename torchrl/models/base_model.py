@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -43,7 +44,7 @@ class BaseModel(ModuleExtended, ABC):
         self.env = env
         self.clip_grad_norm = clip_grad_norm
 
-        self.memory = U.SimpleMemory()
+        self.memory = U.DefaultMemory()
         self.num_updates = 0
         self.losses = []
         self.logger = None
@@ -71,9 +72,9 @@ class BaseModel(ModuleExtended, ABC):
         '''
 
     @abstractmethod
-    def train(self, batch):
+    def train_step(self, batch):
         '''
-        The main training loop.
+        Define the model training procedure.
 
         Parameters
         ----------
@@ -81,10 +82,34 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
+        pass
 
     @property
     def lr(self):
         return self.opt.param_groups[0]['lr']
+
+    @property
+    def name(self):
+        return self.__class__.__name__
+
+    def train(self, batch):
+        '''
+        Wrapper around :meth:`train_step`, adds functionalities
+        to before and after the training loop.
+
+        Parameters
+        ----------
+        batch: torchrl.utils.Batch
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        batch = batch.apply_to_all(self._to_tensor)
+        self.train_step(batch)
+
+        if self.logger is not None:
+            self.write_logs(batch)
+
+        self.memory.clear()
 
     def optimizer_step(self, *args, **kwargs):
         '''
@@ -101,10 +126,9 @@ class BaseModel(ModuleExtended, ABC):
             torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
         self.opt.step()
 
+        self.memory.loss.append(U.to_np(loss))
         self.losses = []
         self.num_updates += 1
-
-        return loss
 
     def forward(self, x):
         '''
@@ -140,7 +164,15 @@ class BaseModel(ModuleExtended, ABC):
         self.logger = logger
 
     def write_logs(self, batch):
-        pass
+        '''
+        Write logs to the terminal and to a tf log file.
+
+        Parameters
+        ----------
+        batch: Batch
+            Some logs might need the batch for calculation.
+        '''
+        self.logger.add_log(self.name + '/Loss', np.mean(self.memory.loss))
 
     @classmethod
     def from_config(cls, config, env=None, **kwargs):
