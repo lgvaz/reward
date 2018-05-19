@@ -7,11 +7,12 @@ from .base_model import BaseModel
 from .value_model import ValueModel
 from .base_pg_model import BasePGModel
 from .vanilla_pg_model import VanillaPGModel
+from .a2c_model import A2CModel
 from .surrogate_pg_model import SurrogatePGModel
 from .ppo_clip_model import PPOClipModel
 from .ppo_adaptive_model import PPOAdaptiveModel
 
 __all__ = [
     'BaseModel', 'ValueModel', 'BasePGModel', 'VanillaPGModel', 'SurrogatePGModel',
-    'PPOClipModel', 'PPOAdaptiveModel'
+    'PPOClipModel', 'PPOAdaptiveModel', 'A2CModel'
 ]

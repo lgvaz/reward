@@ -39,6 +39,14 @@ VanillaPGModel
   :members:
   :private-members:
 
+A2CModel
+--------
+
+.. autoclass:: A2CModel
+  :show-inheritance:
+  :members:
+  :private-members:
+
 SurrogatePGModel
 ----------------
 
@@ -47,10 +55,18 @@ SurrogatePGModel
   :members:
   :private-members:
     
-PPOModel
---------
+PPOClipModel
+------------
 
-.. autoclass:: PPOModel
+.. autoclass:: PPOClipModel
+  :show-inheritance:
+  :members:
+  :private-members:
+    
+PPOAdaptiveModel
+----------------
+
+.. autoclass:: PPOAdaptiveModel
   :show-inheritance:
   :members:
   :private-members:
