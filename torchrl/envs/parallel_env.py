@@ -48,7 +48,7 @@ class ParallelEnv:
     The parallelization is done as described in
     [this paper](https://arxiv.org/pdf/1705.04862.pdf).
 
-    Each worker will hold :math:`\frac{num_envs}{num_workers}` envs.
+    Each worker will hold :math:`\frac{num\_envs}{num\_workers}` envs.
 
     Parameters
     ----------
