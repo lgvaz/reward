@@ -23,7 +23,7 @@ class EnvWorker(Process):
             data = self.conn.recv()
 
             if isinstance(data, str) and data == 'reset':
-                self.conn.send([env.reset() for env in self.envs])
+                self.conn.send([env._reset() for env in self.envs])
 
             else:
                 next_states, rewards, dones = [], [], []
