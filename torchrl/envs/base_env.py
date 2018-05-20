@@ -15,8 +15,12 @@ class BaseEnv(ABC):
 
     Parameters
     ----------
+    env_name: str
+        The environment name.
     normalize_states: bool
         If True, normalize the states (Default is True).
+    scale_reward: bool
+        If True, scale the rewards (Default is True).
     '''
 
     def __init__(self, env_name, normalize_states=False, scale_rewards=False):
