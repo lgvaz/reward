@@ -39,6 +39,7 @@ class BaseEnv(ABC):
         self.ep_reward_sum = 0
         self.rewards = []
         self._state = None
+        self._raw_state = None
 
     @property
     @abstractmethod
@@ -184,12 +185,12 @@ class BaseEnv(ABC):
         state: numpy.ndarray
             The state received by resetting the environment.
         '''
-        state = self._reset()
-        state = self._preprocess_state(state)
+        raw_state = self._reset()
+        state = self._preprocess_state(raw_state)
 
         self.num_episodes += 1
 
-        return state
+        return raw_state, state
 
     def step(self, action):
         '''
@@ -214,8 +215,8 @@ class BaseEnv(ABC):
         done: bool
             If True the episode is over, and :meth:`reset` should be called.
         '''
-        next_state, reward, done = self._step(action)
-        next_state = self._preprocess_state(next_state)
+        raw_next_state, reward, done = self._step(action)
+        next_state = self._preprocess_state(raw_next_state)
         reward = self._preprocess_reward(reward)
 
         self.num_steps += 1
@@ -224,7 +225,7 @@ class BaseEnv(ABC):
             self.rewards.append(self.ep_reward_sum)
             self.ep_reward_sum = 0
 
-        return next_state, reward, done
+        return raw_next_state, next_state, reward, done
 
     def run_one_step(self, select_action_fn):
         '''
@@ -242,11 +243,13 @@ class BaseEnv(ABC):
         '''
         # Choose and execute action
         if self._state is None:
-            self._state = self.reset()
+            self._raw_state, self._state = self.reset()
         action = select_action_fn(self._state[None]).squeeze()
-        next_state, reward, done = self.step(action)
+        raw_next_state, next_state, reward, done = self.step(action)
 
         transition = U.SimpleMemory(
+            raw_state_t=self._raw_state,
+            raw_state_tp1=raw_next_state,
             state_t=self._state,
             state_tp1=next_state,
             action=action,
@@ -254,9 +257,9 @@ class BaseEnv(ABC):
             done=done)
 
         if done:
-            self._state = self.reset()
+            self._raw_state, self._state = self.reset()
         else:
-            self._state = next_state
+            self._raw_state, self._state = raw_next_state, next_state
 
         return transition
 
@@ -280,7 +283,7 @@ class BaseEnv(ABC):
         while not done:
             transition = self.run_one_step(select_action_fn)
             transitions.append(transition)
-            done = transition['done']
+            done = transition.done
 
         return [U.join_transitions(transitions)]
 

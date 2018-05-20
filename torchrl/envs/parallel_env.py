@@ -76,6 +76,7 @@ class ParallelEnv:
 
         self._create_workers(envs)
         self._states = None
+        self._raw_states = None
 
     @property
     def state_info(self):
@@ -170,10 +171,10 @@ class ParallelEnv:
         for worker in self.workers:
             worker.connection.send('reset')
         # Receive results
-        states = np.concatenate([worker.connection.recv() for worker in self.workers])
+        raw_states = np.concatenate([worker.connection.recv() for worker in self.workers])
 
-        states = self._preprocess_state(states)
-        return states
+        states = self._preprocess_state(raw_states)
+        return raw_states, states
 
     def step(self, actions):
         '''
@@ -191,15 +192,15 @@ class ParallelEnv:
         for acts, worker in zip(self.split(actions), self.workers):
             worker.connection.send(acts)
         # Receive results
-        next_states, rewards, dones = map(
+        raw_next_states, rewards, dones = map(
             np.concatenate, zip(*[worker.connection.recv() for worker in self.workers]))
         self.num_steps += self.num_envs
 
-        next_states = self._preprocess_state(next_states)
+        next_states = self._preprocess_state(raw_next_states)
         rewards = self._preprocess_reward(rewards)
         self.update_normalizers()
 
-        return next_states, rewards, dones
+        return raw_next_states, next_states, rewards, dones
 
     def run_one_step(self, select_action_fn):
         '''
@@ -216,17 +217,26 @@ class ParallelEnv:
             A object containing the transition information.
         '''
         if self._states is None:
-            self._states = self.reset()
+            self._raw_states, self._states = self.reset()
 
         actions = select_action_fn(np.array(self._states))
-        next_states, rewards, dones = self.step(actions)
+        raw_next_states, next_states, rewards, dones = self.step(actions)
 
         transition = [
-            U.SimpleMemory(state_t=st, state_tp1=stp1, action=act, reward=rew, done=d)
-            for st, stp1, act, rew, d in zip(self._states, next_states, actions, rewards,
-                                             dones)
+            U.SimpleMemory(
+                raw_state_t=rst,
+                raw_state_tp1=rstp1,
+                state_t=st,
+                state_tp1=stp1,
+                action=act,
+                reward=rew,
+                done=d)
+            for rst, rstp1, st, stp1, act, rew, d in
+            zip(self._raw_states, raw_next_states, self._states, next_states, actions,
+                rewards, dones)
         ]
 
+        self._raw_states = raw_next_states
         self._states = next_states
 
         return transition
