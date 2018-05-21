@@ -78,7 +78,7 @@ class Normalizer(object):
         return (x - offset) * scale
 
     def scale(self, x):
-        self.xs.append(x)
+        self.xs.extend(x)
         scale, _ = self.get()
         return x * scale
 
