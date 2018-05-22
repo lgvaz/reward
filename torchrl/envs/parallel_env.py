@@ -31,7 +31,6 @@ class EnvWorker(Process):
             else:
                 for i, (a, env) in enumerate(zip(self.shared_tran.action, self.envs)):
                     next_state, reward, done = env._step(a)
-                    self.reward_sum += reward
 
                     if done:
                         next_state = env._reset()
