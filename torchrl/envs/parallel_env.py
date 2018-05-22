@@ -1,10 +1,7 @@
-# def profile(x):
-#     return lambda *args, **kwargs: x(*args, **kwargs)
-
 import numpy as np
 import multiprocessing
 from collections import namedtuple
-from multiprocessing import Manager, Process, Queue, Pipe
+from multiprocessing import Manager, Pipe, Process
 
 import torchrl.utils as U
 import numpy as np
@@ -13,13 +10,11 @@ from multiprocessing.sharedctypes import RawArray
 
 
 class EnvWorker(Process):
-    def __init__(self, envs, conn, shared_rewards, shared_transition):
+    def __init__(self, envs, conn, shared_transition):
         super().__init__()
         self.envs = envs
         self.conn = conn
-        self.shared_rewards = shared_rewards
         self.shared_tran = shared_transition
-        self.reward_sum = 0
 
     def run(self):
         super().run()
@@ -40,8 +35,6 @@ class EnvWorker(Process):
 
                     if done:
                         next_state = env._reset()
-                        self.shared_rewards.append(self.reward_sum)
-                        self.reward_sum = 0
 
                     self.shared_tran.state[i] = next_state
                     self.shared_tran.reward[i] = reward
@@ -71,6 +64,9 @@ class ParallelEnv:
         self.num_workers = num_workers or multiprocessing.cpu_count()
         self.num_steps = 0
         self.manager = Manager()
+        # self.rewards = self.manager.list()
+        self.rewards = []
+        self.envs_rewards = np.zeros(self.num_envs)
 
         assert self.num_envs >= self.num_workers, \
             'Number of envs must be greater or equal the number of workers'
@@ -105,7 +101,7 @@ class ParallelEnv:
     def _create_shared_transitions(self, envs):
         # TODO: dtype for atari
         state = self._get_shared(
-            np.array([env.reset()[0] for env in envs], dtype=np.float32, copy=False))
+            np.zeros([self.num_envs] + list(self.state_info['shape']), dtype=np.float32))
         reward = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         action = self._get_shared(
@@ -127,7 +123,6 @@ class ParallelEnv:
         '''
         WorkerNTuple = namedtuple('Worker', ['process', 'connection'])
         self.workers = []
-        self.rewards = self.manager.list()
 
         for envs_i, s_s, s_r, s_d, s_a in zip(
                 self.split(envs),
@@ -139,10 +134,7 @@ class ParallelEnv:
             parent_conn, child_conn = Pipe()
 
             process = EnvWorker(
-                envs=envs_i,
-                conn=child_conn,
-                shared_rewards=self.rewards,
-                shared_transition=shared_tran)
+                envs=envs_i, conn=child_conn, shared_transition=shared_tran)
             process.daemon = True
             process.start()
 
@@ -180,7 +172,6 @@ class ParallelEnv:
         '''
         return self.root_env._preprocess_reward(reward)
 
-    @profile
     def sync(self):
         for worker in self.workers:
             worker.connection.recv()
@@ -194,7 +185,6 @@ class ParallelEnv:
     def record(self, path):
         return self.root_env.record(path)
 
-    @profile
     def reset(self):
         '''
         Reset all workers in parallel, using Pipe for communication.
@@ -209,7 +199,6 @@ class ParallelEnv:
         states = self._preprocess_state(raw_states)
         return raw_states, states
 
-    @profile
     def step(self, actions):
         '''
         Step all workers in parallel, using Pipe for communication.
@@ -223,7 +212,7 @@ class ParallelEnv:
             supports so), in this case it should be a ``numpy.ndarray``.
         '''
         # Send actions to worker
-        self.shared_tran.action = actions
+        self.shared_tran.action[...] = actions
         for worker in self.workers:
             worker.connection.send(True)
         self.sync()
@@ -233,13 +222,19 @@ class ParallelEnv:
         rewards = self.shared_tran.reward
         dones = self.shared_tran.done
 
+        # Accumulate rewards
+        self.envs_rewards += rewards
+        for i, done in enumerate(dones):
+            if done:
+                self.rewards.append(self.envs_rewards[i])
+                self.envs_rewards[i] = 0
+
         next_states = self._preprocess_state(raw_next_states)
         rewards = self._preprocess_reward(rewards)
         self.update_normalizers()
 
         return raw_next_states, next_states, rewards, dones
 
-    @profile
     def run_one_step(self, select_action_fn):
         '''
         Performs a single action on each environment and automatically reset if needed.
@@ -279,7 +274,6 @@ class ParallelEnv:
 
         return transition
 
-    @profile
     def run_n_steps(self, select_action_fn, num_steps):
         '''
         Runs the enviroments for ``num_steps`` steps,
