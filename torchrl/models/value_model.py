@@ -30,7 +30,7 @@ class ValueModel(BaseModel):
         super().__init__(model=model, env=env, **kwargs)
         self.batch_size = batch_size
         self.num_epochs = num_epochs
-        self.clip_range = clip_range
+        self.clip_range = U.make_callable(clip_range)
 
         assert clip_range is None or clip_range > 0, 'clip_range must be None or > 0'
 
@@ -43,7 +43,8 @@ class ValueModel(BaseModel):
     def clipped_mse_loss(self, batch):
         pred = self.forward(batch.state_t).view(-1)
         pred_diff = pred - batch.old_pred
-        pred_clipped = batch.old_pred + pred_diff.clamp(-self.clip_range, self.clip_range)
+        pred_clipped = batch.old_pred + pred_diff.clamp(-self.clip_range(self.step),
+                                                        self.clip_range(self.step))
 
         losses = (pred - batch.vtarget)**2
         losses_clipped = (pred_clipped - batch.vtarget)**2
@@ -53,7 +54,7 @@ class ValueModel(BaseModel):
         self.losses.append(loss)
 
     def add_losses(self, batch):
-        if self.clip_range is None:
+        if self.clip_range(self.step) is None:
             self.mse_loss(batch)
         else:
             self.clipped_mse_loss(batch)
@@ -79,6 +80,8 @@ class ValueModel(BaseModel):
         pred = self.forward(batch.state_t)
         self.logger.add_log(self.name + '/New Explained Var',
                             U.explained_var(batch.vtarget, pred))
+
         pred_diff = pred - self.memory.old_preds
-        clip_frac = (abs(pred_diff) > self.clip_range).float().mean()
+        clip_frac = (abs(pred_diff) > self.clip_range(self.step)).float().mean()
+        self.logger.add_log(self.name + '/Clip Range', self.clip_range(self.step))
         self.logger.add_log(self.name + '/Clip Fraction', clip_frac)

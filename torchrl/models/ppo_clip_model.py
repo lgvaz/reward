@@ -1,4 +1,5 @@
 import torch
+import torchrl.utils as U
 from torchrl.models import SurrogatePGModel
 
 
@@ -17,7 +18,7 @@ class PPOClipModel(SurrogatePGModel):
 
     def __init__(self, model, env, ppo_clip_range=0.2, num_epochs=10, **kwargs):
         super().__init__(model=model, env=env, num_epochs=num_epochs, **kwargs)
-        self.ppo_clip_range = ppo_clip_range
+        self.ppo_clip_range = U.make_callable(ppo_clip_range)
 
     def add_losses(self, batch):
         self.ppo_clip_loss(batch)
@@ -32,8 +33,8 @@ class PPOClipModel(SurrogatePGModel):
         '''
         self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
                                                            batch.log_prob)
-        clipped_prob_ratio = self.memory.prob_ratio.clamp(1 - self.ppo_clip_range,
-                                                          1 + self.ppo_clip_range)
+        clipped_prob_ratio = self.memory.prob_ratio.clamp(
+            1 - self.ppo_clip_range(self.step), 1 + self.ppo_clip_range(self.step))
 
         surrogate = self.memory.prob_ratio * batch.advantage
         clipped_surrogate = clipped_prob_ratio * batch.advantage
@@ -46,6 +47,8 @@ class PPOClipModel(SurrogatePGModel):
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        clip_frac = ((1 - self.memory.prob_ratio).abs() >
-                     self.ppo_clip_range).float().mean()
+        clip_frac = ((1 - self.memory.prob_ratio).abs() > self.ppo_clip_range(
+            self.step)).float().mean()
+
+        self.logger.add_log(self.name + '/PPO Clip Range', self.ppo_clip_range(self.step))
         self.logger.add_log(self.name + '/PPO Clip Fraction', clip_frac)

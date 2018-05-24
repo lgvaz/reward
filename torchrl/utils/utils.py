@@ -106,3 +106,10 @@ def normalize(array):
 
 def one_hot(array, num_classes):
     return np.eye(num_classes)[array]
+
+
+def make_callable(x):
+    if callable(x):
+        return x
+    else:
+        return lambda *args, **kwargs: x

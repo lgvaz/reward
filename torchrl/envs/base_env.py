@@ -282,7 +282,8 @@ class BaseEnv(ABC):
             state_tp1=next_state,
             action=action,
             reward=reward,
-            done=done)
+            done=done,
+            step=self.num_steps)
 
         if done:
             self._raw_state, self._state = self.reset()

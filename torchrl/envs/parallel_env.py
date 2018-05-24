@@ -275,6 +275,7 @@ class ParallelEnv:
                 state_tp1=stp1,
                 action=act,
                 reward=rew,
+                step=self.num_steps,
                 done=d)
             for rst, rstp1, st, stp1, act, rew, d in
             zip(self._raw_states, raw_next_states, self._states, next_states, actions,

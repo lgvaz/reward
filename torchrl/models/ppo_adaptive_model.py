@@ -1,4 +1,5 @@
 import torch
+import torchrl.utils as U
 from torchrl.models import SurrogatePGModel
 from torch.distributions.kl import kl_divergence
 
@@ -17,7 +18,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
     def __init__(self, model, env, kl_target=0.01, kl_penalty=1., num_epochs=10,
                  **kwargs):
         super().__init__(model=model, env=env, num_epochs=num_epochs, **kwargs)
-        self.kl_target = kl_target
+        self.kl_target = U.make_callable(kl_target)
         self.kl_penalty = kl_penalty
 
     def add_losses(self, batch):
@@ -37,11 +38,11 @@ class PPOAdaptiveModel(SurrogatePGModel):
         kl_div = kl_divergence(self.memory.old_dists,
                                self.memory.new_dists).sum(-1).mean()
 
-        loss = 50 * max(0, kl_div - 2. * self.kl_target)**2
+        loss = 50 * max(0, kl_div - 2. * self.kl_target(self.step))**2
 
         self.losses.append(loss)
 
-    def train(self, batch):
+    def train_step(self, batch):
         with torch.no_grad():
             parameters = self.forward(batch.state_t)
             self.memory.old_dists = self.create_dist(parameters)
@@ -54,18 +55,19 @@ class PPOAdaptiveModel(SurrogatePGModel):
             # Create new policy
             self.add_new_dist(batch)
 
-            if batch.kl_div > 4 * self.kl_target:
+            if batch.kl_div > 4 * self.kl_target(self.step):
                 print('Early stopping')
                 break
 
         # Adjust KL penalty
-        if batch.kl_div < self.kl_target / 1.5:
+        if batch.kl_div < self.kl_target(self.step) / 1.5:
             self.kl_penalty /= 2
-        if batch.kl_div > self.kl_target * 1.5:
+        if batch.kl_div > self.kl_target(self.step) * 1.5:
             self.kl_penalty *= 2
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        entropy = self.memory.new_dists.entropy().mean()
+        self.logger.add_log(
+            self.name + '/KL Target', self.kl_target(self.step), precision=4)
         self.logger.add_log(self.name + '/KL Penalty', self.kl_penalty, precision=4)

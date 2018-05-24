@@ -5,7 +5,9 @@ from torchrl.envs import GymEnv, ParallelEnv
 from torchrl.envs.gym_wrappers import atari_wrap
 from torchrl.models import PPOClipModel, ValueModel
 from torchrl.nn import ActionLinear, FlattenLinear
-from torchrl.utils import Config
+from torchrl.utils import Config, piecewise_linear_schedule
+
+MAX_STEPS = 40e6
 
 activation = nn.ReLU
 # Define networks configs
@@ -41,6 +43,8 @@ policy_model = PPOClipModel.from_config(
     num_epochs=4,
     ppo_clip_range=0.1,
     opt_params=dict(lr=3e-4, eps=1e-5),
+    lr_schedule=piecewise_linear_schedule(
+        values=[1e-3, 1e-3, 1e-4], boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5]),
     clip_grad_norm=None)
 
 value_model_config = Config(nn_config=value_nn_config)
@@ -49,6 +53,8 @@ value_model = ValueModel.from_config(
     env=env,
     body=policy_model.body,
     opt_params=dict(lr=3e-4, eps=1e-5),
+    lr_schedule=piecewise_linear_schedule(
+        values=[1e-3, 1e-3, 1e-4], boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5]),
     batch_size=256,
     num_epochs=4,
     clip_range=0.1,
@@ -61,4 +67,4 @@ agent = PGAgent(
     value_model,
     log_dir='logs/pong/16parallel-plr3e4_e4_eps1e5-vlr3e4_b256_e4_eps1e5-gcNone-v0-0',
     normalize_advantages=True)
-agent.train(max_steps=40e6, steps_per_batch=2048)
+agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)

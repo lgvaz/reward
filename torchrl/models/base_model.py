@@ -36,16 +36,19 @@ class BaseModel(ModuleExtended, ABC):
                  env,
                  opt_fn=None,
                  opt_params=dict(),
+                 lr_schedule=None,
                  clip_grad_norm=None,
                  cuda_default=True):
         super().__init__()
 
         self.model = model
         self.env = env
+        self.lr_schedule = U.make_callable(lr_schedule or opt_params['lr'])
         self.clip_grad_norm = clip_grad_norm
 
         self.memory = U.DefaultMemory()
         self.num_updates = 0
+        self.step = 0
         self.losses = []
         self.logger = None
 
@@ -111,7 +114,10 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
+        self.step = batch.step[-1]
+        self.set_lr(value=self.lr_schedule(self.step))
         batch = batch.apply_to_all(self._to_tensor)
+
         self.train_step(batch)
 
         if self.logger is not None:
@@ -181,6 +187,7 @@ class BaseModel(ModuleExtended, ABC):
             Some logs might need the batch for calculation.
         '''
         self.logger.add_log(self.name + '/Loss', np.mean(self.memory.loss))
+        self.logger.add_log(self.name + '/LR', self.lr_schedule(self.step), precision=4)
 
     @classmethod
     def from_config(cls, config, env=None, body=None, head=None, **kwargs):
