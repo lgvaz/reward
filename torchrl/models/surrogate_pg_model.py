@@ -39,6 +39,7 @@ class SurrogatePGModel(BasePGModel):
 
         self.add_new_dist(batch)
         for i_iter in range(self.num_epochs):
+            batch.entropy = self.memory.new_dists.entropy().mean()
             self.optimizer_step(batch)
 
             # Create new policy
@@ -47,12 +48,12 @@ class SurrogatePGModel(BasePGModel):
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        entropy = self.memory.new_dists.entropy().mean()
-        self.logger.add_log(self.name + '/Entropy', entropy)
+        self.logger.add_log(self.name + '/Entropy', batch.entropy)
         self.logger.add_log(self.name + '/KL Divergence', batch.kl_div, precision=4)
 
     def add_losses(self, batch):
         self.surrogate_pg_loss(batch)
+        self.entropy_loss(batch)
 
     def surrogate_pg_loss(self, batch):
         '''

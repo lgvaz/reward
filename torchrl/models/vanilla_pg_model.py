@@ -12,6 +12,7 @@ class VanillaPGModel(BasePGModel):
 
     def add_losses(self, batch):
         self.pg_loss(batch)
+        self.entropy_loss(batch)
 
     def pg_loss(self, batch):
         '''
@@ -32,6 +33,7 @@ class VanillaPGModel(BasePGModel):
         parameters = self.forward(batch.state_t)
         dists = self.create_dist(parameters)
         batch.log_prob = dists.log_prob(batch.action).sum(-1)
+        batch.entropy = dists.entropy().mean()
 
         loss = self.optimizer_step(batch)
 

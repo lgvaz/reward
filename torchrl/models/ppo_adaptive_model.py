@@ -25,6 +25,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
         self.surrogate_pg_loss(batch)
         self.kl_penalty_loss(batch)
         self.hinge_loss(batch)
+        self.entropy_loss(batch)
 
     def kl_penalty_loss(self, batch):
         kl_div = kl_divergence(self.memory.old_dists,

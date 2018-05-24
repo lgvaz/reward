@@ -9,6 +9,26 @@ class BasePGModel(BaseModel):
     Base class for all Policy Gradient Models.
     '''
 
+    def __init__(self, model, env, entropy_coef=0, **kwargs):
+        super().__init__(model=model, env=env, **kwargs)
+        self.entropy_coef = U.make_callable(entropy_coef)
+
+    def entropy_loss(self, batch):
+        '''
+        Adds a entropy cost to the loss function,
+        with the intent of encouraging exploration.
+
+        Parameters
+        ----------
+        batch: Batch
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        objective = batch.log_prob * batch.advantage
+        loss = -objective.mean()
+
+        self.losses.append(loss)
+
     def select_action(self, state):
         '''
         Define how the actions are selected, in this case the actions

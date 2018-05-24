@@ -22,6 +22,7 @@ class PPOClipModel(SurrogatePGModel):
 
     def add_losses(self, batch):
         self.ppo_clip_loss(batch)
+        self.entropy_loss(batch)
 
     def ppo_clip_loss(self, batch):
         '''
