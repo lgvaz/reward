@@ -125,7 +125,8 @@ class BaseAgent(ABC):
             self.rewards = self.env.rewards[-new_eps:]
         self.last_logged_ep = self.env.num_episodes
 
-        self.logger.add_log('Reward/Episode', np.mean(self.rewards))
+        self.logger.add_log('Reward/Episode (New Episodes)', np.mean(self.rewards))
+        self.logger.add_log('Reward/Episode (Last 50)', np.mean(self.env.rewards[-50:]))
 
         self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
         self.logger.log('Update {} | Episode {} | Step {}'.format(
