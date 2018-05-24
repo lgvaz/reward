@@ -5,7 +5,7 @@ from multiprocessing import Manager, Pipe, Process
 
 import torchrl.utils as U
 import numpy as np
-from ctypes import c_uint, c_float, c_double
+from ctypes import c_uint, c_float, c_double, c_int
 from multiprocessing.sharedctypes import RawArray
 
 
@@ -46,6 +46,7 @@ class ParallelEnv:
     r'''
     The parallelization is done as described in
     [this paper](https://arxiv.org/pdf/1705.04862.pdf).
+    Heavily inspired in code from [here](https://github.com/Alfredvc/paac).
 
     Each worker will hold :math:`\frac{num\_envs}{num\_workers}` envs.
 
@@ -56,7 +57,12 @@ class ParallelEnv:
     num_workers: int
         How many process to spawn (Default is available number of CPU cores).
     '''
-    NUMPY_TO_C_DTYPE = {np.float32: c_float, np.float64: c_double, np.uint8: c_uint}
+    NUMPY_TO_C_DTYPE = {
+        np.float32: c_float,
+        np.float64: c_double,
+        np.uint8: c_uint,
+        np.int32: c_int
+    }
 
     def __init__(self, envs, num_workers=None):
         self.num_envs = len(envs)
@@ -103,10 +109,17 @@ class ParallelEnv:
             np.zeros([self.num_envs] + list(self.state_info['shape']), dtype=np.float32))
         reward = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
-        action = self._get_shared(
-            np.zeros(
-                (self.num_envs, np.prod(self.root_env.action_info['shape'])),
-                dtype=np.float32))
+
+        action_info = self.root_env.action_info
+        if action_info['dtype'] == 'continuous':
+            shape = (self.num_envs, np.prod(action_info['shape']))
+            action_type = np.float32
+        elif action_info['dtype'] == 'discrete':
+            shape = (self.num_envs, )
+            action_type = np.int32
+        else:
+            raise ValueError('Action dtype {} not implemented'.format(action_info.dtype))
+        action = self._get_shared(np.zeros(shape, dtype=action_type))
 
         self.shared_tran = U.SimpleMemory(
             state=state, reward=reward, done=done, action=action)

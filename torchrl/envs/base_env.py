@@ -17,22 +17,37 @@ class BaseEnv(ABC):
     ----------
     env_name: str
         The environment name.
-    normalize_states: bool
-        If True, normalize the states (Default is True).
+    fixed_normalize_states: bool
+        If True, use the state min and max value to normalize the states (Default is False).
+    running_normalize_states: bool
+        If True, use the running mean and std to normalize the states (Default is False).
     scale_reward: bool
-        If True, scale the rewards (Default is True).
+        If True, use the running std to scale the rewards (Default is False).
     '''
 
-    def __init__(self, env_name, normalize_states=False, scale_rewards=False):
+    def __init__(self,
+                 env_name,
+                 fixed_normalize_states=False,
+                 running_normalize_states=False,
+                 running_scale_rewards=False,
+                 clip_reward_range=None):
         self.env_name = env_name
-        self.normalize_states = normalize_states
-        self.scale_rewards = scale_rewards
+        self.fixed_normalize_states = fixed_normalize_states
+        self.running_normalize_states = running_normalize_states
+        self.running_scale_rewards = running_scale_rewards
+        self.clip_reward_range = clip_reward_range
 
         self.env = self._create_env()
 
+        if fixed_normalize_states:
+            error_msg = ('At least one state value bound is inf, fixed normalization'
+                         'cant be done, look at running normalization instead')
+            assert not (abs(self.state_info['low_bound']) == np.inf).any(), error_msg
+            assert not (abs(self.state_info['high_bound']) == np.inf).any(), error_msg
+
         self.state_normalizer = Normalizer(
-            self.state_info['shape']) if normalize_states else None
-        self.reward_scaler = Normalizer(1) if scale_rewards else None
+            self.state_info['shape']) if running_normalize_states else None
+        self.reward_scaler = Normalizer(1) if running_scale_rewards else None
 
         self.num_episodes = 0
         self.num_steps = 0
@@ -141,10 +156,15 @@ class BaseEnv(ABC):
         state: numpy.ndarray
             The transformed state.
         '''
-        if self.state_normalizer is not None:
-            state = self.state_normalizer.normalize(state)
+        if self.fixed_normalize_states:
+            low = self.state_info['low_bound']
+            high = self.state_info['high_bound']
+            state = (state - low) / high
 
-        return state
+        if self.state_normalizer is not None:
+            state = self.state_normalizer.normalize(np.array(state))
+
+        return state.squeeze()
 
     def _preprocess_reward(self, reward):
         '''
@@ -163,8 +183,13 @@ class BaseEnv(ABC):
         # TODO: Atari rewards are clipped, we want the unclipped rewards
         self.ep_reward_sum += reward
         if self.reward_scaler is not None:
-            reward = self.reward_scaler.scale(reward).squeeze()
-        return reward
+            reward = self.reward_scaler.scale(np.array(reward))
+        if self.clip_reward_range is not None:
+            a_min = -self.clip_reward_range
+            a_max = self.clip_reward_range
+            reward = np.clip(reward, a_min=a_min, a_max=a_max)
+
+        return reward.squeeze()
 
     def update_normalizers(self):
         '''
@@ -172,7 +197,9 @@ class BaseEnv(ABC):
         '''
         if self.state_normalizer is not None:
             self.state_normalizer.update()
-        if self.reward_scaler is not None and self.num_episodes > 1:
+        # if self.reward_scaler is not None and self.num_episodes > 1:
+        # TODO: testing
+        if self.reward_scaler is not None:
             self.reward_scaler.update()
 
     def reset(self):
@@ -186,7 +213,8 @@ class BaseEnv(ABC):
             The state received by resetting the environment.
         '''
         raw_state = self._reset()
-        state = self._preprocess_state(raw_state)
+        # TODO: Atari frame already came with the first dim
+        state = self._preprocess_state(raw_state[None])
 
         self.num_episodes += 1
 
@@ -216,8 +244,8 @@ class BaseEnv(ABC):
             If True the episode is over, and :meth:`reset` should be called.
         '''
         raw_next_state, reward, done = self._step(action)
-        next_state = self._preprocess_state(raw_next_state)
-        reward = self._preprocess_reward(reward)
+        next_state = self._preprocess_state(np.array(raw_next_state)[None])
+        reward = self._preprocess_reward(np.array(reward)[None])
 
         self.num_steps += 1
         if done:
@@ -332,9 +360,6 @@ class BaseEnv(ABC):
             transition = self.run_one_step(select_action_fn)
             transitions.append(transition)
 
-        trajectory = U.SimpleMemory(
-            (key, np.array([t[key] for t in transitions])) for key in transitions[0])
-
         return [U.join_transitions(transitions)]
 
     def record(self, path):
@@ -355,5 +380,5 @@ class BaseEnv(ABC):
             state_info=dict((key, value) for key, value in self.state_info.items()
                             if key not in ('low_bound', 'high_bound')),
             action_info=self.action_info,
-            normalize_states=self.normalize_states,
-            scale_rewards=self.scale_rewards)
+            running_normalize_states=self.running_normalize_states,
+            running_scale_rewards=self.running_scale_rewards)

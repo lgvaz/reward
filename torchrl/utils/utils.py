@@ -102,3 +102,7 @@ def normalize(array):
     Normalize an array by subtracting the mean and diving by the std dev.
     '''
     return (array - np.mean(array)) / (np.std(array) + EPSILON)
+
+
+def one_hot(array, num_classes):
+    return np.eye(num_classes)[array]

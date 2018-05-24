@@ -1,5 +1,5 @@
 import torch
-from torch.distributions import Categorical, Normal
+from torchrl.distributions import Categorical, Normal
 import torchrl.utils as U
 from torchrl.models import BaseModel
 

@@ -52,10 +52,6 @@ class ValueModel(BaseModel):
 
         self.losses.append(loss)
 
-        if self.logger is not None:
-            clip_frac = (abs(pred_diff) > self.clip_range).float().mean()
-            self.logger.add_log('Value NN/Clip Fraction', clip_frac)
-
     def add_losses(self, batch):
         if self.clip_range is None:
             self.mse_loss(batch)
@@ -80,6 +76,9 @@ class ValueModel(BaseModel):
 
         self.logger.add_log(self.name + '/Old Explained Var',
                             U.explained_var(batch.vtarget, self.memory.old_preds))
-        preds = self.forward(batch.state_t)
+        pred = self.forward(batch.state_t)
         self.logger.add_log(self.name + '/New Explained Var',
-                            U.explained_var(batch.vtarget, preds))
+                            U.explained_var(batch.vtarget, pred))
+        pred_diff = pred - self.memory.old_preds
+        clip_frac = (abs(pred_diff) > self.clip_range).float().mean()
+        self.logger.add_log(self.name + '/Clip Fraction', clip_frac)

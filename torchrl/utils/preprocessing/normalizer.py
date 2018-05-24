@@ -33,23 +33,22 @@ class Normalizer(object):
         '''
         xs = np.array(self.xs)
         self.xs = []
-        if self.first_pass:
-            self.means = np.mean(xs, axis=0)
-            self.vars = np.var(xs, axis=0)
-            self.m = xs.shape[0]
-            self.first_pass = False
-        else:
-            n = xs.shape[0]
-            new_data_var = np.var(xs, axis=0)
-            new_data_mean = np.mean(xs, axis=0)
-            new_data_mean_sq = np.square(new_data_mean)
-            new_means = ((self.means * self.m) + (new_data_mean * n)) / (self.m + n)
-            self.vars = (((self.m * (self.vars + np.square(self.means))) +
-                          (n * (new_data_var + new_data_mean_sq))) /
-                         (self.m + n) - np.square(new_means))
-            self.vars = np.maximum(0.0, self.vars)  # occasionally goes negative, clip
-            self.means = new_means
-            self.m += n
+        # if self.first_pass:
+        #     self.means = np.mean(xs, axis=0)
+        #     self.vars = np.var(xs, axis=0)
+        #     self.m = xs.shape[0]
+        #     self.first_pass = False
+        n = xs.shape[0]
+        new_data_var = np.var(xs, axis=0)
+        new_data_mean = np.mean(xs, axis=0)
+        new_data_mean_sq = np.square(new_data_mean)
+        new_means = ((self.means * self.m) + (new_data_mean * n)) / (self.m + n)
+        self.vars = (((self.m * (self.vars + np.square(self.means))) +
+                      (n * (new_data_var + new_data_mean_sq))) /
+                     (self.m + n) - np.square(new_means))
+        self.vars = np.maximum(0.0, self.vars)  # occasionally goes negative, clip
+        self.means = new_means
+        self.m += n
 
     def get(self):
         '''

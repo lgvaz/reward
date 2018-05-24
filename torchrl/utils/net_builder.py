@@ -19,7 +19,7 @@ def auto_input_shape(obj_config, input_shape):
     if 'FlattenLinear' in name:
         obj_config['in_features'] = input_shape
 
-    if 'ActionLinear' in name:
+    elif 'ActionLinear' in name:
         obj_config['in_features'] = input_shape
 
     elif 'Linear' in name:
@@ -100,4 +100,4 @@ def nn_from_config(config, state_info, action_info, body=None, head=None):
             action_info=action_info)
         head = SequentialExtended(*head_list)
 
-    return SequentialExtended(body, head)
+    return SequentialExtended(OrderedDict([('body', body), ('head', head)]))

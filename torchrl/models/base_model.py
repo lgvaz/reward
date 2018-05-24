@@ -85,6 +85,14 @@ class BaseModel(ModuleExtended, ABC):
         pass
 
     @property
+    def body(self):
+        return self.model.layers[0]
+
+    @property
+    def head(self):
+        return self.model.layers[1]
+
+    @property
     def lr(self):
         return self.opt.param_groups[0]['lr']
 
@@ -175,7 +183,7 @@ class BaseModel(ModuleExtended, ABC):
         self.logger.add_log(self.name + '/Loss', np.mean(self.memory.loss))
 
     @classmethod
-    def from_config(cls, config, env=None, **kwargs):
+    def from_config(cls, config, env=None, body=None, head=None, **kwargs):
         '''
         Creates a model from a configuration file.
 
@@ -197,7 +205,12 @@ class BaseModel(ModuleExtended, ABC):
         config.pop('env', None)
 
         nn_config = config.pop('nn_config')
-        model = U.nn_from_config(nn_config, env.state_info, env.action_info)
+        model = U.nn_from_config(
+            config=nn_config,
+            state_info=env.state_info,
+            action_info=env.action_info,
+            body=body,
+            head=head)
 
         return cls(model=model, env=env, **config.as_dict(), **kwargs)
 

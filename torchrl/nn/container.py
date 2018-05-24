@@ -88,6 +88,16 @@ class SequentialExtended(ModuleExtended):
         return cls(layers_config, **kwargs)
 
 
+# TODO: This is useful?
+class Flatten(nn.Module):
+    '''
+    Flatten the input and apply a linear layer.
+    '''
+
+    def forward(self, x):
+        return x.view(x.shape[0], -1)
+
+
 class FlattenLinear(nn.Linear):
     '''
     Flatten the input and apply a linear layer.
