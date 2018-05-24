@@ -27,6 +27,9 @@ class BaseModel(ModuleExtended, ABC):
     clip_grad_norm: float
         Clip norm for the gradients, if `None` gradients
         will not be clipped (Default is None).
+    loss_coef: float
+        Used when sharing networks, should balance the contribution
+        of the grads of each model.
     cuda_default: bool
         If True and cuda is supported, use it (Default is True).
     '''
@@ -38,6 +41,7 @@ class BaseModel(ModuleExtended, ABC):
                  opt_params=dict(),
                  lr_schedule=None,
                  clip_grad_norm=None,
+                 loss_coef=1.,
                  cuda_default=True):
         super().__init__()
 
@@ -45,6 +49,7 @@ class BaseModel(ModuleExtended, ABC):
         self.env = env
         self.lr_schedule = U.make_callable(lr_schedule or opt_params['lr'])
         self.clip_grad_norm = clip_grad_norm
+        self.loss_coef = U.make_callable(loss_coef)
 
         self.memory = U.DefaultMemory()
         self.num_updates = 0
@@ -134,7 +139,7 @@ class BaseModel(ModuleExtended, ABC):
         self.add_losses(*args, **kwargs)
 
         self.opt.zero_grad()
-        loss = sum(self.losses)
+        loss = sum(self.losses) * self.loss_coef(self.step)
         loss.backward()
         if self.clip_grad_norm is not None:
             torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
