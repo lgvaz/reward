@@ -29,10 +29,10 @@ value_nn_config = Config(head=[
 # Create environment
 envs = [
     GymEnv(
-        'PongNoFrameskip-v4',
+        'BreakoutNoFrameskip-v4',
         fixed_normalize_states=True,
         clip_reward_range=1,
-        wrappers=[atari_wrap]) for _ in range(16)
+        wrappers=[atari_wrap]) for _ in range(8)
 ]
 env = ParallelEnv(envs)
 
@@ -44,9 +44,9 @@ policy_model = PPOClipModel.from_config(
     ppo_clip_range=0.1,
     opt_params=dict(lr=3e-4, eps=1e-5),
     lr_schedule=piecewise_linear_schedule(
-        values=[5e-4, 3e-4, 3e-4, 1e-4],
-        boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.7]),
-    clip_grad_norm=None)
+        values=[3e-4, 3e-4, 1e-4, 5e-5],
+        boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.8]),
+    clip_grad_norm=0.5)
 
 value_model_config = Config(nn_config=value_nn_config)
 value_model = ValueModel.from_config(
@@ -55,18 +55,18 @@ value_model = ValueModel.from_config(
     body=policy_model.body,
     opt_params=dict(lr=3e-4, eps=1e-5),
     lr_schedule=piecewise_linear_schedule(
-        values=[5e-4, 3e-4, 3e-4, 1e-4],
-        boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.7]),
+        values=[3e-4, 3e-4, 1e-4, 5e-5],
+        boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.8]),
     batch_size=256,
     num_epochs=4,
     clip_range=0.1,
-    clip_grad_norm=None)
+    clip_grad_norm=0.5)
 
 # Create agent
 agent = PGAgent(
     env,
     policy_model,
     value_model,
-    log_dir='logs/pong/16parallel-plr3e4_e4_eps1e5-vlr3e4_b256_e4_eps1e5-gcNone-v1-2',
+    log_dir='logs/breakout/8parallel-p_e4_eps1e5-v_3e4_b256_e4_eps1e5-gc05-v1-0',
     normalize_advantages=True)
 agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)
