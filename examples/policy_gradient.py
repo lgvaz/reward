@@ -1,17 +1,13 @@
 import torch.nn as nn
 
-import torchrl.utils as U
 from torchrl.utils import Config
-from torchrl.models import VanillaPGModel, SurrogatePGModel, PPOClipModel, ValueModel
+from torchrl.models import PPOClipModel, ValueModel
 from torchrl.agents import PGAgent
-from torchrl.envs import GymEnv
 from torchrl.envs import GymEnv, ParallelEnv
 from torchrl.nn import ActionLinear
 
-activation = nn.ReLU
-# activation = nn.Tanh
+activation = nn.Tanh
 # Define networks configs
-# The input_features of the first layer will be automatically added.
 policy_nn_config = Config(
     body=[
         dict(func=nn.Linear, out_features=64),
@@ -29,10 +25,10 @@ value_nn_config = Config(
     ],
     head=[dict(func=nn.Linear, out_features=1)])
 
-# Single env
-# env = GymEnv('HalfCheetah-v2', normalize_states=True, scale_rewards=True)
-# Parallel envs
-envs = [GymEnv('Hopper-v2', normalize_states=True, scale_rewards=True) for _ in range(32)]
+envs = [
+    GymEnv('HalfCheetah-v2', running_normalize_states=True, running_scale_rewards=True)
+    for _ in range(16)
+]
 env = ParallelEnv(envs)
 
 # TODO: actual method can't share bodies
@@ -40,23 +36,25 @@ policy_model_config = Config(nn_config=policy_nn_config)
 policy_model = PPOClipModel.from_config(
     config=policy_model_config,
     env=env,
-    opt_params=dict(lr=1e-3, eps=1e-5),
-    clip_grad_norm=0.5)
+    opt_params=dict(lr=3e-4, eps=1e-5),
+    clip_grad_norm=None)
 
 value_model_config = Config(nn_config=value_nn_config)
 value_model = ValueModel.from_config(
     config=value_model_config,
     env=env,
-    opt_params=dict(lr=1e-3, eps=1e-5),
-    clip_grad_norm=0.5)
+    opt_params=dict(lr=3e-4, eps=1e-5),
+    batch_size=256,
+    num_epochs=10,
+    clip_range=0.2,
+    clip_grad_norm=None)
 
 # Create agent
 agent = PGAgent(
     env,
     policy_model,
     value_model,
-    # advantage=U.estimators.advantage.TD(gamma=0.99),
-    # vtarget=U.estimators.value.TDTarget(gamma=0.99),
-    log_dir='logs/hopper/parallel/32parallel-relu-2',
+    log_dir=
+    'logs/cheetah/new/16parallel-plr3e4_eps1e5-vlr3e4_b256_e10_eps1e5-gclipNone-v5-3',
     normalize_advantages=True)
-agent.train(max_steps=1e6, steps_per_batch=2048)
+agent.train(max_steps=10e6, steps_per_batch=2048)

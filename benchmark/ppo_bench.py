@@ -16,8 +16,8 @@ CONFIG = Config(
     max_steps=10e6,
     steps_per_batch=2048,
     normalize_advantages=True,
-    normalize_states=True,
-    scale_rewards=True,
+    running_normalize_states=True,
+    running_scale_rewards=True,
     activation=nn.Tanh,
     ppo_policy_clip=0.2,
     value_clip=0.2,
@@ -39,8 +39,9 @@ def run_bench(config):
     envs = [
         GymEnv(
             env_name=config.env_name,
-            normalize_states=config.normalize_states,
-            scale_rewards=config.scale_rewards) for _ in range(config.num_envs)
+            running_normalize_states=config.running_normalize_states,
+            running_scale_rewards=config.running_scale_rewards)
+        for _ in range(config.num_envs)
     ]
     env = ParallelEnv(envs)
 
