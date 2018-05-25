@@ -61,27 +61,35 @@ class ValueModel(BaseModel):
 
     def train_step(self, batch):
         with torch.no_grad():
-            self.memory.old_preds = self.forward(batch.state_t).view(-1)
+            batch.old_pred = self.forward(batch.state_t).view(-1)
+            # self.memory.old_preds = self.forward(batch.state_t).view(-1)
 
-        dataset = TensorDataset(batch.state_t, batch.vtarget, self.memory.old_preds)
-        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        # dataset = TensorDataset(batch.state_t, batch.vtarget, self.memory.old_preds)
+        # data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
+        self.memory.batch_keys.extend(['state_t', 'old_pred', 'vtarget'])
         for _ in range(self.num_epochs):
-            for state_t, vtarget, old_pred in data_loader:
-                mini_batch = U.Batch(
-                    dict(state_t=state_t, vtarget=vtarget, old_pred=old_pred))
+            # for mini_batch in batch.sample(batch_size=self.batch_size, shuffle=True):
+            for mini_batch in batch.sample_keys(
+                    keys=self.memory.batch_keys, batch_size=self.batch_size,
+                    shuffle=True):
+                # for state_t, vtarget, old_pred in data_loader:
+                #     mini_batch = U.Batch(
+                #         dict(state_t=state_t, vtarget=vtarget, old_pred=old_pred))
                 self.optimizer_step(mini_batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
         self.logger.add_log(self.name + '/Old Explained Var',
-                            U.explained_var(batch.vtarget, self.memory.old_preds))
+                            U.explained_var(batch.vtarget, batch.old_pred))
+        # U.explained_var(batch.vtarget, self.memory.old_preds))
         pred = self.forward(batch.state_t)
         self.logger.add_log(self.name + '/New Explained Var',
                             U.explained_var(batch.vtarget, pred))
 
-        pred_diff = pred - self.memory.old_preds
+        pred_diff = pred - batch.old_pred
+        # pred_diff = pred - self.memory.old_preds
         clip_frac = (abs(pred_diff) > self.clip_range(self.step)).float().mean()
         self.logger.add_log(self.name + '/Clip Range', self.clip_range(self.step))
         self.logger.add_log(self.name + '/Clip Fraction', clip_frac)

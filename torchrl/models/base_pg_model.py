@@ -1,3 +1,4 @@
+from abc import abstractproperty
 import torch
 from torchrl.distributions import Categorical, Normal
 import torchrl.utils as U
@@ -13,6 +14,10 @@ class BasePGModel(BaseModel):
         super().__init__(model=model, env=env, **kwargs)
         self.entropy_coef = U.make_callable(entropy_coef)
 
+    @abstractproperty
+    def entropy(self):
+        pass
+
     def entropy_loss(self, batch):
         '''
         Adds a entropy cost to the loss function,
@@ -24,8 +29,7 @@ class BasePGModel(BaseModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        objective = batch.log_prob * batch.advantage
-        loss = -objective.mean()
+        loss = -self.entropy * self.entropy_coef(self.step)
 
         self.losses.append(loss)
 

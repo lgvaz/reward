@@ -20,16 +20,23 @@ class SurrogatePGModel(BasePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, env, num_epochs=1, **kwargs):
+    def __init__(self, model, env, num_epochs=1, mini_batch_size=512, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.num_epochs = num_epochs
+        self.mini_batch_size = mini_batch_size
+
+    @property
+    def kl_div(self):
+        return kl_divergence(self.memory.old_dists, self.memory.new_dists).sum(-1).mean()
+
+    @property
+    def entropy(self):
+        return self.memory.new_dists.entropy().mean()
 
     def add_new_dist(self, batch):
         parameters = self.forward(batch.state_t)
         self.memory.new_dists = self.create_dist(parameters)
-        batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
-        batch.kl_div = kl_divergence(self.memory.old_dists,
-                                     self.memory.new_dists).sum(-1).mean()
+        # batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
 
     def train_step(self, batch):
         with torch.no_grad():
@@ -37,19 +44,26 @@ class SurrogatePGModel(BasePGModel):
             self.memory.old_dists = self.create_dist(parameters)
             batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
-        self.add_new_dist(batch)
+        self.memory.batch_keys.extend(['state_t', 'action', 'log_prob', 'advantage'])
         for i_iter in range(self.num_epochs):
-            batch.entropy = self.memory.new_dists.entropy().mean()
-            self.optimizer_step(batch)
+            for mini_batch in batch.sample_keys(
+                    keys=self.memory.batch_keys,
+                    batch_size=self.mini_batch_size,
+                    shuffle=True):
+                self.add_new_dist(mini_batch)
+                self.optimizer_step(mini_batch)
 
-            # Create new policy
-            self.add_new_dist(batch)
+            # self.optimizer_step(batch)
+            # self.add_new_dist(batch)
+
+        # Create new policy on complete batch
+        self.add_new_dist(batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        self.logger.add_log(self.name + '/Entropy', batch.entropy)
-        self.logger.add_log(self.name + '/KL Divergence', batch.kl_div, precision=4)
+        self.logger.add_log(self.name + '/Entropy', self.entropy)
+        self.logger.add_log(self.name + '/KL Divergence', self.kl_div, precision=4)
 
     def add_losses(self, batch):
         self.surrogate_pg_loss(batch)

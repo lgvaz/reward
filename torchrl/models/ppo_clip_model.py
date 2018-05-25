@@ -32,8 +32,8 @@ class PPOClipModel(SurrogatePGModel):
         ----------
             batch: Batch
         '''
-        self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
-                                                           batch.log_prob)
+        new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
+        self.memory.prob_ratio = self.calculate_prob_ratio(new_log_prob, batch.log_prob)
         clipped_prob_ratio = self.memory.prob_ratio.clamp(
             1 - self.ppo_clip_range(self.step), 1 + self.ppo_clip_range(self.step))
 

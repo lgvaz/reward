@@ -1,5 +1,6 @@
 import numpy as np
 from torch.utils.data import Dataset
+from torch.utils.data import TensorDataset, DataLoader
 
 
 # TODO: Inherit from dict? Is this really necessary?
@@ -36,6 +37,20 @@ class Batch(Dataset):
 
     def apply_to_all(self, func):
         return Batch({k: func(v) for k, v in self.batch.items()})
+
+    def sample(self, batch_size, shuffle):
+        keys = list(self.batch.keys())
+
+        return self.sample_keys(keys=keys, batch_size=batch_size, shuffle=shuffle)
+
+    def sample_keys(self, keys, batch_size, shuffle):
+        values = [self.batch[k] for k in keys]
+
+        dataset = TensorDataset(*values)
+        data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+        for data in data_loader:
+            yield Batch({k: v for k, v in zip(keys, data)})
 
     @classmethod
     def from_trajs(cls, trajs):
