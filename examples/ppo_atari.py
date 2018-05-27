@@ -14,15 +14,19 @@ activation = nn.ReLU
 policy_nn_config = Config(
     body=[
         dict(func=nn.Conv2d, out_channels=16, kernel_size=8, stride=4),
+        dict(func=activation),
         dict(func=nn.Conv2d, in_channels=16, out_channels=32, kernel_size=4, stride=2)
+        dict(func=activation)
     ],
     head=[
         dict(func=FlattenLinear, out_features=256),
+        dict(func=activation),
         dict(func=ActionLinear, in_features=256)
     ])
 # Will share body with policy_nn
 value_nn_config = Config(head=[
     dict(func=FlattenLinear, out_features=256),
+    dict(func=activation),
     dict(func=nn.Linear, in_features=256, out_features=1)
 ])
 
