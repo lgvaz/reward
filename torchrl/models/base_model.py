@@ -19,6 +19,11 @@ class BaseModel(ModuleExtended, ABC):
         A pytorch model.
     env: torchrl.envs
             A torchrl environment.
+    num_epochs: int
+        How many times to train over the entire dataset (Default is 1).
+    num_mini_batches: int
+        How many mini-batches to subset the batch
+        (Default is 1, so all the batch is used at once).
     opt_fn: torch.optim
         The optimizer reference function (the constructor, not the instance)
         (Default is Adam).
@@ -37,6 +42,9 @@ class BaseModel(ModuleExtended, ABC):
     def __init__(self,
                  model,
                  env,
+                 *,
+                 num_epochs=1,
+                 num_mini_batches=1,
                  opt_fn=None,
                  opt_params=dict(),
                  lr_schedule=None,
@@ -47,6 +55,8 @@ class BaseModel(ModuleExtended, ABC):
 
         self.model = model
         self.env = env
+        self.num_epochs = num_epochs
+        self.num_mini_batches = num_mini_batches
         self.lr_schedule = U.make_callable(lr_schedule or opt_params['lr'])
         self.clip_grad_norm = clip_grad_norm
         self.loss_coef = U.make_callable(loss_coef)
@@ -56,6 +66,8 @@ class BaseModel(ModuleExtended, ABC):
         self.step = 0
         self.losses = []
         self.logger = None
+        self.callbacks = U.Callback()
+        self.register_callbacks()
 
         # Create optimizer
         opt_fn = opt_fn or torch.optim.Adam
@@ -98,13 +110,10 @@ class BaseModel(ModuleExtended, ABC):
     def register_batch_keys(self, *keys):
         self.memory.batch_keys.extend(keys)
 
-    def start_batch_callback(self, batch):
+    def register_callbacks(self):
         pass
 
-    def end_batch_callback(self, batch):
-        pass
-
-    def learn_from_batch(self, batch):
+    def learn_from_batch(self, batch, num_epochs, num_mini_batches, shuffle=True):
         '''
         Define the model training procedure.
 
@@ -113,32 +122,49 @@ class BaseModel(ModuleExtended, ABC):
         batch: torchrl.utils.Batch
             The batch should contain all the information necessary
             to compute the gradients.
+        num_epochs: int
+            How many times to train over the entire dataset.
+        num_mini_batches: int
+            How many mini-batches to subset the batch.
+        shuffle: bool
+            Whether to shuffle dataset.
         '''
-        for _ in range(self.num_epochs):
-            self.start_batch_callback(batch)
+        for i_epoch in range(num_epochs):
+            if self.callbacks.on_epoch_start(batch):
+                break
 
-            if self.num_mini_batches > 1:
-                for mini_batch in batch.sample_keys(
-                        keys=self.memory.batch_keys,
-                        num_mini_batches=self.num_mini_batches,
-                        shuffle=True):
-                    self.start_batch_callback(mini_batch)
-                    self.optimizer_step(mini_batch)
-            else:
-                self.optimizer_step(batch)
+            for mini_batch in batch.sample_keys(
+                    keys=self.memory.batch_keys,
+                    num_mini_batches=num_mini_batches,
+                    shuffle=shuffle):
+                if self.callbacks.on_mini_batch_start(mini_batch):
+                    break
 
-            self.end_batch_callback(batch)
+                self.optimizer_step(mini_batch)
+
+                if self.callbacks.on_mini_batch_end(mini_batch):
+                    break
+
+            if self.callbacks.on_epoch_end(batch):
+                break
 
     def train_step(self, batch):
         '''
         The most basic learning step. Just calls :func:`self.learn_from_batch`
         '''
-        self.learn_from_batch(batch)
+        if self.callbacks.on_train_start(batch):
+            return
+
+        self.learn_from_batch(
+            batch, num_epochs=self.num_epochs, num_mini_batches=self.num_mini_batches)
+
+        if self.callbacks.on_train_end(batch):
+            return
 
     def train(self, batch):
         '''
         Wrapper around :meth:`train_step`, adds functionalities
-        to before and after the training loop.
+        to before and after the training step.
 
         Parameters
         ----------

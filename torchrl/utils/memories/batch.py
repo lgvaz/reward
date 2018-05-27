@@ -44,14 +44,17 @@ class Batch(Dataset):
         return self.sample_keys(keys=keys, batch_size=batch_size, shuffle=shuffle)
 
     def sample_keys(self, keys, num_mini_batches, shuffle):
-        values = [self.batch[k] for k in keys]
-        batch_size = len(self) // num_mini_batches
+        if num_mini_batches > 1:
+            values = [self.batch[k] for k in keys]
+            batch_size = len(self) // num_mini_batches
 
-        dataset = TensorDataset(*values)
-        data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+            dataset = TensorDataset(*values)
+            data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
-        for data in data_loader:
-            yield Batch({k: v for k, v in zip(keys, data)})
+            for data in data_loader:
+                yield Batch({k: v for k, v in zip(keys, data)})
+        else:
+            yield self
 
     @classmethod
     def from_trajs(cls, trajs):

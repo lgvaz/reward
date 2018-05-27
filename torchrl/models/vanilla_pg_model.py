@@ -10,6 +10,18 @@ class VanillaPGModel(BasePGModel):
     The classical Policy Gradient algorithm.
     '''
 
+    @property
+    def entropy(self):
+        return self.memory.dists.entropy().mean()
+
+    def add_dist(self, batch):
+        parameters = self.forward(batch.state_t)
+        self.memory.dists = self.create_dist(parameters)
+
+    def register_callbacks(self):
+        super().register_callbacks()
+        self.callbacks.register_on_train_start(self.add_dist)
+
     def add_losses(self, batch):
         self.pg_loss(batch)
         self.entropy_loss(batch)
@@ -24,18 +36,11 @@ class VanillaPGModel(BasePGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        objective = batch.log_prob * batch.advantage
+        log_prob = self.memory.dists.log_prob(batch.action).sum(-1)
+        objective = log_prob * batch.advantage
         loss = -objective.mean()
 
         self.losses.append(loss)
-
-    def train(self, batch):
-        parameters = self.forward(batch.state_t)
-        dists = self.create_dist(parameters)
-        batch.log_prob = dists.log_prob(batch.action).sum(-1)
-        self.memory.entropy = dists.entropy().mean()
-
-        loss = self.optimizer_step(batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)

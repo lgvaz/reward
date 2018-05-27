@@ -20,11 +20,6 @@ class SurrogatePGModel(BasePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, env, num_epochs=1, num_mini_batches=1, **kwargs):
-        super().__init__(model=model, env=env, **kwargs)
-        self.num_epochs = num_epochs
-        self.num_mini_batches = num_mini_batches
-
     @property
     def kl_div(self):
         return kl_divergence(self.memory.old_dists, self.memory.new_dists).sum(-1).mean()
@@ -36,31 +31,12 @@ class SurrogatePGModel(BasePGModel):
     def add_new_dist(self, batch):
         parameters = self.forward(batch.state_t)
         self.memory.new_dists = self.create_dist(parameters)
+        # TODO
         # batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
 
-    # def train_step(self, batch):
-    #     with torch.no_grad():
-    #         parameters = self.forward(batch.state_t)
-    #         self.memory.old_dists = self.create_dist(parameters)
-    #         batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
-
-    #     self.memory.batch_keys.extend(['state_t', 'action', 'log_prob', 'advantage'])
-    #     for i_iter in range(self.num_epochs):
-    #         # if self.num_mini_batches > 1:
-    #         #     mini_batch_size = len(batch) // self.num_mini_batches
-    #         #     for i, mini_batch in enumerate(
-    #         #             batch.sample_keys(
-    #         #                 keys=self.memory.batch_keys,
-    #         #                 batch_size=,
-    #         #                 shuffle=False)):
-    #         #         self.add_new_dist(mini_batch)
-    #         #         self.optimizer_step(mini_batch)
-    #         # else:
-    #         self.add_new_dist(batch)
-    #         self.optimizer_step(batch)
-
-    #     # Create new policy on complete batch
-    #     self.add_new_dist(batch)
+    def register_callbacks(self):
+        super().register_callbacks()
+        self.callbacks.register_on_epoch_start(self.add_new_dist)
 
     def train_step(self, batch):
         with torch.no_grad():
@@ -68,11 +44,9 @@ class SurrogatePGModel(BasePGModel):
             self.memory.old_dists = self.create_dist(parameters)
             batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
-        self.memory.batch_keys.extend(['state_t', 'action', 'log_prob', 'advantage'])
-        self.learn_from_batch(batch)
-        self.add_new_dist(batch)
+        self.register_batch_keys('state_t', 'action', 'log_prob', 'advantage')
 
-    def start_batch_callback(self, batch):
+        super().train_step(batch)
         self.add_new_dist(batch)
 
     def write_logs(self, batch):

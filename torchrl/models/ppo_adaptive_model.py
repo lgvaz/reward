@@ -43,28 +43,22 @@ class PPOAdaptiveModel(SurrogatePGModel):
 
         self.losses.append(loss)
 
-    def train_step(self, batch):
-        with torch.no_grad():
-            parameters = self.forward(batch.state_t)
-            self.memory.old_dists = self.create_dist(parameters)
-            batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
+    def register_callbacks(self):
+        super().register_callbacks()
+        self.callbacks.register_on_epoch_end(self.kl_early_stopping)
+        self.callbacks.register_on_train_end(self.kl_penalty_adjust)
 
-        self.add_new_dist(batch)
-        for i_iter in range(self.num_epochs):
-            self.optimizer_step(batch)
-
-            # Create new policy
-            self.add_new_dist(batch)
-
-            if self.memory.kl_div > 4 * self.kl_target(self.step):
-                print('Early stopping')
-                break
-
+    def kl_penalty_adjsut(self, batch):
         # Adjust KL penalty
-        if self.memory.kl_div < self.kl_target(self.step) / 1.5:
+        if self.kl_div < self.kl_target(self.step) / 1.5:
             self.kl_penalty /= 2
-        if self.memory.kl_div > self.kl_target(self.step) * 1.5:
+        if self.kl_div > self.kl_target(self.step) * 1.5:
             self.kl_penalty *= 2
+
+    def kl_early_stopping(self, batch):
+        if self.kl_div > 4 * self.kl_target(self.step):
+            print('Early stopping')
+            return True
 
     def write_logs(self, batch):
         super().write_logs(batch)

@@ -12,10 +12,6 @@ class ValueModel(BaseModel):
 
     Parameters
     ----------
-    batch_size: int
-        The mini-batch size (Default is 64).
-    num_epochs: int
-        How many times to train over the entire dataset (Default is 10).
     clip_range: float
         Similar to PPOClip, limits the change between the new and old value function.
     '''
@@ -23,15 +19,19 @@ class ValueModel(BaseModel):
     def __init__(self,
                  model,
                  env,
+                 *,
+                 clip_range=None,
                  num_mini_batches=4,
                  num_epochs=10,
-                 clip_range=None,
                  **kwargs):
-        super().__init__(model=model, env=env, **kwargs)
-        self.num_mini_batches = num_mini_batches
-        self.num_epochs = num_epochs
-        self.clip_range = U.make_callable(clip_range)
+        super().__init__(
+            model=model,
+            env=env,
+            num_mini_batches=num_mini_batches,
+            num_epochs=num_epochs,
+            **kwargs)
 
+        self.clip_range = U.make_callable(clip_range)
         assert clip_range is None or clip_range > 0, 'clip_range must be None or > 0'
 
     def mse_loss(self, batch):
@@ -63,22 +63,19 @@ class ValueModel(BaseModel):
         with torch.no_grad():
             batch.old_pred = self.forward(batch.state_t).view(-1)
 
-        # self.memory.batch_keys.extend(['state_t', 'old_pred', 'vtarget'])
         self.register_batch_keys('state_t', 'old_pred', 'vtarget')
-        self.learn_from_batch(batch)
+        super().train_step(batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
         self.logger.add_log(self.name + '/Old Explained Var',
                             U.explained_var(batch.vtarget, batch.old_pred))
-        # U.explained_var(batch.vtarget, self.memory.old_preds))
         pred = self.forward(batch.state_t)
         self.logger.add_log(self.name + '/New Explained Var',
                             U.explained_var(batch.vtarget, pred))
 
         pred_diff = pred - batch.old_pred
-        # pred_diff = pred - self.memory.old_preds
         clip_frac = (abs(pred_diff) > self.clip_range(self.step)).float().mean()
         self.logger.add_log(self.name + '/Clip Range', self.clip_range(self.step))
         self.logger.add_log(self.name + '/Clip Fraction', clip_frac)

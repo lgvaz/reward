@@ -71,6 +71,6 @@ agent = PGAgent(
     policy_model,
     value_model,
     log_dir=
-    'logs/cheetah/new3/16parallel_p_b2048_e20_eps1e5_v_b512_e10_eps1e5-gcNone-v7-1',
+    'logs/cheetah/new3/16parallel_p_b2048_e20_eps1e5_v_b512_e10_eps1e5-gcNone-v8-1',
     normalize_advantages=True)
 agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)

@@ -1,5 +1,6 @@
 from .constants import EPSILON
 from .memories import Batch, SimpleMemory, DefaultMemory
+from .callback import Callback
 from .config import Config
 from .utils import (get_obj, env_from_config, join_transitions, to_np, explained_var,
                     normalize, one_hot, make_callable)
@@ -13,5 +14,5 @@ __all__ = [
     'EPSILON', 'Config', 'Logger', 'get_obj', 'env_from_config', 'join_transitions',
     'to_np', 'explained_var', 'normalize', 'one_hot', 'auto_input_shape',
     'get_module_list', 'nn_from_config', 'Batch', 'SimpleMemory', 'DefaultMemory',
-    'linear_schedule', 'piecewise_linear_schedule', 'make_callable'
+    'linear_schedule', 'piecewise_linear_schedule', 'make_callable', 'Callback'
 ]

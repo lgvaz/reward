@@ -185,7 +185,6 @@ class BaseEnv(ABC):
         reward: float
             The transformed reward.
         '''
-        # TODO: Atari rewards are clipped, we want the unclipped rewards
         self.ep_reward_sum += reward
         if self.reward_scaler is not None:
             reward = self.reward_scaler.scale(np.array(reward))
