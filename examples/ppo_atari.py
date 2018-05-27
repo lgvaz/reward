@@ -44,7 +44,7 @@ policy_model_config = Config(nn_config=policy_nn_config)
 policy_model = PPOClipModel.from_config(
     config=policy_model_config,
     env=env,
-    num_epochs=20,
+    num_epochs=4,
     ppo_clip_range=0.1,
     entropy_coef=0.01,
     opt_params=dict(lr=3e-4, eps=1e-5),
