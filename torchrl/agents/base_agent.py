@@ -22,10 +22,8 @@ class BaseAgent(ABC):
         self.env = env
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
-        self.rewards = [0]
 
         self.models = U.DefaultMemory()
-        self.last_logged_ep = self.env.num_episodes
 
     @abstractmethod
     def step(self):
@@ -120,13 +118,7 @@ class BaseAgent(ABC):
         '''
         Use the logger to write general information about the training process.
         '''
-        new_eps = abs(self.last_logged_ep - self.env.num_episodes)
-        if new_eps != 0:
-            self.rewards = self.env.rewards[-new_eps:]
-        self.last_logged_ep = self.env.num_episodes
-
-        self.logger.add_log('Reward/Episode (New Episodes)', np.mean(self.rewards))
-        self.logger.add_log('Reward/Episode (Last 50)', np.mean(self.env.rewards[-50:]))
+        self.env.write_logs(logger=self.logger)
 
         self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
         self.logger.log('Update {} | Episode {} | Step {}'.format(

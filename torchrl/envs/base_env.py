@@ -49,12 +49,13 @@ class BaseEnv(ABC):
             self.state_info['shape']) if running_normalize_states else None
         self.reward_scaler = Normalizer(1) if running_scale_rewards else None
 
-        self.num_episodes = 0
         self.num_steps = 0
         self.ep_reward_sum = 0
         self.rewards = []
+        self.new_rewards = []
         self._state = None
         self._raw_state = None
+        self.last_logged_ep = self.num_episodes
 
     @property
     @abstractmethod
@@ -142,6 +143,10 @@ class BaseEnv(ABC):
             Flag indicating the termination of the episode.
         '''
 
+    @property
+    def num_episodes(self):
+        return len(self.rewards)
+
     def _preprocess_state(self, state):
         '''
         Perform transformations on the state (scaling, normalizing, cropping, etc).
@@ -215,8 +220,6 @@ class BaseEnv(ABC):
         raw_state = self._reset()
         # TODO: Atari frame already came with the first dim
         state = self._preprocess_state(raw_state[None])
-
-        self.num_episodes += 1
 
         return raw_state, state
 
@@ -362,6 +365,25 @@ class BaseEnv(ABC):
             transitions.append(transition)
 
         return [U.join_transitions(transitions)]
+
+    def write_logs(self, logger):
+        new_eps = abs(self.last_logged_ep - self.num_episodes)
+        if new_eps != 0:
+            self.new_rewards = self.rewards[-new_eps:]
+        self.last_logged_ep = self.num_episodes
+
+        logger.add_log('Env/Reward/Episode (New Episodes)', np.mean(self.new_rewards))
+        logger.add_log('Env/Reward/Episode (Last 50)', np.mean(self.rewards[-50:]))
+
+        if self.state_normalizer is not None:
+            logger.add_tf_only_log('Env/States/Mean',
+                                   np.mean(self.state_normalizer.means))
+            logger.add_tf_only_log('Env/States/Vars', np.mean(self.state_normalizer.vars))
+        if self.state_normalizer is not None:
+            logger.add_tf_only_log('Env/Rewards/Mean', np.mean(self.reward_scaler.means))
+            logger.add_tf_only_log('Env/Rewards/Vars', np.mean(self.reward_scaler.vars))
+            # TODO
+            # logger.add_histogram('Env/Rewards/Vars_hist', self.reward_scaler.vars)
 
     def record(self, path):
         raise NotImplementedError

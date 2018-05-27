@@ -69,8 +69,6 @@ class ParallelEnv:
         self.num_workers = num_workers or multiprocessing.cpu_count()
         self.num_steps = 0
         self.manager = Manager()
-        # self.rewards = self.manager.list()
-        self.rewards = []
         self.envs_rewards = np.zeros(self.num_envs)
 
         assert self.num_envs >= self.num_workers, \
@@ -81,6 +79,7 @@ class ParallelEnv:
         self.state_normalizer = env.state_normalizer
         self.reward_scaler = env.reward_scaler
         self.root_env = env
+        self.rewards = self.root_env.rewards
 
         self._create_shared_transitions(envs)
         self._create_workers(envs)
@@ -101,7 +100,7 @@ class ParallelEnv:
 
     @property
     def num_episodes(self):
-        return len(self.rewards)
+        return self.root_env.num_episodes
 
     def _create_shared_transitions(self, envs):
         # TODO: dtype for atari
@@ -359,6 +358,9 @@ class ParallelEnv:
             array[i * q + min(i, r):(i + 1) * q + min(i + 1, r)]
             for i in range(self.num_workers)
         ]
+
+    def write_logs(self, logger):
+        return self.root_env.write_logs(logger=logger)
 
     def update_config(self, config):
         return self.root_env.update_config(config)

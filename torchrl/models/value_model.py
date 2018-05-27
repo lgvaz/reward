@@ -23,12 +23,12 @@ class ValueModel(BaseModel):
     def __init__(self,
                  model,
                  env,
-                 batch_size=64,
+                 num_mini_batches=4,
                  num_epochs=10,
                  clip_range=None,
                  **kwargs):
         super().__init__(model=model, env=env, **kwargs)
-        self.batch_size = batch_size
+        self.num_mini_batches = num_mini_batches
         self.num_epochs = num_epochs
         self.clip_range = U.make_callable(clip_range)
 
@@ -62,21 +62,10 @@ class ValueModel(BaseModel):
     def train_step(self, batch):
         with torch.no_grad():
             batch.old_pred = self.forward(batch.state_t).view(-1)
-            # self.memory.old_preds = self.forward(batch.state_t).view(-1)
 
-        # dataset = TensorDataset(batch.state_t, batch.vtarget, self.memory.old_preds)
-        # data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
-
-        self.memory.batch_keys.extend(['state_t', 'old_pred', 'vtarget'])
-        for _ in range(self.num_epochs):
-            # for mini_batch in batch.sample(batch_size=self.batch_size, shuffle=True):
-            for mini_batch in batch.sample_keys(
-                    keys=self.memory.batch_keys, batch_size=self.batch_size,
-                    shuffle=True):
-                # for state_t, vtarget, old_pred in data_loader:
-                #     mini_batch = U.Batch(
-                #         dict(state_t=state_t, vtarget=vtarget, old_pred=old_pred))
-                self.optimizer_step(mini_batch)
+        # self.memory.batch_keys.extend(['state_t', 'old_pred', 'vtarget'])
+        self.register_batch_keys('state_t', 'old_pred', 'vtarget')
+        self.learn_from_batch(batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)

@@ -56,14 +56,14 @@ class PPOAdaptiveModel(SurrogatePGModel):
             # Create new policy
             self.add_new_dist(batch)
 
-            if batch.kl_div > 4 * self.kl_target(self.step):
+            if self.memory.kl_div > 4 * self.kl_target(self.step):
                 print('Early stopping')
                 break
 
         # Adjust KL penalty
-        if batch.kl_div < self.kl_target(self.step) / 1.5:
+        if self.memory.kl_div < self.kl_target(self.step) / 1.5:
             self.kl_penalty /= 2
-        if batch.kl_div > self.kl_target(self.step) * 1.5:
+        if self.memory.kl_div > self.kl_target(self.step) * 1.5:
             self.kl_penalty *= 2
 
     def write_logs(self, batch):

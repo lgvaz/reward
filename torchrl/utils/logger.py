@@ -2,7 +2,7 @@ import time
 from collections import defaultdict
 from datetime import timedelta
 from tensorboardX import SummaryWriter
-from torchrl.utils import to_np
+from torchrl.utils import to_np, DefaultMemory
 
 import numpy as np
 
@@ -19,9 +19,11 @@ class Logger:
 
     def __init__(self, log_dir=None, debug=False):
         self.debug = debug
-        self.logs = defaultdict(list)
-        self.histograms = dict()
+        self.logs = DefaultMemory()
+        self.tf_logs = DefaultMemory()
         self.precision = dict()
+        self.tf_precision = dict()
+        self.histograms = dict()
         self.time = time.time()
         self.steps_sum = 0
         self.eta = None
@@ -46,6 +48,24 @@ class Logger:
         '''
         self.logs[name].append(to_np(value))
         self.precision[name] = precision
+
+    def add_tf_only_log(self, name, value, precision=2):
+        '''
+        Register a value to a name, this function can be called
+        multiple times and the values will be averaged when logging.
+        Will not display the logs on the console but just write on the file.
+
+        Parameters
+        ----------
+        name: str
+            Name displayed when printing the table.
+        value: float
+            Value to log.
+        precision: int
+            Decimal points displayed for the value (Default is 2).
+        '''
+        self.tf_logs[name].append(to_np(value))
+        self.tf_precision[name] = precision
 
     def add_debug(self, name, value, precision=2):
         if self.debug:
@@ -88,13 +108,17 @@ class Logger:
 
         # Write tensorboard summary
         if self.writer is not None:
+            self.tf_logs = {key: np.mean(value) for key, value in self.tf_logs.items()}
             for key, value in self.logs.items():
+                self.writer.add_scalar(key, value, global_step=self.i_step)
+            for key, value in self.tf_logs.items():
                 self.writer.add_scalar(key, value, global_step=self.i_step)
             for key, value in self.histograms.items():
                 self.writer.add_histogram(key, value, global_step=self.i_step)
 
         # Reset dict
-        self.logs = defaultdict(list)
+        self.logs = DefaultMemory()
+        self.tf_logs = DefaultMemory()
         self.histograms = dict()
 
     def timeit(self, i_step, max_steps=-1):

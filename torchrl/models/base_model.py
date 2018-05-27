@@ -79,19 +79,6 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
 
-    @abstractmethod
-    def train_step(self, batch):
-        '''
-        Define the model training procedure.
-
-        Parameters
-        ----------
-        batch: torchrl.utils.Batch
-            The batch should contain all the information necessary
-            to compute the gradients.
-        '''
-        pass
-
     @property
     def body(self):
         return self.model.layers[0]
@@ -107,6 +94,46 @@ class BaseModel(ModuleExtended, ABC):
     @property
     def name(self):
         return self.__class__.__name__
+
+    def register_batch_keys(self, *keys):
+        self.memory.batch_keys.extend(keys)
+
+    def start_batch_callback(self, batch):
+        pass
+
+    def end_batch_callback(self, batch):
+        pass
+
+    def learn_from_batch(self, batch):
+        '''
+        Define the model training procedure.
+
+        Parameters
+        ----------
+        batch: torchrl.utils.Batch
+            The batch should contain all the information necessary
+            to compute the gradients.
+        '''
+        for _ in range(self.num_epochs):
+            self.start_batch_callback(batch)
+
+            if self.num_mini_batches > 1:
+                for mini_batch in batch.sample_keys(
+                        keys=self.memory.batch_keys,
+                        num_mini_batches=self.num_mini_batches,
+                        shuffle=True):
+                    self.start_batch_callback(mini_batch)
+                    self.optimizer_step(mini_batch)
+            else:
+                self.optimizer_step(batch)
+
+            self.end_batch_callback(batch)
+
+    def train_step(self, batch):
+        '''
+        The most basic learning step. Just calls :func:`self.learn_from_batch`
+        '''
+        self.learn_from_batch(batch)
 
     def train(self, batch):
         '''

@@ -43,8 +43,9 @@ class Batch(Dataset):
 
         return self.sample_keys(keys=keys, batch_size=batch_size, shuffle=shuffle)
 
-    def sample_keys(self, keys, batch_size, shuffle):
+    def sample_keys(self, keys, num_mini_batches, shuffle):
         values = [self.batch[k] for k in keys]
+        batch_size = len(self) // num_mini_batches
 
         dataset = TensorDataset(*values)
         data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)

@@ -20,10 +20,10 @@ class SurrogatePGModel(BasePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, env, num_epochs=1, mini_batch_size=512, **kwargs):
+    def __init__(self, model, env, num_epochs=1, num_mini_batches=1, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.num_epochs = num_epochs
-        self.mini_batch_size = mini_batch_size
+        self.num_mini_batches = num_mini_batches
 
     @property
     def kl_div(self):
@@ -38,6 +38,30 @@ class SurrogatePGModel(BasePGModel):
         self.memory.new_dists = self.create_dist(parameters)
         # batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
 
+    # def train_step(self, batch):
+    #     with torch.no_grad():
+    #         parameters = self.forward(batch.state_t)
+    #         self.memory.old_dists = self.create_dist(parameters)
+    #         batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
+
+    #     self.memory.batch_keys.extend(['state_t', 'action', 'log_prob', 'advantage'])
+    #     for i_iter in range(self.num_epochs):
+    #         # if self.num_mini_batches > 1:
+    #         #     mini_batch_size = len(batch) // self.num_mini_batches
+    #         #     for i, mini_batch in enumerate(
+    #         #             batch.sample_keys(
+    #         #                 keys=self.memory.batch_keys,
+    #         #                 batch_size=,
+    #         #                 shuffle=False)):
+    #         #         self.add_new_dist(mini_batch)
+    #         #         self.optimizer_step(mini_batch)
+    #         # else:
+    #         self.add_new_dist(batch)
+    #         self.optimizer_step(batch)
+
+    #     # Create new policy on complete batch
+    #     self.add_new_dist(batch)
+
     def train_step(self, batch):
         with torch.no_grad():
             parameters = self.forward(batch.state_t)
@@ -45,18 +69,10 @@ class SurrogatePGModel(BasePGModel):
             batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
         self.memory.batch_keys.extend(['state_t', 'action', 'log_prob', 'advantage'])
-        for i_iter in range(self.num_epochs):
-            for mini_batch in batch.sample_keys(
-                    keys=self.memory.batch_keys,
-                    batch_size=self.mini_batch_size,
-                    shuffle=True):
-                self.add_new_dist(mini_batch)
-                self.optimizer_step(mini_batch)
+        self.learn_from_batch(batch)
+        self.add_new_dist(batch)
 
-            # self.optimizer_step(batch)
-            # self.add_new_dist(batch)
-
-        # Create new policy on complete batch
+    def start_batch_callback(self, batch):
         self.add_new_dist(batch)
 
     def write_logs(self, batch):
