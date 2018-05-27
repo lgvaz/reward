@@ -15,7 +15,7 @@ policy_nn_config = Config(
     body=[
         dict(func=nn.Conv2d, out_channels=16, kernel_size=8, stride=4),
         dict(func=activation),
-        dict(func=nn.Conv2d, in_channels=16, out_channels=32, kernel_size=4, stride=2)
+        dict(func=nn.Conv2d, in_channels=16, out_channels=32, kernel_size=4, stride=2),
         dict(func=activation)
     ],
     head=[
