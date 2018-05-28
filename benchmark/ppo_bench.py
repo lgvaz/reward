@@ -13,7 +13,6 @@ from utils import NoDaemonProcessPool, config2str
 
 CONFIG = Config(
     num_envs=16,
-    max_steps=10e6,
     steps_per_batch=2048,
     normalize_advantages=True,
     running_normalize_states=True,
@@ -23,17 +22,15 @@ CONFIG = Config(
     value_clip=0.2,
     policy_opt_params=dict(lr=3e-4, eps=1e-5),
     value_opt_params=dict(lr=3e-4, eps=1e-5),
-    value_batch_size=128,
-    value_num_epochs=10,
-    clip_grad_norm=0.5)
+    clip_grad_norm=None)
 
 TASK = MUJOCO_ESSENTIAL_BENCH
-NUM_WORKERS = 4
+NUM_WORKERS = 3
 
 
 def run_bench(config):
     log_dir = config2str(config)
-    log_dir = os.path.join('logs', config.env_name, log_dir)
+    log_dir = os.path.join('tests', config.env_name, log_dir)
 
     # Create env
     envs = [
@@ -69,7 +66,6 @@ def run_bench(config):
     policy_model = PPOClipModel.from_config(
         config=policy_model_config,
         env=env,
-        ppo_clip_range=config.ppo_policy_clip,
         opt_params=config.policy_opt_params,
         clip_grad_norm=config.clip_grad_norm)
 
@@ -79,8 +75,6 @@ def run_bench(config):
         env=env,
         clip_range=config.value_clip,
         opt_params=config.value_opt_params,
-        batch_size=config.value_batch_size,
-        num_epochs=config.value_num_epochs,
         clip_grad_norm=config.clip_grad_norm)
 
     # Create agent
@@ -97,25 +91,28 @@ def run_bench(config):
 if __name__ == '__main__':
 
     p = NoDaemonProcessPool(NUM_WORKERS)
-    p.map_async(run_bench, task_gen(TASK, CONFIG)).get()
+    p.map(run_bench, task_gen(TASK, CONFIG))
     p.join()
     p.close()
 
-    p = NoDaemonProcessPool(NUM_WORKERS)
+    # p = NoDaemonProcessPool(NUM_WORKERS)
     CONFIG.num_envs = 32
-    p.map_async(run_bench, task_gen(TASK, CONFIG)).get()
+    p.map(run_bench, task_gen(TASK, CONFIG)).get()
     p.join()
     p.close()
 
-    p = NoDaemonProcessPool(NUM_WORKERS)
+    # p = NoDaemonProcessPool(NUM_WORKERS)
     CONFIG.num_envs = 16
-    CONFIG.clip_grad_norm = None
-    p.map_async(run_bench, task_gen(TASK, CONFIG)).get()
+    CONFIG.running_normalize_states = False,
+    CONFIG.running_scale_rewards = False,
+    p.map(run_bench, task_gen(TASK, CONFIG)).get()
     p.join()
     p.close()
 
     p = NoDaemonProcessPool(NUM_WORKERS)
     CONFIG.steps_per_batch = 10000
-    p.map_async(run_bench, task_gen(TASK, CONFIG)).get()
+    CONFIG.running_normalize_states = True,
+    CONFIG.running_scale_rewards = True,
+    p.map(run_bench, task_gen(TASK, CONFIG)).get()
     p.join()
     p.close()
