@@ -1,6 +1,8 @@
 TorchRL
 ========
 
+|docs|
+
 Documentation
 -------------
 For full documentation go here_.
