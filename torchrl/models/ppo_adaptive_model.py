@@ -48,7 +48,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
         self.callbacks.register_on_epoch_end(self.kl_early_stopping)
         self.callbacks.register_on_train_end(self.kl_penalty_adjust)
 
-    def kl_penalty_adjsut(self, batch):
+    def kl_penalty_adjust(self, batch):
         # Adjust KL penalty
         if self.kl_div < self.kl_target(self.step) / 1.5:
             self.kl_penalty /= 2
@@ -63,6 +63,5 @@ class PPOAdaptiveModel(SurrogatePGModel):
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        self.logger.add_log(
-            self.name + '/KL Target', self.kl_target(self.step), precision=4)
-        self.logger.add_log(self.name + '/KL Penalty', self.kl_penalty, precision=4)
+        self.add_log('KL Target', self.kl_target(self.step), precision=4)
+        self.add_log('KL Penalty', self.kl_penalty, precision=4)
