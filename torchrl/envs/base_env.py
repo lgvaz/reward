@@ -27,6 +27,7 @@ class BaseEnv(ABC):
 
     def __init__(self,
                  env_name,
+                 *,
                  fixed_normalize_states=False,
                  running_normalize_states=False,
                  running_scale_rewards=False,

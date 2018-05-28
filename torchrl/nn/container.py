@@ -13,7 +13,11 @@ class ModuleExtended(nn.Module):
     A torch module with added functionalities.
     '''
 
-    def _maybe_cuda(self, x):
+    @property
+    def is_cuda(self):
+        return next(self.parameters()).is_cuda
+
+    def maybe_cuda(self, x):
         '''
         Convert input tensor to cuda if available.
 
@@ -29,7 +33,7 @@ class ModuleExtended(nn.Module):
         '''
         return x.cuda() if self.is_cuda and not x.is_cuda else x
 
-    def _to_tensor(self, x):
+    def to_tensor(self, x):
         if isinstance(x, np.ndarray):
             # pytorch doesn't support bool
             if x.dtype == 'bool':
@@ -40,11 +44,7 @@ class ModuleExtended(nn.Module):
 
             x = torch.from_numpy(x)
 
-        return self._maybe_cuda(x)
-
-    @property
-    def is_cuda(self):
-        return next(self.parameters()).is_cuda
+        return self.maybe_cuda(x)
 
     def get_output_shape(self, input_shape):
         '''
@@ -60,7 +60,7 @@ class ModuleExtended(nn.Module):
         torch.IntTensor
             The dimensions of the output.
         '''
-        fake_input = Variable(self._maybe_cuda(torch.zeros(input_shape)[None]))
+        fake_input = Variable(self.maybe_cuda(torch.zeros(input_shape)[None]))
         out = self.layers(fake_input)
         shape = out.shape[1:]
 
@@ -77,7 +77,7 @@ class SequentialExtended(ModuleExtended):
         self.layers = nn.Sequential(*args, **kwargs)
 
     def forward(self, x):
-        return self.layers(self._to_tensor(x))
+        return self.layers(self.to_tensor(x))
 
     @classmethod
     def from_config(cls, config, kwargs):

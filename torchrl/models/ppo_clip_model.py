@@ -16,7 +16,7 @@ class PPOClipModel(SurrogatePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, env, ppo_clip_range=0.2, num_epochs=10, **kwargs):
+    def __init__(self, model, env, *, ppo_clip_range=0.2, num_epochs=10, **kwargs):
         super().__init__(model=model, env=env, num_epochs=num_epochs, **kwargs)
         self.ppo_clip_range_fn = U.make_callable(ppo_clip_range)
 

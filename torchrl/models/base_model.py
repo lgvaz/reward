@@ -189,7 +189,7 @@ class BaseModel(ModuleExtended, ABC):
         '''
         self.step = batch.step[-1]
         self.set_lr(value=self.lr)
-        batch = batch.apply_to_all(self._to_tensor)
+        batch = batch.apply_to_all(self.to_tensor)
 
         self.train_step(batch)
 

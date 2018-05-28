@@ -10,7 +10,7 @@ class BasePGModel(BaseModel):
     Base class for all Policy Gradient Models.
     '''
 
-    def __init__(self, model, env, entropy_coef=0, **kwargs):
+    def __init__(self, model, env, *, entropy_coef=0, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
         self.entropy_coef_fn = U.make_callable(entropy_coef)
 

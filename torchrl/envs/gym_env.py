@@ -18,6 +18,7 @@ class GymEnv(BaseEnv):
 
     def __init__(self,
                  env_name,
+                 *,
                  wrappers=[],
                  monitor_dir=None,
                  monitor_force=True,

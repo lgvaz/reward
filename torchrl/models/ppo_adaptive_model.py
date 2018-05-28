@@ -15,7 +15,13 @@ class PPOAdaptiveModel(SurrogatePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, env, kl_target=0.01, kl_penalty=1., num_epochs=10,
+    def __init__(self,
+                 model,
+                 env,
+                 *,
+                 kl_target=0.01,
+                 kl_penalty=1.,
+                 num_epochs=10,
                  **kwargs):
         super().__init__(model=model, env=env, num_epochs=num_epochs, **kwargs)
         self.kl_target_fn = U.make_callable(kl_target)

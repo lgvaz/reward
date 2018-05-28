@@ -81,7 +81,7 @@ class ParallelEnv:
         self.root_env = env
         self.rewards = self.root_env.rewards
 
-        self._create_shared_transitions(envs)
+        self._create_shared_transitions()
         self._create_workers(envs)
         self._states = None
         self._raw_states = None
@@ -102,7 +102,7 @@ class ParallelEnv:
     def num_episodes(self):
         return self.root_env.num_episodes
 
-    def _create_shared_transitions(self, envs):
+    def _create_shared_transitions(self):
         # TODO: dtype for atari
         state = self._get_shared(
             np.zeros([self.num_envs] + list(self.state_info['shape']), dtype=np.float32))
@@ -367,9 +367,17 @@ class ParallelEnv:
 
     def _get_shared(self, array):
         """
-        Returns a RawArray backed numpy array that can be shared between processes.
-        :param array: the array to be shared
-        :return: the RawArray backed numpy array
+        A numpy array that can be shared between processes.
+        From: `alfredcv <https://sourcegraph.com/github.com/Alfredvc/paac/-/blob/runners.py#L20:9-20:20$references>`_.
+
+        Parameters
+        ----------
+        array: np.array
+            The shared to be shared
+
+        Returns
+        -------
+        A shared numpy array.
         """
 
         dtype = self.NUMPY_TO_C_DTYPE[array.dtype.type]

@@ -35,6 +35,7 @@ class BatchAgent(BaseAgent):
         return trajs
 
     def train(self,
+              *,
               steps_per_batch=-1,
               episodes_per_batch=-1,
               max_updates=-1,

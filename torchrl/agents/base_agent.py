@@ -18,7 +18,7 @@ class BaseAgent(ABC):
         Directory where logs will be written (Default is `runs`).
     '''
 
-    def __init__(self, env, gamma=0.99, log_dir='runs'):
+    def __init__(self, env, *, gamma=0.99, log_dir='runs'):
         self.env = env
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
@@ -62,7 +62,7 @@ class BaseAgent(ABC):
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
 
-    def train(self, max_updates=-1, max_episodes=-1, max_steps=-1):
+    def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1):
         '''
         Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
 
@@ -125,43 +125,43 @@ class BaseAgent(ABC):
             self.models.policy.num_updates, self.env.num_episodes, self.env.num_steps))
 
     # TODO: Reimplement method
-    @classmethod
-    def from_config(cls, config, env=None):
-        '''
-        Create an agent from a configuration object.
+    # @classmethod
+    # def from_config(cls, config, env=None):
+    #     '''
+    #     Create an agent from a configuration object.
 
-        Returns
-        -------
-        torchrl.agents
-            A TorchRL agent.
-        '''
-        if env is None:
-            try:
-                env = U.get_obj(config.env.obj)
-            except AttributeError:
-                raise ValueError('The env must be defined in the config '
-                                 'or passed as an argument')
+    #     Returns
+    #     -------
+    #     torchrl.agents
+    #         A TorchRL agent.
+    #     '''
+    #     if env is None:
+    #         try:
+    #             env = U.get_obj(config.env.obj)
+    #         except AttributeError:
+    #             raise ValueError('The env must be defined in the config '
+    #                              'or passed as an argument')
 
-        model = cls._model.from_config(config.model, env.state_info, env.action_info)
+    #     model = cls._model.from_config(config.model, env.state_info, env.action_info)
 
-        return cls(env, model, **config.agent.as_dict())
+    #     return cls(env, model, **config.agent.as_dict())
 
-    # TODO: Reimplement method
-    @classmethod
-    def from_file(cls, file_path, env=None):
-        '''
-        Create an agent from a configuration file.
+    # # TODO: Reimplement method
+    # @classmethod
+    # def from_file(cls, file_path, env=None):
+    #     '''
+    #     Create an agent from a configuration file.
 
-        Parameters
-        ----------
-        file_path: str
-            Path to the configuration file.
+    #     Parameters
+    #     ----------
+    #     file_path: str
+    #         Path to the configuration file.
 
-        Returns
-        -------
-        torchrl.agents
-            A TorchRL agent.
-        '''
-        config = U.Config.load(file_path)
+    #     Returns
+    #     -------
+    #     torchrl.agents
+    #         A TorchRL agent.
+    #     '''
+    #     config = U.Config.load(file_path)
 
-        return cls.from_config(config, env=env)
+    #     return cls.from_config(config, env=env)
