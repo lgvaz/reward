@@ -59,7 +59,7 @@ class BaseModel(ModuleExtended, ABC):
         self.num_mini_batches = num_mini_batches
         self.lr_schedule = U.make_callable(lr_schedule or opt_params['lr'])
         self.clip_grad_norm = clip_grad_norm
-        self.loss_coef = U.make_callable(loss_coef)
+        self.loss_coef_fn = U.make_callable(loss_coef)
 
         self.memory = U.DefaultMemory()
         self.num_updates = 0
@@ -110,7 +110,11 @@ class BaseModel(ModuleExtended, ABC):
 
     @property
     def lr(self):
-        return self.opt.param_groups[0]['lr']
+        return self.lr_schedule(self.step)
+
+    @property
+    def loss_coef(self):
+        return self.loss_coef_fn(self.step)
 
     @property
     def name(self):
@@ -184,7 +188,7 @@ class BaseModel(ModuleExtended, ABC):
             to compute the gradients.
         '''
         self.step = batch.step[-1]
-        self.set_lr(value=self.lr_schedule(self.step))
+        self.set_lr(value=self.lr)
         batch = batch.apply_to_all(self._to_tensor)
 
         self.train_step(batch)
@@ -201,7 +205,7 @@ class BaseModel(ModuleExtended, ABC):
         Should use the batch to compute and apply gradients to the network.
         '''
         self.opt.zero_grad()
-        loss = self.calculate_loss(batch) * self.loss_coef(self.step)
+        loss = self.calculate_loss(batch) * self.loss_coef
         loss.backward()
         if self.clip_grad_norm is not None:
             torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)

@@ -12,11 +12,15 @@ class BasePGModel(BaseModel):
 
     def __init__(self, model, env, entropy_coef=0, **kwargs):
         super().__init__(model=model, env=env, **kwargs)
-        self.entropy_coef = U.make_callable(entropy_coef)
+        self.entropy_coef_fn = U.make_callable(entropy_coef)
 
     @abstractproperty
     def entropy(self):
         pass
+
+    @property
+    def entropy_coef(self):
+        return self.entropy_coef_fn(self.step)
 
     def entropy_loss(self, batch):
         '''
@@ -29,7 +33,7 @@ class BasePGModel(BaseModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        loss = -self.entropy * self.entropy_coef(self.step)
+        loss = -self.entropy * self.entropy_coef
         return loss
 
     def select_action(self, state):

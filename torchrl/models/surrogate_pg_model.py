@@ -36,6 +36,13 @@ class SurrogatePGModel(BasePGModel):
         super().register_callbacks()
         self.callbacks.register_on_mini_batch_start(self.add_new_dist)
 
+    def add_new_dist(self, batch):
+        parameters = self.forward(batch.state_t)
+        self.memory.new_dists = self.create_dist(parameters)
+        batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
+        self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
+                                                           batch.old_log_prob)
+
     def train_step(self, batch):
         with torch.no_grad():
             parameters = self.forward(batch.state_t)
@@ -44,13 +51,6 @@ class SurrogatePGModel(BasePGModel):
 
         super().train_step(batch)
         self.add_new_dist(batch)
-
-    def add_new_dist(self, batch):
-        parameters = self.forward(batch.state_t)
-        self.memory.new_dists = self.create_dist(parameters)
-        batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
-        self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
-                                                           batch.old_log_prob)
 
     def surrogate_pg_loss(self, batch):
         '''
