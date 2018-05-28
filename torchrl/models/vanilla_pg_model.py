@@ -11,6 +11,10 @@ class VanillaPGModel(BasePGModel):
     '''
 
     @property
+    def batch_keys(self):
+        return ['state_t', 'action', 'advantage']
+
+    @property
     def entropy(self):
         return self.memory.dists.entropy().mean()
 
@@ -41,9 +45,3 @@ class VanillaPGModel(BasePGModel):
         loss = -objective.mean()
 
         self.losses.append(loss)
-
-    def write_logs(self, batch):
-        super().write_logs(batch)
-
-        entropy = self.memory.new_dists.entropy().mean()
-        self.logger.add_log(self.name + '/Entropy', entropy)

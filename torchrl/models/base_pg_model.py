@@ -73,3 +73,7 @@ class BasePGModel(BaseModel):
         else:
             raise ValueError('No distribution is defined for {} actions'.format(
                 self.env.action_info['dtype']))
+
+    def write_logs(self, batch):
+        super().write_logs(batch)
+        self.add_log('Entropy', self.entropy)

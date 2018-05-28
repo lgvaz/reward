@@ -34,6 +34,10 @@ class ValueModel(BaseModel):
         self.clip_range = U.make_callable(clip_range)
         assert clip_range is None or clip_range > 0, 'clip_range must be None or > 0'
 
+    @property
+    def batch_keys(self):
+        return ['state_t', 'old_pred', 'vtarget']
+
     def mse_loss(self, batch):
         pred = self.forward(batch.state_t).view(-1)
         loss = F.mse_loss(pred, batch.vtarget)
@@ -63,19 +67,16 @@ class ValueModel(BaseModel):
         with torch.no_grad():
             batch.old_pred = self.forward(batch.state_t).view(-1)
 
-        self.register_batch_keys('state_t', 'old_pred', 'vtarget')
         super().train_step(batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        self.logger.add_log(self.name + '/Old Explained Var',
-                            U.explained_var(batch.vtarget, batch.old_pred))
+        self.add_log('Old Explained Var', U.explained_var(batch.vtarget, batch.old_pred))
         pred = self.forward(batch.state_t)
-        self.logger.add_log(self.name + '/New Explained Var',
-                            U.explained_var(batch.vtarget, pred))
+        self.add_log('New Explained Var', U.explained_var(batch.vtarget, pred))
 
         pred_diff = pred - batch.old_pred
         clip_frac = (abs(pred_diff) > self.clip_range(self.step)).float().mean()
-        self.logger.add_log(self.name + '/Clip Range', self.clip_range(self.step))
-        self.logger.add_log(self.name + '/Clip Fraction', clip_frac)
+        self.add_log('Clip Range', self.clip_range(self.step))
+        self.add_log('Clip Fraction', clip_frac)

@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 import numpy as np
 import torch
@@ -78,6 +78,14 @@ class BaseModel(ModuleExtended, ABC):
         if self.cuda_enabled:
             self.model.cuda()
 
+    @abstractproperty
+    def batch_keys(self):
+        '''
+        The batch keys needed for computing all losses.
+        This is done to reduce overhead when sampling a dataloader,
+        it makes sure only the requested keys are being sampled.
+        '''
+
     @abstractmethod
     def add_losses(self, batch):
         '''
@@ -107,9 +115,6 @@ class BaseModel(ModuleExtended, ABC):
     def name(self):
         return self.__class__.__name__
 
-    def register_batch_keys(self, *keys):
-        self.memory.batch_keys.extend(keys)
-
     def register_callbacks(self):
         pass
 
@@ -134,8 +139,7 @@ class BaseModel(ModuleExtended, ABC):
                 break
 
             for mini_batch in batch.sample_keys(
-                    keys=self.memory.batch_keys,
-                    num_mini_batches=num_mini_batches,
+                    keys=self.batch_keys, num_mini_batches=num_mini_batches,
                     shuffle=shuffle):
                 if self.callbacks.on_mini_batch_start(mini_batch):
                     break
@@ -235,6 +239,21 @@ class BaseModel(ModuleExtended, ABC):
         '''
         self.logger = logger
 
+    def wrap_name(self, name):
+        return '/'.join([self.name, name])
+
+    def add_log(self, name, value, **kwargs):
+        self.logger.add_log(name=self.wrap_name(name), value=value, **kwargs)
+
+    def add_tf_only_log(self, name, value, **kwargs):
+        self.logger.add_tf_only_log(name=self.wrap_name(name), value=value, **kwargs)
+
+    def add_debug_log(self, name, value, **kwargs):
+        self.logger.add_debug(name=self.wrap_name(name), value=value, **kwargs)
+
+    def add_histogram_log(self, name, values, **kwargs):
+        self.logger.add_histogram(name=self.wrap_name(name), values=values, **kwargs)
+
     def write_logs(self, batch):
         '''
         Write logs to the terminal and to a tf log file.
@@ -244,8 +263,8 @@ class BaseModel(ModuleExtended, ABC):
         batch: Batch
             Some logs might need the batch for calculation.
         '''
-        self.logger.add_log(self.name + '/Loss', np.mean(self.memory.loss))
-        self.logger.add_log(self.name + '/LR', self.lr_schedule(self.step), precision=4)
+        self.add_log('Loss', np.mean(self.memory.loss))
+        self.add_log('LR', self.lr_schedule(self.step), precision=4)
 
     @classmethod
     def from_config(cls, config, env=None, body=None, head=None, **kwargs):
