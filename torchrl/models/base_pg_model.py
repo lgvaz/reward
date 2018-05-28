@@ -30,8 +30,7 @@ class BasePGModel(BaseModel):
             to compute the gradients.
         '''
         loss = -self.entropy * self.entropy_coef(self.step)
-
-        self.losses.append(loss)
+        return loss
 
     def select_action(self, state):
         '''

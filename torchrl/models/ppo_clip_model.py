@@ -20,9 +20,9 @@ class PPOClipModel(SurrogatePGModel):
         super().__init__(model=model, env=env, num_epochs=num_epochs, **kwargs)
         self.ppo_clip_range = U.make_callable(ppo_clip_range)
 
-    def add_losses(self, batch):
-        self.ppo_clip_loss(batch)
-        self.entropy_loss(batch)
+    def register_losses(self):
+        self.register_loss(self.ppo_clip_loss)
+        self.register_loss(self.entropy_loss)
 
     def ppo_clip_loss(self, batch):
         '''
@@ -41,7 +41,7 @@ class PPOClipModel(SurrogatePGModel):
         losses = torch.min(surrogate, clipped_surrogate)
         loss = -losses.mean()
 
-        self.losses.append(loss)
+        return loss
 
     def write_logs(self, batch):
         super().write_logs(batch)

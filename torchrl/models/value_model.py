@@ -24,6 +24,9 @@ class ValueModel(BaseModel):
                  num_mini_batches=4,
                  num_epochs=10,
                  **kwargs):
+        self.clip_range = U.make_callable(clip_range)
+        assert clip_range is None or clip_range > 0, 'clip_range must be None or > 0'
+
         super().__init__(
             model=model,
             env=env,
@@ -31,18 +34,21 @@ class ValueModel(BaseModel):
             num_epochs=num_epochs,
             **kwargs)
 
-        self.clip_range = U.make_callable(clip_range)
-        assert clip_range is None or clip_range > 0, 'clip_range must be None or > 0'
-
     @property
     def batch_keys(self):
         return ['state_t', 'old_pred', 'vtarget']
+
+    def register_losses(self):
+        if self.clip_range(self.step) is None:
+            self.register_loss(self.mse_loss)
+        else:
+            self.register_loss(self.clipped_mse_loss)
 
     def mse_loss(self, batch):
         pred = self.forward(batch.state_t).view(-1)
         loss = F.mse_loss(pred, batch.vtarget)
 
-        self.losses.append(loss)
+        return loss
 
     def clipped_mse_loss(self, batch):
         pred = self.forward(batch.state_t).view(-1)
@@ -52,16 +58,9 @@ class ValueModel(BaseModel):
 
         losses = (pred - batch.vtarget)**2
         losses_clipped = (pred_clipped - batch.vtarget)**2
-
         loss = 0.5 * torch.max(losses, losses_clipped).mean()
 
-        self.losses.append(loss)
-
-    def add_losses(self, batch):
-        if self.clip_range(self.step) is None:
-            self.mse_loss(batch)
-        else:
-            self.clipped_mse_loss(batch)
+        return loss
 
     def train_step(self, batch):
         with torch.no_grad():

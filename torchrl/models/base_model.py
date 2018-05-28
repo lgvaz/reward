@@ -65,9 +65,10 @@ class BaseModel(ModuleExtended, ABC):
         self.num_updates = 0
         self.step = 0
         self.losses = []
-        self.logger = None
+        self.register_losses()
         self.callbacks = U.Callback()
         self.register_callbacks()
+        self.logger = None
 
         # Create optimizer
         opt_fn = opt_fn or torch.optim.Adam
@@ -87,7 +88,7 @@ class BaseModel(ModuleExtended, ABC):
         '''
 
     @abstractmethod
-    def add_losses(self, batch):
+    def register_losses(self):
         '''
         Append losses to ``self.losses``, the losses are used
         at :meth:`optimizer_step` for calculating the gradients.
@@ -115,8 +116,14 @@ class BaseModel(ModuleExtended, ABC):
     def name(self):
         return self.__class__.__name__
 
+    def register_loss(self, func):
+        self.losses.append(func)
+
     def register_callbacks(self):
         pass
+
+    def calculate_loss(self, batch):
+        return sum([f(batch) for f in self.losses])
 
     def learn_from_batch(self, batch, num_epochs, num_mini_batches, shuffle=True):
         '''
@@ -187,23 +194,20 @@ class BaseModel(ModuleExtended, ABC):
 
         self.memory.clear()
 
-    def optimizer_step(self, *args, **kwargs):
+    def optimizer_step(self, batch):
         '''
         Apply the gradients in respect to the losses defined by :meth:`add_losses`.
 
         Should use the batch to compute and apply gradients to the network.
         '''
-        self.add_losses(*args, **kwargs)
-
         self.opt.zero_grad()
-        loss = sum(self.losses) * self.loss_coef(self.step)
+        loss = self.calculate_loss(batch) * self.loss_coef(self.step)
         loss.backward()
         if self.clip_grad_norm is not None:
             torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
         self.opt.step()
 
         self.memory.loss.append(U.to_np(loss))
-        self.losses = []
         self.num_updates += 1
 
     def forward(self, x):

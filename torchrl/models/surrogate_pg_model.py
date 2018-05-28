@@ -28,12 +28,9 @@ class SurrogatePGModel(BasePGModel):
     def batch_keys(self):
         return ['state_t', 'action', 'advantage', 'old_log_prob']
 
-    def add_new_dist(self, batch):
-        parameters = self.forward(batch.state_t)
-        self.memory.new_dists = self.create_dist(parameters)
-        batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
-        self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
-                                                           batch.old_log_prob)
+    def register_losses(self):
+        self.register_loss(self.surrogate_pg_loss)
+        self.register_loss(self.entropy_loss)
 
     def register_callbacks(self):
         super().register_callbacks()
@@ -48,13 +45,12 @@ class SurrogatePGModel(BasePGModel):
         super().train_step(batch)
         self.add_new_dist(batch)
 
-    def write_logs(self, batch):
-        super().write_logs(batch)
-        self.add_log('KL Divergence', self.kl_div, precision=4)
-
-    def add_losses(self, batch):
-        self.surrogate_pg_loss(batch)
-        self.entropy_loss(batch)
+    def add_new_dist(self, batch):
+        parameters = self.forward(batch.state_t)
+        self.memory.new_dists = self.create_dist(parameters)
+        batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
+        self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
+                                                           batch.old_log_prob)
 
     def surrogate_pg_loss(self, batch):
         '''
@@ -66,10 +62,9 @@ class SurrogatePGModel(BasePGModel):
         '''
         prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.old_log_prob)
         surrogate = prob_ratio * batch.advantage
-
         loss = -surrogate.mean()
 
-        self.losses.append(loss)
+        return loss
 
     def calculate_prob_ratio(self, new_log_probs, old_log_probs):
         '''
@@ -82,3 +77,7 @@ class SurrogatePGModel(BasePGModel):
         '''
         prob_ratio = (new_log_probs - old_log_probs).exp()
         return prob_ratio
+
+    def write_logs(self, batch):
+        super().write_logs(batch)
+        self.add_log('KL Divergence', self.kl_div, precision=4)

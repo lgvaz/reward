@@ -18,17 +18,17 @@ class VanillaPGModel(BasePGModel):
     def entropy(self):
         return self.memory.dists.entropy().mean()
 
-    def add_dist(self, batch):
-        parameters = self.forward(batch.state_t)
-        self.memory.dists = self.create_dist(parameters)
+    def register_losses(self):
+        self.register_loss(self.pg_loss)
+        self.register_loss(self.entropy_loss)
 
     def register_callbacks(self):
         super().register_callbacks()
         self.callbacks.register_on_train_start(self.add_dist)
 
-    def add_losses(self, batch):
-        self.pg_loss(batch)
-        self.entropy_loss(batch)
+    def add_dist(self, batch):
+        parameters = self.forward(batch.state_t)
+        self.memory.dists = self.create_dist(parameters)
 
     def pg_loss(self, batch):
         '''
@@ -44,4 +44,4 @@ class VanillaPGModel(BasePGModel):
         objective = log_prob * batch.advantage
         loss = -objective.mean()
 
-        self.losses.append(loss)
+        return loss

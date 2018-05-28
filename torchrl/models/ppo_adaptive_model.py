@@ -21,32 +21,30 @@ class PPOAdaptiveModel(SurrogatePGModel):
         self.kl_target = U.make_callable(kl_target)
         self.kl_penalty = kl_penalty
 
-    def add_losses(self, batch):
-        self.surrogate_pg_loss(batch)
-        self.kl_penalty_loss(batch)
-        self.hinge_loss(batch)
-        self.entropy_loss(batch)
-
-    def kl_penalty_loss(self, batch):
-        kl_div = kl_divergence(self.memory.old_dists,
-                               self.memory.new_dists).sum(-1).mean()
-
-        loss = self.kl_penalty * kl_div
-
-        self.losses.append(loss)
-
-    def hinge_loss(self, batch):
-        kl_div = kl_divergence(self.memory.old_dists,
-                               self.memory.new_dists).sum(-1).mean()
-
-        loss = 50 * max(0, kl_div - 2. * self.kl_target(self.step))**2
-
-        self.losses.append(loss)
+    def register_losses(self):
+        self.register_loss(self.surrogate_pg_loss)
+        self.register_loss(self.kl_penalty_loss)
+        self.register_loss(self.hinge_loss)
+        self.register_loss(self.entropy_loss)
 
     def register_callbacks(self):
         super().register_callbacks()
         self.callbacks.register_on_epoch_end(self.kl_early_stopping)
         self.callbacks.register_on_train_end(self.kl_penalty_adjust)
+
+    def kl_penalty_loss(self, batch):
+        kl_div = kl_divergence(self.memory.old_dists,
+                               self.memory.new_dists).sum(-1).mean()
+        loss = self.kl_penalty * kl_div
+
+        return loss
+
+    def hinge_loss(self, batch):
+        kl_div = kl_divergence(self.memory.old_dists,
+                               self.memory.new_dists).sum(-1).mean()
+        loss = 50 * max(0, kl_div - 2. * self.kl_target(self.step))**2
+
+        return loss
 
     def kl_penalty_adjust(self, batch):
         # Adjust KL penalty
