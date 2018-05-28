@@ -16,7 +16,7 @@ A series of benchmarks can be found in the benchmarks_ folder.
   :alt: Documentation Status
   
 .. |chat| image:: https://img.shields.io/discord/102860784329052160.svg
-  :target: https://discord.gg/rPrthvq
+  :target: https://discord.gg/9Nr2XE2
   :alt: Discord
 
 .. _here: https://torchrl.readthedocs.io/en/master/
