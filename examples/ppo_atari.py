@@ -12,33 +12,37 @@ envs = [
         'BreakoutNoFrameskip-v4',
         fixed_normalize_states=True,
         clip_reward_range=1,
-        wrappers=[atari_wrap]) for _ in range(16)
+        wrappers=[atari_wrap]) for _ in range(8)
 ]
-env = ParallelEnv(envs)
+env = ParallelEnv(envs, num_workers=4)
+
+lr_schedule = piecewise_linear_schedule(
+    values=[2.5e-4, 2.5e-4, 1e-4, 5e-5],
+    boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.8])
+
+clip_schedule = piecewise_linear_schedule(
+    values=[0.1, 0.1, 0.03], boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.7])
 
 policy_model = PPOClipModel.from_arch(
     arch='a3c',
     env=env,
     num_epochs=4,
-    ppo_clip_range=0.1,
+    num_mini_batches=4,
+    ppo_clip_range=clip_schedule,
     entropy_coef=0.01,
-    opt_params=dict(lr=3e-4, eps=1e-5),
-    lr_schedule=piecewise_linear_schedule(
-        values=[3e-4, 3e-4, 1e-4, 5e-5],
-        boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.8]),
+    opt_params=dict(lr=2.5e-4, eps=1e-5),
+    lr_schedule=lr_schedule,
     clip_grad_norm=0.5)
 
 value_model = ValueModel.from_arch(
     arch='a3c',
     env=env,
     body=policy_model.body,
-    opt_params=dict(lr=3e-4, eps=1e-5),
-    lr_schedule=piecewise_linear_schedule(
-        values=[3e-4, 3e-4, 1e-4, 5e-5],
-        boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5, MAX_STEPS * 0.8]),
     num_epochs=4,
     num_mini_batches=4,
-    clip_range=0.1,
+    opt_params=dict(lr=2.5e-4, eps=1e-5),
+    lr_schedule=lr_schedule,
+    clip_range=clip_schedule,
     clip_grad_norm=0.5,
     loss_coef=0.5)
 
@@ -47,5 +51,6 @@ agent = PGAgent(
     env,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/breakout/16parallel-p_e4_eps1e5-v_3e4_b256_e4_vlc05_gc05_v3-1')
-agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)
+    log_dir='logs/breakout/8parallel-p_e4_nmb4-v_nmb4_e4_vlc05_gc05_v4-0')
+
+agent.train(max_steps=MAX_STEPS, steps_per_batch=128)
