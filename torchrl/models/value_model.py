@@ -26,7 +26,6 @@ class ValueModel(BaseModel):
                  num_epochs=10,
                  **kwargs):
         self.clip_range_fn = U.make_callable(clip_range)
-        assert clip_range is None or clip_range > 0, 'clip_range must be None or > 0'
 
         super().__init__(
             model=model,

@@ -292,7 +292,7 @@ class BaseModel(ModuleExtended, ABC):
             Some logs might need the batch for calculation.
         '''
         self.add_log('Loss', np.mean(self.memory.loss))
-        self.add_log('LR', self.lr_schedule(self.step), precision=4)
+        self.add_log('LR', self.lr, precision=4)
 
     @classmethod
     def from_config(cls, config, env=None, body=None, head=None, **kwargs):
