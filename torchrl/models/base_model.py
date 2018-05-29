@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod, abstractproperty
+from collections import ChainMap
 
 import os
 import numpy as np
@@ -147,7 +148,10 @@ class BaseModel(ModuleExtended, ABC):
         pass
 
     def calculate_loss(self, batch):
-        return sum([f(batch) for f in self.losses])
+        losses = {f.__name__: f(batch) for f in self.losses}
+        self.memory.losses.append(losses)
+
+        return sum(losses.values())
 
     def learn_from_batch(self, batch, num_epochs, num_mini_batches, shuffle=True):
         '''
@@ -231,7 +235,6 @@ class BaseModel(ModuleExtended, ABC):
             torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
         self.opt.step()
 
-        self.memory.loss.append(U.to_np(loss))
         self.num_updates += 1
 
     def forward(self, x):
@@ -291,8 +294,15 @@ class BaseModel(ModuleExtended, ABC):
         batch: Batch
             Some logs might need the batch for calculation.
         '''
-        self.add_log('Loss', np.mean(self.memory.loss))
         self.add_log('LR', self.lr, precision=4)
+
+        total_loss = 0
+        for k, v in ChainMap(*self.memory.losses).items():
+            loss = v.mean()
+            total_loss += loss
+            self.add_tf_only_log('/'.join(['Loss', k]), loss, precision=4)
+
+        self.add_log('Loss/Total', total_loss, precision=4)
 
     @classmethod
     def from_config(cls, config, env=None, body=None, head=None, **kwargs):

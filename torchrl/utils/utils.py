@@ -94,7 +94,7 @@ def explained_var(target, preds):
     float
         The explained variance.
     '''
-    return 1 - (target.view(-1) - preds.view(-1)).var() / target.view(-1).var()
+    return 1 - (target.squeeze() - preds.squeeze()).var() / target.view(-1).var()
 
 
 def normalize(array):

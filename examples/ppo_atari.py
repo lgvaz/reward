@@ -9,12 +9,12 @@ MAX_STEPS = 15e6
 # Create environment
 envs = [
     GymEnv(
-        'BreakoutNoFrameskip-v4',
+        'PongNoFrameskip-v4',
         fixed_normalize_states=True,
         clip_reward_range=1,
         wrappers=[atari_wrap]) for _ in range(8)
 ]
-env = ParallelEnv(envs, num_workers=4)
+env = ParallelEnv(envs)
 
 lr_schedule = piecewise_linear_schedule(
     values=[2.5e-4, 2.5e-4, 1e-4, 5e-5],
@@ -51,6 +51,6 @@ agent = PGAgent(
     env,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/breakout/8parallel-p_e4_nmb4-v_nmb4_e4_vlc05_gc05_v4-0')
+    log_dir='tests/pong/8parallel-p_e4_nmb4-0ent-v_nmb4_e4_vlc05_gc05_v4-3')
 
 agent.train(max_steps=MAX_STEPS, steps_per_batch=128)
