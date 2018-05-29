@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 
+import os
 import numpy as np
 import torch
 import torch.nn as nn
@@ -98,6 +99,25 @@ class BaseModel(ModuleExtended, ABC):
         batch: dict
             The batch should contain all the information necessary
             to compute the gradients.
+        '''
+
+    @staticmethod
+    @abstractmethod
+    def output_layer(input_shape, action_info):
+        '''
+        The final layer of the model, will be appended to the model head.
+
+        Parameters
+        ----------
+        input_shape: int or tuple
+            The shape of the input to this layer.
+        action_info: dict
+            Dictionary containing information about the action space.
+
+        Examples
+        --------
+        The output of most PG models have the same dimension as the action,
+        but the output of the Value models is rank 1. This is where this is defined.
         '''
 
     @property
@@ -296,6 +316,11 @@ class BaseModel(ModuleExtended, ABC):
         env = env or U.env_from_config(config)
         config.pop('env', None)
 
+        if not 'body' in config.nn_config:
+            config.nn_config.body = []
+        if not 'head' in config.nn_config:
+            config.nn_config.head = []
+
         nn_config = config.pop('nn_config')
         model = U.nn_from_config(
             config=nn_config,
@@ -304,11 +329,23 @@ class BaseModel(ModuleExtended, ABC):
             body=body,
             head=head)
 
+        output_layer = cls.output_layer(
+            input_shape=model.get_output_shape(env.state_info['shape']),
+            action_info=env.action_info)
+
+        model.layers.head.append(output_layer)
+
         return cls(model=model, env=env, **config.as_dict(), **kwargs)
 
-    # TODO: Reimplement method
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):
         config = U.Config.load(file_path)
 
         return cls.from_config(config, *args, **kwargs)
+
+    @classmethod
+    def from_arch(cls, arch, *args, **kwargs):
+        module_path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(module_path, 'archs', arch)
+
+        return cls.from_file(file_path=path, *args, **kwargs)

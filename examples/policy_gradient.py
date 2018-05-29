@@ -11,22 +11,18 @@ MAX_STEPS = 10e6
 # activation = nn.ReLU
 activation = nn.Tanh
 # Define networks configs
-policy_nn_config = Config(
-    body=[
-        dict(func=nn.Linear, out_features=64),
-        dict(func=activation),
-        dict(func=nn.Linear, in_features=64, out_features=64),
-        dict(func=activation)
-    ],
-    head=[dict(func=ActionLinear)])
-value_nn_config = Config(
-    body=[
-        dict(func=nn.Linear, out_features=64),
-        dict(func=activation),
-        dict(func=nn.Linear, in_features=64, out_features=64),
-        dict(func=activation)
-    ],
-    head=[dict(func=nn.Linear, out_features=1)])
+policy_nn_config = Config(body=[
+    dict(func=nn.Linear, out_features=64),
+    dict(func=activation),
+    dict(func=nn.Linear, in_features=64, out_features=64),
+    dict(func=activation)
+])
+value_nn_config = Config(body=[
+    dict(func=nn.Linear, out_features=64),
+    dict(func=activation),
+    dict(func=nn.Linear, in_features=64, out_features=64),
+    dict(func=activation)
+])
 
 # Create environment
 # env = GymEnv('HalfCheetah-v2', running_normalize_states=True, running_scale_rewards=True)
@@ -38,7 +34,6 @@ envs = [
 env = ParallelEnv(envs)
 
 policy_model_config = Config(nn_config=policy_nn_config)
-# policy_model = SurrogatePGModel.from_config(
 policy_model = PPOClipModel.from_config(
     # policy_model = PPOAdaptiveModel.from_config(
     config=policy_model_config,
@@ -68,8 +63,8 @@ value_model = ValueModel.from_config(
 # Create agent
 agent = PGAgent(
     env,
-    policy_model,
-    value_model,
-    log_dir='logs/cheetah/new/16parallel_p_nmb1_e10-v_nmb8_e10-cr02-gcNone-v8-1',
+    policy_model=policy_model,
+    value_model=value_model,
+    log_dir='tests/cheetah/new/16parallel_p_nmb1_e10-v_nmb8_e10-cr02-gcNone-v9-1',
     normalize_advantages=True)
 agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)

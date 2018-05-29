@@ -31,7 +31,7 @@ class ModuleExtended(nn.Module):
         torch.Tensor
             A pytorch tensor.
         '''
-        return x.cuda() if self.is_cuda and not x.is_cuda else x
+        return x.cuda() if self.is_cuda else x
 
     def to_tensor(self, x):
         if isinstance(x, np.ndarray):
@@ -60,7 +60,8 @@ class ModuleExtended(nn.Module):
         torch.IntTensor
             The dimensions of the output.
         '''
-        fake_input = Variable(self.maybe_cuda(torch.zeros(input_shape)[None]))
+        self.maybe_cuda(self.layers)
+        fake_input = self.maybe_cuda(torch.zeros(input_shape)[None])
         out = self.layers(fake_input)
         shape = out.shape[1:]
 
@@ -76,8 +77,15 @@ class SequentialExtended(ModuleExtended):
         super().__init__()
         self.layers = nn.Sequential(*args, **kwargs)
 
+    def append(self, module, name=None):
+        name = str(name or len(self.layers))
+        self.layers.add_module(name=name, module=module)
+
     def forward(self, x):
-        return self.layers(self.to_tensor(x))
+        if len(self.layers) > 0:
+            return self.layers(self.to_tensor(x))
+        else:
+            return x
 
     @classmethod
     def from_config(cls, config, kwargs):
@@ -143,8 +151,8 @@ class ActionLinear(nn.Module):
         self.action_info = action_info
         out_features = int(np.prod(action_info['shape']))
 
-        self.linear = nn.Linear(
-            in_features=int(in_features), out_features=out_features, **kwargs)
+        self.linear = FlattenLinear(
+            in_features=in_features, out_features=out_features, **kwargs)
 
         if action_info['dtype'] == 'continuous':
             self.log_std = nn.Parameter(torch.zeros(1, out_features))

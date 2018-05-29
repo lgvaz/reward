@@ -3,6 +3,7 @@ import torch
 from torchrl.distributions import Categorical, Normal
 import torchrl.utils as U
 from torchrl.models import BaseModel
+from torchrl.nn import ActionLinear
 
 
 class BasePGModel(BaseModel):
@@ -80,3 +81,7 @@ class BasePGModel(BaseModel):
     def write_logs(self, batch):
         super().write_logs(batch)
         self.add_log('Entropy', self.entropy)
+
+    @staticmethod
+    def output_layer(input_shape, action_info):
+        return ActionLinear(in_features=input_shape, action_info=action_info)

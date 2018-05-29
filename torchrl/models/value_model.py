@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torchrl.utils as U
 from torchrl.models import BaseModel
+from torchrl.nn import FlattenLinear
 
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -82,3 +83,7 @@ class ValueModel(BaseModel):
         clip_frac = (abs(pred_diff) > self.clip_range).float().mean()
         self.add_log('Clip Range', self.clip_range)
         self.add_log('Clip Fraction', clip_frac)
+
+    @staticmethod
+    def output_layer(input_shape, action_info):
+        return FlattenLinear(in_features=input_shape, out_features=1)
