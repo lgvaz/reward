@@ -62,7 +62,7 @@ class BaseAgent(ABC):
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
 
-    def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1):
+    def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1, log_freq=1):
         '''
         Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
 
@@ -78,6 +78,8 @@ class BaseAgent(ABC):
         self.max_updates = max_updates
         self.max_episodes = max_episodes
         self.max_steps = max_steps
+
+        self.logger.set_log_freq(log_freq=log_freq)
 
         while True:
             self.step()

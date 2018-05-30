@@ -17,8 +17,10 @@ class Logger:
         Path to write logs file.
     '''
 
-    def __init__(self, log_dir=None, debug=False):
+    def __init__(self, log_dir=None, *, debug=False, log_freq=1):
         self.debug = debug
+        self.log_freq = log_freq
+        self.num_logs = 0
         self.logs = DefaultMemory()
         self.tf_logs = DefaultMemory()
         self.precision = dict()
@@ -31,6 +33,9 @@ class Logger:
 
         print('Writing logs to: {}'.format(log_dir))
         self.writer = SummaryWriter(log_dir=log_dir)
+
+    def set_log_freq(self, log_freq):
+        self.log_freq = log_freq
 
     def add_log(self, name, value, precision=2):
         '''
@@ -93,33 +98,38 @@ class Logger:
         header: str
             Optional header to include at the top of the table (Default is None).
         '''
-        # Take the mean of the values
-        self.logs = {key: np.mean(value) for key, value in self.logs.items()}
-        # Convert values to string, with defined precision
-        avg_dict = {
-            key: '{:.{prec}f}'.format(value, prec=self.precision[key])
-            for key, value in self.logs.items()
-        }
+        self.num_logs += 1
+        if self.num_logs % self.log_freq == 0:
+            # Take the mean of the values
+            self.logs = {key: np.mean(value) for key, value in self.logs.items()}
+            # Convert values to string, with defined precision
+            avg_dict = {
+                key: '{:.{prec}f}'.format(value, prec=self.precision[key])
+                for key, value in self.logs.items()
+            }
 
-        # Log to the console
-        if self.eta is not None:
-            header += ' | ETA: {}'.format(self.eta)
-        print_table(avg_dict, header)
+            # Log to the console
+            if self.eta is not None:
+                header += ' | ETA: {}'.format(self.eta)
+            print_table(avg_dict, header)
 
-        # Write tensorboard summary
-        if self.writer is not None:
-            self.tf_logs = {key: np.mean(value) for key, value in self.tf_logs.items()}
-            for key, value in self.logs.items():
-                self.writer.add_scalar(key, value, global_step=self.i_step)
-            for key, value in self.tf_logs.items():
-                self.writer.add_scalar(key, value, global_step=self.i_step)
-            for key, value in self.histograms.items():
-                self.writer.add_histogram(key, value, global_step=self.i_step)
+            # Write tensorboard summary
+            if self.writer is not None:
+                self.tf_logs = {
+                    key: np.mean(value)
+                    for key, value in self.tf_logs.items()
+                }
+                for key, value in self.logs.items():
+                    self.writer.add_scalar(key, value, global_step=self.i_step)
+                for key, value in self.tf_logs.items():
+                    self.writer.add_scalar(key, value, global_step=self.i_step)
+                for key, value in self.histograms.items():
+                    self.writer.add_histogram(key, value, global_step=self.i_step)
 
-        # Reset dict
-        self.logs = DefaultMemory()
-        self.tf_logs = DefaultMemory()
-        self.histograms = dict()
+            # Reset dict
+            self.logs = DefaultMemory()
+            self.tf_logs = DefaultMemory()
+            self.histograms = dict()
 
     def timeit(self, i_step, max_steps=-1):
         '''

@@ -40,7 +40,8 @@ class BatchAgent(BaseAgent):
               episodes_per_batch=-1,
               max_updates=-1,
               max_episodes=-1,
-              max_steps=-1):
+              max_steps=-1,
+              log_freq=1):
         '''
         The main training loop.
 
@@ -56,4 +57,7 @@ class BatchAgent(BaseAgent):
         self.steps_per_batch = steps_per_batch
         self.episodes_per_batch = episodes_per_batch
         super().train(
-            max_updates=max_updates, max_episodes=max_episodes, max_steps=max_steps)
+            max_updates=max_updates,
+            max_episodes=max_episodes,
+            max_steps=max_steps,
+            log_freq=log_freq)
