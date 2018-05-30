@@ -46,7 +46,7 @@ policy_model = PPOClipModel.from_config(
     opt_params=dict(lr=3e-4, eps=1e-5),
     # lr_schedule=piecewise_linear_schedule(
     #     values=[3e-4, 3e-4, 1e-4], boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5]),
-    clip_grad_norm=None)
+    clip_grad_norm=float('inf'))
 
 value_model_config = Config(nn_config=value_nn_config)
 value_model = ValueClipModel.from_config(
@@ -58,7 +58,7 @@ value_model = ValueClipModel.from_config(
     num_mini_batches=8,
     num_epochs=10,
     clip_range=0.2,
-    clip_grad_norm=None)
+    clip_grad_norm=float('inf'))
 
 # Create agent
 agent = PGAgent(
