@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 from torchrl.utils import Config
-from torchrl.models import PPOClipModel, ValueModel
+from torchrl.models import PPOClipModel, ValueClipModel
 from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv, ParallelEnv
 from torchrl.nn import ActionLinear
@@ -49,7 +49,7 @@ policy_model = PPOClipModel.from_config(
     clip_grad_norm=None)
 
 value_model_config = Config(nn_config=value_nn_config)
-value_model = ValueModel.from_config(
+value_model = ValueClipModel.from_config(
     config=value_model_config,
     env=env,
     opt_params=dict(lr=3e-4, eps=1e-5),

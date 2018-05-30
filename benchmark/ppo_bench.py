@@ -6,7 +6,7 @@ import torchrl.utils as U
 from bench import MUJOCO_SIMPLE_BENCH, MUJOCO_ESSENTIAL_BENCH, task_gen
 from torchrl.agents import PGAgent
 from torchrl.envs import GymEnv, ParallelEnv
-from torchrl.models import PPOClipModel, ValueModel
+from torchrl.models import PPOClipModel, ValueClipModel
 from torchrl.nn import ActionLinear
 from torchrl.utils import Config
 from utils import NoDaemonProcessPool, config2str
@@ -70,7 +70,7 @@ def run_bench(config):
         clip_grad_norm=config.clip_grad_norm)
 
     value_model_config = Config(nn_config=value_nn_config)
-    value_model = ValueModel.from_config(
+    value_model = ValueClipModel.from_config(
         config=value_model_config,
         env=env,
         clip_range=config.value_clip,

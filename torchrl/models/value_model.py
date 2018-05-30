@@ -1,10 +1,9 @@
 import torch
 import torch.nn.functional as F
+
 import torchrl.utils as U
 from torchrl.models import BaseModel
 from torchrl.nn import FlattenLinear
-
-from torch.utils.data import TensorDataset, DataLoader
 
 
 class ValueModel(BaseModel):
@@ -17,16 +16,7 @@ class ValueModel(BaseModel):
         Similar to PPOClip, limits the change between the new and old value function.
     '''
 
-    def __init__(self,
-                 model,
-                 env,
-                 *,
-                 clip_range=None,
-                 num_mini_batches=4,
-                 num_epochs=10,
-                 **kwargs):
-        self.clip_range_fn = U.make_callable(clip_range)
-
+    def __init__(self, model, env, *, num_mini_batches=4, num_epochs=10, **kwargs):
         super().__init__(
             model=model,
             env=env,
@@ -36,17 +26,14 @@ class ValueModel(BaseModel):
 
     @property
     def batch_keys(self):
-        return ['state_t', 'old_pred', 'vtarget']
-
-    @property
-    def clip_range(self):
-        return self.clip_range_fn(self.step)
+        return ['state_t', 'vtarget']
 
     def register_losses(self):
-        if self.clip_range is None:
-            self.register_loss(self.mse_loss)
-        else:
-            self.register_loss(self.clipped_mse_loss)
+        self.register_loss(self.mse_loss)
+
+    def register_callbacks(self):
+        super().register_callbacks()
+        self.callbacks.register_on_epoch_start(self.add_old_pred)
 
     def mse_loss(self, batch):
         pred = self.forward(batch.state_t).view(-1)
@@ -54,34 +41,17 @@ class ValueModel(BaseModel):
 
         return loss
 
-    def clipped_mse_loss(self, batch):
-        pred = self.forward(batch.state_t).view(-1)
-        pred_diff = pred - batch.old_pred
-        pred_clipped = batch.old_pred + pred_diff.clamp(-self.clip_range, self.clip_range)
-
-        losses = (pred - batch.vtarget)**2
-        losses_clipped = (pred_clipped - batch.vtarget)**2
-        loss = 0.5 * torch.max(losses, losses_clipped).mean()
-
-        return loss
-
-    def train_step(self, batch):
+    def add_old_pred(self, batch):
         with torch.no_grad():
             batch.old_pred = self.forward(batch.state_t).view(-1)
-
-        super().train_step(batch)
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
         self.add_log('Old Explained Var', U.explained_var(batch.vtarget, batch.old_pred))
-        pred = self.forward(batch.state_t)
-        self.add_log('New Explained Var', U.explained_var(batch.vtarget, pred))
-
-        pred_diff = pred - batch.old_pred
-        clip_frac = (abs(pred_diff) > self.clip_range).float().mean()
-        self.add_log('Clip Range', self.clip_range)
-        self.add_log('Clip Fraction', clip_frac)
+        self.memory.new_pred = self.forward(batch.state_t)
+        self.add_log('New Explained Var',
+                     U.explained_var(batch.vtarget, self.memory.new_pred))
 
     @staticmethod
     def output_layer(input_shape, action_info):
