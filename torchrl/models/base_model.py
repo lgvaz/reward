@@ -32,8 +32,8 @@ class BaseModel(ModuleExtended, ABC):
     opt_params: dict
         Parameters for the optimizer (Default is empty dict).
     clip_grad_norm: float
-        Clip norm for the gradients, if `None` gradients
-        will not be clipped (Default is None).
+        Max norm of the gradients, if float('inf') no clipping is done
+        (Default is float('inf')).
     loss_coef: float
         Used when sharing networks, should balance the contribution
         of the grads of each model.
@@ -50,7 +50,7 @@ class BaseModel(ModuleExtended, ABC):
                  opt_fn=None,
                  opt_params=dict(),
                  lr_schedule=None,
-                 clip_grad_norm=None,
+                 clip_grad_norm=float('inf'),
                  loss_coef=1.,
                  cuda_default=True):
         super().__init__()
@@ -231,10 +231,10 @@ class BaseModel(ModuleExtended, ABC):
         self.opt.zero_grad()
         loss = self.calculate_loss(batch) * self.loss_coef
         loss.backward()
-        if self.clip_grad_norm is not None:
-            torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
+        norm = torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
         self.opt.step()
 
+        self.memory.grad_norm.append(norm)
         self.num_updates += 1
 
     def forward(self, x):
@@ -295,6 +295,7 @@ class BaseModel(ModuleExtended, ABC):
             Some logs might need the batch for calculation.
         '''
         self.add_log('LR', self.lr, precision=4)
+        self.add_tf_only_log('Grad Norm', np.mean(self.memory.grad_norm))
 
         total_loss = 0
         for k, v in ChainMap(*self.memory.losses).items():
