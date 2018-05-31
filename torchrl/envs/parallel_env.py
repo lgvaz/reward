@@ -1,19 +1,20 @@
 import numpy as np
 import multiprocessing
 from collections import namedtuple
-from multiprocessing import Manager, Pipe, Process
+from multiprocessing import Manager, Pipe, Process, Queue
 
 import torchrl.utils as U
 import numpy as np
-from ctypes import c_uint, c_float, c_double, c_int
+from ctypes import c_uint8, c_float, c_double, c_int
 from multiprocessing.sharedctypes import RawArray
 
 
 class EnvWorker(Process):
-    def __init__(self, envs, conn, shared_transition):
+    def __init__(self, envs, conn, barrier, shared_transition):
         super().__init__()
         self.envs = envs
         self.conn = conn
+        self.barrier = barrier
         self.shared_tran = shared_transition
 
     def run(self):
@@ -22,7 +23,7 @@ class EnvWorker(Process):
 
     def _run(self):
         while True:
-            data = self.conn.recv()
+            data = self.conn.get()
 
             if data is None:
                 for i, env in enumerate(self.envs):
@@ -39,7 +40,8 @@ class EnvWorker(Process):
                     self.shared_tran.reward[i] = reward
                     self.shared_tran.done[i] = done
 
-            self.conn.send(True)
+            # self.conn.put(True)
+            self.barrier.send(True)
 
 
 class ParallelEnv:
@@ -60,7 +62,7 @@ class ParallelEnv:
     NUMPY_TO_C_DTYPE = {
         np.float32: c_float,
         np.float64: c_double,
-        np.uint8: c_uint,
+        np.uint8: c_uint8,
         np.int32: c_int
     }
 
@@ -103,9 +105,11 @@ class ParallelEnv:
         return self.root_env.num_episodes
 
     def _create_shared_transitions(self):
+        # TODO
         # TODO: dtype for atari
+        # TODO
         state = self._get_shared(
-            np.zeros([self.num_envs] + list(self.state_info['shape']), dtype=np.float32))
+            np.zeros([self.num_envs] + list(self.state_info['shape']), dtype=np.uint8))
         reward = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
 
@@ -132,7 +136,7 @@ class ParallelEnv:
         envs: list
             List of envs, each worker will have approximately the same number of envs.
         '''
-        WorkerNTuple = namedtuple('Worker', ['process', 'connection'])
+        WorkerNTuple = namedtuple('Worker', ['process', 'connection', 'barrier'])
         self.workers = []
 
         for envs_i, s_s, s_r, s_d, s_a in zip(
@@ -143,13 +147,22 @@ class ParallelEnv:
 
             shared_tran = U.SimpleMemory(state=s_s, reward=s_r, done=s_d, action=s_a)
             parent_conn, child_conn = Pipe()
+            queue = Queue()
+            # barrier = Queue()
 
+            # process = EnvWorker(
+            #     envs=envs_i, conn=child_conn, shared_transition=shared_tran)
             process = EnvWorker(
-                envs=envs_i, conn=child_conn, shared_transition=shared_tran)
+                envs=envs_i,
+                conn=queue,
+                barrier=child_conn,
+                shared_transition=shared_tran)
             process.daemon = True
             process.start()
 
-            self.workers.append(WorkerNTuple(process=process, connection=parent_conn))
+            # self.workers.append(WorkerNTuple(process=process, connection=parent_conn))
+            self.workers.append(
+                WorkerNTuple(process=process, connection=queue, barrier=parent_conn))
 
     def _preprocess_state(self, state):
         '''
@@ -185,7 +198,7 @@ class ParallelEnv:
 
     def sync(self):
         for worker in self.workers:
-            worker.connection.recv()
+            worker.barrier.recv()
 
     def update_normalizers(self):
         '''
@@ -202,7 +215,7 @@ class ParallelEnv:
         '''
         # Send signal to reset
         for worker in self.workers:
-            worker.connection.send(None)
+            worker.connection.put(None)
         # Receive results
         raw_states = self.shared_tran.state
         self.sync()
@@ -225,7 +238,7 @@ class ParallelEnv:
         # Send actions to worker
         self.shared_tran.action[...] = actions
         for worker in self.workers:
-            worker.connection.send(True)
+            worker.connection.put(True)
         self.sync()
         self.num_steps += self.num_envs
 
@@ -266,10 +279,11 @@ class ParallelEnv:
         actions = select_action_fn(np.array(self._states))
         raw_next_states, next_states, rewards, dones = self.step(actions)
 
+        # TODO: raw states
         transition = [
             U.SimpleMemory(
-                raw_state_t=rst,
-                raw_state_tp1=rstp1,
+                # raw_state_t=rst,
+                # raw_state_tp1=rstp1,
                 state_t=st,
                 state_tp1=stp1,
                 action=act,
