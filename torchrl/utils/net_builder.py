@@ -90,13 +90,13 @@ def nn_from_config(config, state_info, action_info, body=None, head=None):
     '''
     if body is None:
         body_list = get_module_list(
-            config=config.body, input_shape=state_info['shape'], action_info=action_info)
+            config=config.body, input_shape=state_info.shape, action_info=action_info)
         body = SequentialExtended(*body_list)
 
     if head is None:
         head_list = get_module_list(
             config=config.head,
-            input_shape=body.get_output_shape(state_info['shape']),
+            input_shape=body.get_output_shape(state_info.shape),
             action_info=action_info)
         head = SequentialExtended(*head_list)
 

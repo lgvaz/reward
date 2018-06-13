@@ -9,6 +9,7 @@ import numpy as np
 
 import gym
 from gym import spaces
+cv2.ocl.setUseOpenCL(False)
 
 
 def atari_wrap(env, frame_skip=4, stack_frames=4, noop_max=30):

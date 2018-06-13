@@ -9,6 +9,12 @@ import torch.nn as nn
 import torchrl.utils as U
 from torchrl.nn import ModuleExtended
 
+from multiprocessing import Process
+
+
+def profile(x):
+    return lambda *args, **kwargs: x(*args, **kwargs)
+
 
 class BaseModel(ModuleExtended, ABC):
     '''
@@ -72,14 +78,17 @@ class BaseModel(ModuleExtended, ABC):
         self.register_callbacks()
         self.logger = None
 
-        # Create optimizer
-        opt_fn = opt_fn or torch.optim.Adam
-        self.opt = opt_fn(self.parameters(), **opt_params)
-
         # Enable cuda if wanted
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
             self.model.cuda()
+        # self.device = torch.device('cuda' if cuda_default and torch.cuda.is_available()
+        #                            else 'cpu')
+        # self.to(self.device)
+
+        # Create optimizer
+        opt_fn = opt_fn or torch.optim.Adam
+        self.opt = opt_fn(self.parameters(), **opt_params)
 
     @abstractproperty
     def batch_keys(self):
@@ -200,7 +209,8 @@ class BaseModel(ModuleExtended, ABC):
         if self.callbacks.on_train_end(batch):
             return
 
-    def train(self, batch):
+    @profile
+    def train(self, batch, step):
         '''
         Wrapper around :meth:`train_step`, adds functionalities
         to before and after the training step.
@@ -211,9 +221,11 @@ class BaseModel(ModuleExtended, ABC):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        self.step = batch.step[-1]
+        self.step = step
         self.set_lr(value=self.lr)
-        batch = batch.apply_to_all(self.to_tensor)
+        # TODO: Transform to tensor only one time, maybe in agent
+        # batch = batch.apply_to_all(self.to_tensor)
+        # batch = batch.apply_to_keys(func=self.to_tensor, keys=self.batch_keys)
 
         self.train_step(batch)
 
@@ -298,6 +310,7 @@ class BaseModel(ModuleExtended, ABC):
         self.add_tf_only_log('Grad Norm', np.mean(self.memory.grad_norm))
 
         total_loss = 0
+        # TODO: POSSIBLY WRONG
         for k, v in ChainMap(*self.memory.losses).items():
             loss = v.mean()
             total_loss += loss
@@ -305,8 +318,9 @@ class BaseModel(ModuleExtended, ABC):
 
         self.add_log('Loss/Total', total_loss, precision=4)
 
+    # TODO: Env and batcher are needed?
     @classmethod
-    def from_config(cls, config, env=None, body=None, head=None, **kwargs):
+    def from_config(cls, config, env=None, batcher=None, body=None, head=None, **kwargs):
         '''
         Creates a model from a configuration file.
 
@@ -335,14 +349,14 @@ class BaseModel(ModuleExtended, ABC):
         nn_config = config.pop('nn_config')
         model = U.nn_from_config(
             config=nn_config,
-            state_info=env.state_info,
-            action_info=env.action_info,
+            state_info=batcher.get_state_info(),
+            action_info=env.get_action_info(),
             body=body,
             head=head)
 
         output_layer = cls.output_layer(
-            input_shape=model.get_output_shape(env.state_info['shape']),
-            action_info=env.action_info)
+            input_shape=model.get_output_shape(batcher.get_state_info().shape),
+            action_info=env.get_action_info())
 
         model.layers.head.append(output_layer)
 

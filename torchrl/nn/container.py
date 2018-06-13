@@ -5,7 +5,9 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from torchrl.utils import get_obj
+from torchrl.utils import get_obj, to_tensor
+
+# import torchrl.utils as U
 
 
 class ModuleExtended(nn.Module):
@@ -34,17 +36,7 @@ class ModuleExtended(nn.Module):
         return x.cuda() if self.is_cuda else x
 
     def to_tensor(self, x):
-        if isinstance(x, np.ndarray):
-            # pytorch doesn't support bool
-            if x.dtype == 'bool':
-                x = x.astype('int')
-            # we want only single precision floats
-            if x.dtype == 'float64':
-                x = x.astype('float32')
-
-            x = torch.from_numpy(x)
-
-        return self.maybe_cuda(x)
+        return to_tensor(x, cuda_default=self.is_cuda)
 
     def get_output_shape(self, input_shape):
         '''
@@ -154,17 +146,17 @@ class ActionLinear(nn.Module):
         self.linear = FlattenLinear(
             in_features=in_features, out_features=out_features, **kwargs)
 
-        if action_info['dtype'] == 'continuous':
+        if action_info.space == 'continuous':
             self.log_std = nn.Parameter(torch.zeros(1, out_features))
             # Tiny layer for maximizing exploration
             self.linear.weight.data.normal_(std=0.01)
 
     def forward(self, x):
-        if self.action_info['dtype'] == 'discrete':
+        if self.action_info.space == 'discrete':
             logits = self.linear(x)
             return logits
 
-        elif self.action_info['dtype'] == 'continuous':
+        elif self.action_info.space == 'continuous':
             mean = self.linear(x)
             log_std = self.log_std.expand_as(mean)
             # return torch.cat((mean, log_std), dim=-1)
@@ -172,4 +164,4 @@ class ActionLinear(nn.Module):
 
         else:
             raise ValueError('Action space {} not implemented'.format(
-                self.action_info['dtype']))
+                self.action_info.space))

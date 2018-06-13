@@ -1,5 +1,6 @@
 import gym
 from torchrl.envs.base_env import BaseEnv
+import torchrl.utils as U
 
 
 class GymEnv(BaseEnv):
@@ -46,7 +47,7 @@ class GymEnv(BaseEnv):
 
         return env
 
-    def _reset(self):
+    def reset(self):
         '''
         Calls the reset method on the gym environment.
 
@@ -57,7 +58,7 @@ class GymEnv(BaseEnv):
         '''
         return self.env.reset()
 
-    def _step(self, action):
+    def step(self, action):
         '''
         Calls the step method on the gym environment.
 
@@ -78,19 +79,17 @@ class GymEnv(BaseEnv):
         done: bool
             Flag indicating the termination of the episode.
         '''
-        next_state, reward, done, _ = self.env.step(action)
-        return next_state, reward, done
+        next_state, reward, done, info = self.env.step(action)
+        return next_state, reward, done, info
 
-    @property
-    def state_info(self):
+    def get_state_info(self):
         '''
         Dictionary containing the shape and type of the state space.
         If it is continuous, also contains the minimum and maximum value.
         '''
         return GymEnv.get_space_info(self.env.observation_space)
 
-    @property
-    def action_info(self):
+    def get_action_info(self):
         '''
         Dictionary containing the shape and type of the action space.
         If it is continuous, also contains the minimum and maximum value.
@@ -100,6 +99,9 @@ class GymEnv(BaseEnv):
     @property
     def simulator(self):
         return GymEnv
+
+    def sample_random_action(self):
+        return self.env.action_space.sample()
 
     def seed(self, value):
         self.env.seed(value)
@@ -132,12 +134,14 @@ class GymEnv(BaseEnv):
             Dictionary containing the space shape and type
         '''
         if isinstance(space, gym.spaces.Box):
-            return dict(
+            return U.SimpleMemory(
                 shape=space.shape,
                 low_bound=space.low,
                 high_bound=space.high,
-                dtype='continuous')
+                space='continuous',
+                dtype=space.dtype)
         if isinstance(space, gym.spaces.Discrete):
-            return dict(shape=space.n, dtype='discrete')
+            return U.SimpleMemory(shape=space.n, space='discrete', dtype=space.dtype)
         if isinstance(space, gym.spaces.MultiDiscrete):
-            return dict(shape=space.shape, dtype='multi_discrete')
+            return U.SimpleMemory(
+                shape=space.shape, space='multi_discrete', dtype=space.dtype)

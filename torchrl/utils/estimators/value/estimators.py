@@ -10,7 +10,7 @@ class CompleteReturn(BaseEstimator):
         return discounted_sum_rewards(
             rewards=batch.rewards,
             dones=batch.done,
-            last_state_value=batch.state_value[-1],
+            last_state_value_t=batch.state_value_t[-1],
             gamma=self.gamma)
 
 
@@ -22,11 +22,12 @@ class TDTarget(BaseEstimator):
         return td_target(
             rewards=batch.reward,
             dones=batch.done,
-            state_values=batch.state_value,
+            state_value_tp1=batch.state_value_tp1,
             gamma=self.gamma)
 
 
 # TODO: Not really GAE estimation... Only gae in policy too
 class GAE(BaseEstimator):
     def __call__(self, batch):
-        return batch.advantage + batch.state_value
+        # TODO: check shapes
+        return batch.advantage + batch.state_value_t

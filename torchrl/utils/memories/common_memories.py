@@ -18,8 +18,8 @@ class DefaultMemory(defaultdict):
     A defaultdict whose keys can be accessed as attributes.
     '''
 
-    def __init__(self):
-        super().__init__(list)
+    def __init__(self, *args, **kwargs):
+        super().__init__(list, *args, **kwargs)
 
     def __setattr__(self, *args, **kwargs):
         return self.__setitem__(*args, **kwargs)

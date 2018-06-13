@@ -11,7 +11,7 @@ class CompleteReturn(BaseEstimator):
         return discounted_sum_rewards(
             rewards=batch.rewards,
             dones=batch.done,
-            last_state_value=batch.state_value[-1],
+            last_state_value_t=batch.state_value_t[-1],
             gamma=self.gamma)
 
 
@@ -23,9 +23,9 @@ class Baseline(BaseEstimator):
         return_ = discounted_sum_rewards(
             rewards=batch.rewards,
             dones=batch.done,
-            last_state_value=batch.state_value[-1],
+            last_state_value_t=batch.state_value_t[-1],
             gamma=self.gamma)
-        return return_ - batch.state_value
+        return return_ - batch.state_value_t
 
 
 class TD(BaseEstimator):
@@ -36,8 +36,8 @@ class TD(BaseEstimator):
         return td_target(
             rewards=batch.reward,
             dones=batch.done,
-            state_values=batch.state_value,
-            gamma=self.gamma) - batch.state_value
+            state_value_tp1=batch.state_value_tp1,
+            gamma=self.gamma) - batch.state_value_t
 
 
 class GAE(BaseEstimator):
@@ -49,6 +49,6 @@ class GAE(BaseEstimator):
         return gae_estimation(
             rewards=batch.reward,
             dones=batch.done,
-            state_values=batch.state_value,
+            state_value_t_and_tp1=batch.state_value_t_and_tp1,
             gamma=self.gamma,
             gae_lambda=self.gae_lambda)

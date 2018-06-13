@@ -52,6 +52,6 @@ agent = PGAgent(
     env,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/pong/16parallel-p_e4_nmb4-0ent-v_nmb4_e4_vlc05_gc05-b2048-v4-2')
+    log_dir='tests/pong/16parallel-p_e4_nmb4-0ent-v_nmb4_e4_vlc05_gc05-b2048-v4-2')
 
 agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)

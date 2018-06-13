@@ -18,7 +18,8 @@ class BaseAgent(ABC):
         Directory where logs will be written (Default is `runs`).
     '''
 
-    def __init__(self, env, *, gamma=0.99, log_dir='runs'):
+    def __init__(self, env, batcher, *, gamma=0.99, log_dir='runs'):
+        self.batcher = batcher
         self.env = env
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
@@ -126,6 +127,10 @@ class BaseAgent(ABC):
         self.logger.log('Update {} | Episode {} | Step {}'.format(
             self.models.policy.num_updates, self.env.num_episodes, self.env.num_steps))
 
+    def generate_batch(self):
+        batch = self.batcher.get_batch(select_action_fn=self.select_action)
+        return batch
+
     # TODO: Reimplement method
     # @classmethod
     # def from_config(cls, config, env=None):
@@ -144,7 +149,7 @@ class BaseAgent(ABC):
     #             raise ValueError('The env must be defined in the config '
     #                              'or passed as an argument')
 
-    #     model = cls._model.from_config(config.model, env.state_info, env.action_info)
+    #     model = cls._model.from_config(config.model, env.get_state_info(), env.get_action_info())
 
     #     return cls(env, model, **config.agent.as_dict())
 

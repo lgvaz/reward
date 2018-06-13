@@ -1,8 +1,10 @@
 import numpy as np
+import torch
 from numbers import Number
 from collections import OrderedDict
 from torch.autograd import Variable
 from torchrl.utils import EPSILON, SimpleMemory
+import cv2
 
 
 def get_obj(config):
@@ -77,6 +79,23 @@ def to_np(value):
     return value.detach().cpu().numpy()
 
 
+def to_tensor(x, cuda_default=True):
+    if isinstance(x, np.ndarray):
+        # pytorch doesn't support bool
+        if x.dtype == 'bool':
+            x = x.astype('int')
+        # we want only single precision floats
+        if x.dtype == 'float64':
+            x = x.astype('float32')
+
+        x = torch.from_numpy(x)
+
+    if cuda_default and torch.cuda.is_available():
+        x = x.cuda()
+
+    return x
+
+
 def explained_var(target, preds):
     '''
     Calculates the explained variance between two datasets.
@@ -113,3 +132,39 @@ def make_callable(x):
         return x
     else:
         return lambda *args, **kwargs: x
+
+
+def rgb_to_gray():
+    def grayscale(frame):
+        return cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)[..., None]
+
+    return grayscale
+
+
+def rescale_img(shape):
+    def rescale(frame):
+        assert frame.ndim == 3 or frame.ndim == 2
+        frame = cv2.resize(frame, shape, interpolation=cv2.INTER_NEAREST)
+
+        return frame if frame.ndim == 3 else frame[:, :, None]
+
+    return rescale
+
+
+# def force_shape(ndim=4):
+#     def get(frame):
+#         assert frame.ndim >= 2, \
+#             'frame have {} dimensions and should have at least 2'.format(frame.ndim)
+#         for _ in range(ndim - frame.ndim):
+#             frame = frame[None]
+#         return frame
+
+#     return get
+
+
+def hwc_to_chw():
+    def hwc2chw(frame):
+        assert frame.ndim == 3, 'frame have {} dims but must have 3'.format(frame.ndim)
+        return np.rollaxis(frame, -1)
+
+    return hwc2chw

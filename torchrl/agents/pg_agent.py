@@ -1,5 +1,10 @@
+import numpy as np
 import torchrl.utils as U
 from torchrl.agents import BatchAgent
+
+
+def profile(x):
+    return lambda *args, **kwargs: x(*args, **kwargs)
 
 
 class PGAgent(BatchAgent):
@@ -44,30 +49,42 @@ class PGAgent(BatchAgent):
         self._register_model('policy', policy_model)
         self._register_model('value', value_model)
 
+    @profile
     def step(self):
-        trajs = self.generate_trajectories()
+        batch = self.generate_batch()
 
-        for traj in trajs:
-            self.add_state_value(traj)
-            self.add_advantage(traj)
-            self.add_vtarget(traj)
+        self.add_state_value(batch)
+        self.add_advantage(batch)
+        self.add_vtarget(batch)
 
-        batch = U.Batch.from_trajs(trajs)
+        import pdb
+        pdb.set_trace()
+        batch = batch.concat_batch()
+
         if self.normalize_advantages:
             batch.advantage = U.normalize(batch.advantage)
 
-        self.models.policy.train(batch)
-        self.models.value.train(batch)
+        # TODO: make to tensor more general, state_t and state_tp1, can cuda only one
+        batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
+        self.models.policy.train(batch_tensor, step=self.env.num_steps)
+        self.models.value.train(batch_tensor, step=self.env.num_steps)
 
-    def add_state_value(self, traj):
+    @profile
+    def add_state_value(self, batch):
         if self.models.value is not None:
-            traj.state_value = U.to_np(self.models.value(traj.state_t).view(-1))
+            s = batch.state_t_and_tp1
+            v = self.models.value(s.reshape(-1, *s.shape[2:]))
 
-    def add_advantage(self, traj):
-        traj.advantage = self.advantage(traj)
+            v = U.to_np(v).reshape(s.shape[:2])
+            batch.state_value_t_and_tp1 = v
+            batch.state_value_t = v[:-1]
+            batch.state_value_tp1 = v[1:]
 
-    def add_vtarget(self, traj):
-        traj.vtarget = self.vtarget(traj)
+    def add_advantage(self, batch):
+        batch.advantage = self.advantage(batch)
+
+    def add_vtarget(self, batch):
+        batch.vtarget = self.vtarget(batch)
 
     # TODO: Reimplement this method
     # @classmethod
@@ -84,7 +101,7 @@ class PGAgent(BatchAgent):
     #     policy_nn_config = config.pop('policy_nn_config')
     #     value_nn_config = config.pop('value_nn_config', None)
 
-    #     policy_nn = U.nn_from_config(policy_nn_config, env.state_info, env.action_info)
+    #     policy_nn = U.nn_from_config(policy_nn_config, env.get_state_info(), env.get_action_info())
     #     if value_nn_config is not None:
     #         if value_nn_config.get('body') is None:
     #             print('Policy NN and Value NN are sharing bodies')
@@ -93,7 +110,7 @@ class PGAgent(BatchAgent):
     #             print('Policy NN and Value NN are using different bodies')
     #             value_nn_body = None
     #         value_nn = U.nn_from_config(
-    #             value_nn_config, env.state_info, env.action_info, body=value_nn_body)
+    #             value_nn_config, env.get_state_info(), env.get_action_info(), body=value_nn_body)
     #     else:
     #         value_nn = None
 
