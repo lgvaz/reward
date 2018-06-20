@@ -7,6 +7,8 @@ class BaseRunner(ABC):
         self.env = env
         self._rewards = []
         self._steps = 0
+        self._last_logged_ep = 0
+        self._new_rewards = []
 
     @property
     @abstractmethod
@@ -45,5 +47,10 @@ class BaseRunner(ABC):
         raise NotImplementedError
 
     def write_logs(self, logger):
-        print('Need to write runner log')
+        new_eps = abs(self._last_logged_ep - self.num_episodes)
+        if new_eps != 0:
+            self._new_rewards = self.rewards[-new_eps:]
+            self._last_logged_ep = self.num_episodes
+
+        logger.add_log('Reward/Episode (New)', np.mean(self._new_rewards))
         logger.add_log('Reward/Episode (Last 50)', np.mean(self.rewards[-50:]))

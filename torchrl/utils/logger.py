@@ -30,6 +30,7 @@ class Logger:
         self.steps_sum = 0
         self.eta = None
         self.i_step = 0
+        self.time_header = None
 
         print('Writing logs to: {}'.format(log_dir))
         self.writer = SummaryWriter(log_dir=log_dir)
@@ -109,8 +110,10 @@ class Logger:
             }
 
             # Log to the console
-            if self.eta is not None:
-                header += ' | ETA: {}'.format(self.eta)
+            # if self.eta is not None:
+            #     header += ' | ETA: {}'.format(self.eta)
+            # header += self.time_header or ''
+            header = ' | '.join(filter(None, [header, self.time_header, self.eta]))
             print_table(avg_dict, header)
 
             # Write tensorboard summary
@@ -146,17 +149,19 @@ class Logger:
         steps, self.i_step = i_step - self.i_step, i_step
         new_time = time.time()
         steps_sec = steps / (new_time - self.time)
-        self.add_log('Steps_per_second', steps_sec)
+        self.time_header = 'Steps/Second: {}'.format(int(steps_sec))
+        # self.add_log('Steps_per_second', steps_sec)
         self.time = new_time
         self.steps_sum += steps
 
         if max_steps != -1:
             eta_seconds = (max_steps - self.steps_sum) / steps_sec
             # Format days, hours, minutes, seconds and remove milliseconds
-            self.eta = str(timedelta(seconds=eta_seconds)).split('.')[0]
+            eta = str(timedelta(seconds=eta_seconds)).split('.')[0]
+            self.eta = 'ETA: {}'.format(eta)
 
 
-def print_table(tags_and_values_dict, header=None, width=42):
+def print_table(tags_and_values_dict, header=None, width=62):
     '''
     Prints a pretty table =)
     Expects keys and values of dict to be a string
@@ -166,17 +171,20 @@ def print_table(tags_and_values_dict, header=None, width=42):
     values_maxlen = max(len(value) for value in tags_and_values_dict.values())
 
     max_width = max(width, tags_maxlen + values_maxlen)
+    table = []
 
-    print()
+    table.append('')
     if header:
-        print(header)
+        table.append(header)
 
-    print((2 + max_width) * '-')
+    table.append((2 + max_width) * '-')
 
     for tag, value in tags_and_values_dict.items():
         num_spaces = 2 + values_maxlen - len(value)
         string_right = '{:{n}}{}'.format('|', value, n=num_spaces)
         num_spaces = 2 + max_width - len(tag) - len(string_right)
-        print(''.join((tag, ' ' * num_spaces, string_right)))
+        table.append(''.join((tag, ' ' * num_spaces, string_right)))
 
-    print((2 + max_width) * '-')
+    table.append((2 + max_width) * '-')
+
+    print('\n'.join(table))

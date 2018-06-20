@@ -53,7 +53,6 @@ class BaseBatcher:
         return self.runner.get_action_info()
 
     def write_logs(self, logger):
-        print('Need to write batcher logs')
         self.runner.write_logs(logger)
 
     def close(self):

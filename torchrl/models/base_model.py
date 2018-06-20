@@ -65,7 +65,8 @@ class BaseModel(ModuleExtended, ABC):
         self.batcher = batcher
         self.num_epochs = num_epochs
         self.num_mini_batches = num_mini_batches
-        self.lr_schedule = U.make_callable(lr_schedule or opt_params['lr'])
+        self.opt_params = opt_params or dict(lr=1e-3)
+        self.lr_schedule = U.make_callable(lr_schedule or self.opt_params['lr'])
         self.clip_grad_norm = clip_grad_norm
         self.loss_coef_fn = U.make_callable(loss_coef)
 
@@ -87,9 +88,8 @@ class BaseModel(ModuleExtended, ABC):
         # self.to(self.device)
 
         # Create optimizer
-        opt_params = opt_params or dict()
         opt_fn = opt_fn or torch.optim.Adam
-        self.opt = opt_fn(self.parameters(), **opt_params)
+        self.opt = opt_fn(self.parameters(), **self.opt_params)
 
     @abstractproperty
     def batch_keys(self):
@@ -307,19 +307,21 @@ class BaseModel(ModuleExtended, ABC):
         batch: Batch
             Some logs might need the batch for calculation.
         '''
-        self.add_log('LR', self.lr, precision=4)
+        self.add_tf_only_log('LR', self.lr, precision=4)
         self.add_tf_only_log('Grad Norm', np.mean(self.memory.grad_norm))
 
         total_loss = 0
-        # TODO: POSSIBLY WRONG
-        for k, v in ChainMap(*self.memory.losses).items():
-            loss = v.mean()
-            total_loss += loss
-            self.add_tf_only_log('/'.join(['Loss', k]), loss, precision=4)
+        for k in self.memory.losses[0]:
+            partial_loss = 0
+            for loss in self.memory.losses:
+                partial_loss += loss[k]
+
+            partial_loss = partial_loss / len(self.memory.losses)
+            total_loss += partial_loss
+            self.add_tf_only_log('/'.join(['Loss', k]), partial_loss, precision=4)
 
         self.add_log('Loss/Total', total_loss, precision=4)
 
-    # TODO: Env and batcher are needed?
     @classmethod
     def from_config(cls, config, batcher=None, body=None, head=None, **kwargs):
         '''

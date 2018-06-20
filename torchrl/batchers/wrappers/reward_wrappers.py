@@ -10,4 +10,11 @@ class RewardRunScaler(BaseWrapper):
     def transform_batch(self, batch):
         batch.reward = self.filt.scale(batch.reward)
         self.filt.update()
+
         return self.old_transform_batch(batch)
+
+    def write_logs(self, logger):
+        logger.add_tf_only_log('Env/Reward/mean', self.filt.mean.mean())
+        logger.add_tf_only_log('Env/Reward/std', self.filt.std.mean())
+
+        self.old_write_logs(logger)

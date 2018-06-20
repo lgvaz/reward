@@ -51,6 +51,6 @@ agent = PGAgent(
     value_model=value_model,
     advantage=U.estimators.advantage.Baseline(gamma=0.99),
     vtarget=U.estimators.value.TDTarget(gamma=0.99),
-    log_dir='logs/pong/nv-a2c-episodiclifebugfix-tdtarget-32parallel-paac-v2-0')
+    log_dir='tests/pong/nv-a2c-episodiclifebugfix-tdtarget-32parallel-paac-v2-0')
 
 agent.train(max_steps=MAX_STEPS, log_freq=10)

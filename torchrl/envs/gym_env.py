@@ -79,6 +79,8 @@ class GymEnv(BaseEnv):
         done: bool
             Flag indicating the termination of the episode.
         '''
+        if self.get_action_info().space == 'discrete':
+            action = int(action)
         next_state, reward, done, info = self.env.step(action)
         return next_state, reward, done, info
 
