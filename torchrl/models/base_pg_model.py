@@ -11,8 +11,8 @@ class BasePGModel(BaseModel):
     Base class for all Policy Gradient Models.
     '''
 
-    def __init__(self, model, env, *, entropy_coef=0, **kwargs):
-        super().__init__(model=model, env=env, **kwargs)
+    def __init__(self, model, batcher, *, entropy_coef=0, **kwargs):
+        super().__init__(model=model, batcher=batcher, **kwargs)
         self.entropy_coef_fn = U.make_callable(entropy_coef)
 
     @abstractproperty
@@ -64,11 +64,11 @@ class BasePGModel(BaseModel):
         The parameters are used to create a distribution
         (continuous or discrete depending on the type of the environment).
         '''
-        if self.env.get_action_info().space == 'discrete':
+        if self.batcher.get_action_info().space == 'discrete':
             logits = parameters
             return Categorical(logits=logits)
 
-        elif self.env.get_action_info().space == 'continuous':
+        elif self.batcher.get_action_info().space == 'continuous':
             means = parameters[..., 0]
             std_devs = parameters[..., 1].exp()
 
@@ -76,7 +76,7 @@ class BasePGModel(BaseModel):
 
         else:
             raise ValueError('No distribution is defined for {} actions'.format(
-                self.env.get_action_info().space))
+                self.batcher.get_action_info().space))
 
     def write_logs(self, batch):
         super().write_logs(batch)

@@ -5,6 +5,10 @@ import numpy as np
 from torchrl.envs.wrappers import BaseWrapper
 
 
+def profile(x):
+    return lambda *args, **kwargs: x(*args, **kwargs)
+
+
 class EpisodicLife(BaseWrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
@@ -14,6 +18,7 @@ class EpisodicLife(BaseWrapper):
         self.was_real_done = True
         super().__init__(env=env)
 
+    @profile
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.was_real_done = done
@@ -27,6 +32,19 @@ class EpisodicLife(BaseWrapper):
             done = True
         self.lives = lives
         return obs, reward, done, info
+
+    def reset(self):
+        """Reset only when lives are exhausted.
+        This way all states are still reachable even though lives are episodic,
+        and the learner need not know about any of this behind-the-scenes.
+        """
+        if self.was_real_done:
+            obs = self.env.reset()
+        else:
+            # no-op step to advance from terminal/lost life state
+            obs, _, _, _ = self.env.step(0)
+        self.lives = self.env.num_lives
+        return obs
 
 
 class RandomReset(BaseWrapper):
@@ -74,6 +92,7 @@ class ActionRepeat(BaseWrapper):
             [2] + list(self.env.get_state_info().shape), dtype=np.uint8)
         self._skip = skip
 
+    @profile
     def step(self, action):
         """Repeat action, sum reward, and max over last observations."""
         total_reward = 0.0
@@ -94,17 +113,17 @@ class ActionRepeat(BaseWrapper):
         return max_frame, total_reward, done, info
 
 
-class HWC_to_CHW(BaseWrapper):
-    def reset(self):
-        state = self.env.reset()
-        assert state.ndim == 3, 'state have {} dims and must have 3'.format(state.ndim)
-        state = np.rollaxis(state, -1)
+# class HWC_to_CHW(BaseWrapper):
+#     def reset(self):
+#         state = self.env.reset()
+#         assert state.ndim == 3, 'state have {} dims and must have 3'.format(state.ndim)
+#         state = np.rollaxis(state, -1)
 
-        return state
+#         return state
 
-    def step(self, action):
-        state, reward, done, info = self.env.step(action)
-        assert state.ndim == 3, 'state have {} dims and must have 3'.format(state.ndim)
-        state = np.rollaxis(state, -1)
+#     def step(self, action):
+#         state, reward, done, info = self.env.step(action)
+#         assert state.ndim == 3, 'state have {} dims and must have 3'.format(state.ndim)
+#         state = np.rollaxis(state, -1)
 
-        return state, reward, done, info
+#         return state, reward, done, info

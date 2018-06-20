@@ -4,9 +4,9 @@ import numpy as np
 def discounted_sum_rewards(rewards, dones, last_state_value_t=None, gamma=0.99):
     rewards = rewards.copy()
 
-    if last_state_value_t is None and not all(dones[-1]):
-        raise AssertionError('If one episode is not finished you must'
-                             'pass a value to last_state_value_t to bootstrap from.')
+    # if last_state_value_t is None and not all(dones[-1]):
+    #     raise AssertionError('If one episode is not finished you must'
+    #                          'pass a value to last_state_value_t to bootstrap from.')
 
     if last_state_value_t is not None:
         bootstrap = np.where(dones[-1] == False)[0]
@@ -37,7 +37,7 @@ def gae_estimation(rewards, dones, state_value_t_and_tp1, *, gamma, gae_lambda):
     advantages = discounted_sum_rewards(
         rewards=td_residual,
         dones=dones,
-        last_state_value_t=state_value_t_and_tp1[-2],
+        last_state_value_t=None,
         gamma=gamma * gae_lambda)
     # vtarget = advantages + state_values
 

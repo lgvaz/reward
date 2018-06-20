@@ -21,7 +21,7 @@ class Baseline(BaseEstimator):
 
     def __call__(self, batch):
         return_ = discounted_sum_rewards(
-            rewards=batch.rewards,
+            rewards=batch.reward,
             dones=batch.done,
             last_state_value_t=batch.state_value_t[-1],
             gamma=self.gamma)

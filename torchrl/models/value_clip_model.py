@@ -7,7 +7,7 @@ from torchrl.models import ValueModel
 class ValueClipModel(ValueModel):
     def __init__(self,
                  model,
-                 env,
+                 batcher,
                  clip_range,
                  *,
                  num_mini_batches=4,
@@ -17,7 +17,7 @@ class ValueClipModel(ValueModel):
 
         super().__init__(
             model=model,
-            env=env,
+            batcher=batcher,
             num_mini_batches=num_mini_batches,
             num_epochs=num_epochs,
             **kwargs)

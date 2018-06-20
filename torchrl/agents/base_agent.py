@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import torchrl.utils as U
 
 
+# TODO: Docstring
 class BaseAgent(ABC):
     '''
     Basic TorchRL agent. Encapsulate an environment and a model.
@@ -18,9 +19,8 @@ class BaseAgent(ABC):
         Directory where logs will be written (Default is `runs`).
     '''
 
-    def __init__(self, env, batcher, *, gamma=0.99, log_dir='runs'):
+    def __init__(self, batcher, *, gamma=0.99, log_dir='runs'):
         self.batcher = batcher
-        self.env = env
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
 
@@ -33,6 +33,14 @@ class BaseAgent(ABC):
         and defines the training procedure.
         '''
 
+    @property
+    def num_steps(self):
+        return self.batcher.runner.num_steps
+
+    @property
+    def num_episodes(self):
+        return self.batcher.runner.num_episodes
+
     def _check_termination(self):
         '''
         Check if the training loop reached the end.
@@ -43,8 +51,8 @@ class BaseAgent(ABC):
         True if done, False otherwise.
         '''
         if (self.models.policy.num_updates // self.max_updates >= 1
-                or self.env.num_episodes // self.max_episodes >= 1
-                or self.env.num_steps // self.max_steps >= 1):
+                or self.num_episodes // self.max_episodes >= 1
+                or self.num_steps // self.max_steps >= 1):
             return True
 
         return False
@@ -105,27 +113,28 @@ class BaseAgent(ABC):
         '''
         return self.models.policy.select_action(state)
 
-    def run_one_episode(self):
-        '''
-        Run an entire episode using the current model.
+    # def run_one_episode(self):
+    #     '''
+    #     Run an entire episode using the current model.
 
-        Returns
-        -------
-        batch: dict
-            Dictionary containing information about the episode.
-        '''
-        return self.env.run_n_episodes(
-            select_action_fn=self.select_action, num_episodes=1)
+    #     Returns
+    #     -------
+    #     batch: dict
+    #         Dictionary containing information about the episode.
+    #     '''
+    #     return self.env.run_n_episodes(
+    #         select_action_fn=self.select_action, num_episodes=1)
 
     def write_logs(self):
         '''
         Use the logger to write general information about the training process.
         '''
-        self.env.write_logs(logger=self.logger)
+        self.batcher.write_logs(logger=self.logger)
 
-        self.logger.timeit(self.env.num_steps, max_steps=self.max_steps)
+        self.logger.timeit(self.num_steps, max_steps=self.max_steps)
+        # Instead of Update should be Iter?
         self.logger.log('Update {} | Episode {} | Step {}'.format(
-            self.models.policy.num_updates, self.env.num_episodes, self.env.num_steps))
+            self.models.policy.num_updates, self.num_episodes, self.num_steps))
 
     def generate_batch(self):
         batch = self.batcher.get_batch(select_action_fn=self.select_action)

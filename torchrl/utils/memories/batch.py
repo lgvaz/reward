@@ -82,6 +82,7 @@
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
 from torchrl.utils.memories import SimpleMemory, DefaultMemory
+import torch
 
 
 class Batch(DefaultMemory):
@@ -118,8 +119,23 @@ class Batch(DefaultMemory):
             yield self
 
     def concat_batch(self):
-        func = lambda x: np.reshape(x, (-1, *x.shape[2:]))
+        func = lambda x: x.reshape((-1, *x.shape[2:])) if (
+            isinstance(x, (np.ndarray, torch.Tensor))) else x
         return self.apply_to_all(func)
+
+    def to_array_or_tensor(self):
+        new_batch = Batch()
+        for k, v in self.items():
+            if isinstance(v[0], np.ndarray):
+                new_batch[k] = np.stack(v)
+
+            elif isinstance(v[0], torch.Tensor):
+                new_batch[k] = torch.stack(v)
+
+            else:
+                new_batch[k] = v
+
+        return new_batch
 
     @classmethod
     def from_trajs(cls, trajs):

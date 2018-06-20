@@ -1,13 +1,14 @@
 import numpy as np
 import torchrl.utils as U
-from torchrl.agents import BatchAgent
+from torchrl.agents import BaseAgent
 
 
 def profile(x):
     return lambda *args, **kwargs: x(*args, **kwargs)
 
 
-class PGAgent(BatchAgent):
+# TODO: docstring
+class PGAgent(BaseAgent):
     '''
     Policy Gradient Agent, compatible with all PG models.
 
@@ -32,15 +33,15 @@ class PGAgent(BatchAgent):
     '''
 
     def __init__(self,
-                 env,
+                 batcher,
                  *,
                  policy_model,
                  value_model=None,
                  normalize_advantages=True,
                  advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
-                 vtarget=U.estimators.value.GAE(),
+                 vtarget=U.estimators.value.FromAdvantage(),
                  **kwargs):
-        super().__init__(env, **kwargs)
+        super().__init__(batcher=batcher, **kwargs)
 
         self.normalize_advantages = normalize_advantages
         self.advantage = advantage
@@ -57,8 +58,6 @@ class PGAgent(BatchAgent):
         self.add_advantage(batch)
         self.add_vtarget(batch)
 
-        import pdb
-        pdb.set_trace()
         batch = batch.concat_batch()
 
         if self.normalize_advantages:
@@ -66,8 +65,8 @@ class PGAgent(BatchAgent):
 
         # TODO: make to tensor more general, state_t and state_tp1, can cuda only one
         batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
-        self.models.policy.train(batch_tensor, step=self.env.num_steps)
-        self.models.value.train(batch_tensor, step=self.env.num_steps)
+        self.models.policy.train(batch_tensor, step=self.num_steps)
+        self.models.value.train(batch_tensor, step=self.num_steps)
 
     @profile
     def add_state_value(self, batch):

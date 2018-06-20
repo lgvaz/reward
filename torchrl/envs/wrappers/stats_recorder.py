@@ -4,8 +4,8 @@ from torchrl.envs.wrappers import BaseWrapper
 
 class StatsRecorder(BaseWrapper):
     def __init__(self, env):
-        self.num_steps = 0
-        self.num_episodes = 0
+        self.real_num_steps = 0
+        self.real_num_episodes = 0
         self.ep_reward_sum = 0
         self.rewards = []
         super().__init__(env=env)
@@ -17,9 +17,9 @@ class StatsRecorder(BaseWrapper):
         if done:
             self.rewards.append(self.ep_reward_sum)
             self.ep_reward_sum = 0
-            self.num_episodes += 1
+            self.real_num_episodes += 1
 
-        self.num_steps += 1
+        self.real_num_steps += 1
 
         return state, reward, done, info
 

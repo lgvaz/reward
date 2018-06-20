@@ -118,6 +118,9 @@ class GymEnv(BaseEnv):
         super().update_config(config)
         config.env.obj.update(dict(wrappers=self.wrappers))
 
+    def close(self):
+        self.env.close()
+
     @staticmethod
     def get_space_info(space):
         '''

@@ -1,6 +1,6 @@
 import torchrl.utils as U
 from torchrl.envs.wrappers import (ActionRepeat, BaseWrapper, EpisodicLife, FireReset,
-                                   RandomReset, StateWrapper)
+                                   RandomReset, RGB2GRAY, Rescale, HWC2CHW)
 
 
 class AtariWrapper(BaseWrapper):
@@ -10,10 +10,13 @@ class AtariWrapper(BaseWrapper):
         env = ActionRepeat(env, skip=frame_skip)
         if 'FIRE' in env.get_action_meanings():
             env = FireReset(env)
-        env = StateWrapper(
-            env=env, funcs=[U.rgb_to_gray(),
-                            U.rescale_img(shape),
-                            U.hwc_to_chw()])
-        # env = HWC_to_CHW(env)
+        # TODO: I think it better to have separte classes for the transforms
+        # env = StateWrapper(
+        #     env=env, funcs=[U.rgb_to_gray(),
+        #                     U.rescale_img(shape),
+        #                     U.hwc_to_chw()])
+        env = RGB2GRAY(env)
+        env = Rescale(env, shape=shape)
+        env = HWC2CHW(env)
 
         self.env = env

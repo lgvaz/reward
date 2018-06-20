@@ -6,6 +6,8 @@ class FinalWrapper(BaseWrapper):
     def __init__(self, env):
         # Don't hold any additional attributes, so it always get proxied to self.env
         self.env = env
+        self.num_steps = 0
+        self.num_episodes = 0
 
     def reset(self):
         state = self.env.reset()
@@ -15,6 +17,10 @@ class FinalWrapper(BaseWrapper):
         state, reward, done, info = self.env.step(action)
         if auto_reset and done:
             state = self.env.reset()
+
+        if done:
+            self.num_episodes += 1
+        self.num_steps += 1
 
         return state[None], np.array(reward)[None], np.array(done)[None], info
 

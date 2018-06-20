@@ -1,27 +1,58 @@
+from abc import ABC, abstractmethod
+import numpy as np
+import cv2
 import torchrl.utils as U
 from torchrl.envs.wrappers import BaseWrapper
 
 
-class StateWrapper(BaseWrapper):
-    def __init__(self, env, funcs=None):
-        self.funcs = funcs or []
-        # self.funcs.append(U.force_shape())
+class BaseStateWrapper(BaseWrapper, ABC):
+    def __init__(self, env):
         super().__init__(env=env)
+        self._shape = None
 
-    def __str__(self):
-        funcs_name = '-'.join(f.__name__ for f in self.funcs)
-        name = '{}({})'.format(type(self).__name__, funcs_name)
-        return '<{}{}>'.format(name, self.env)
+    @abstractmethod
+    def transform(self, state):
+        pass
 
     def reset(self):
         state = self.env.reset()
-        for func in self.funcs:
-            state = func(state)
-
-        return state
+        return self.transform(state)
 
     def step(self, action):
         state, reward, done, info = self.env.step(action)
-        for func in self.funcs:
-            state = func(state)
+        state = self.transform(state)
+
         return state, reward, done, info
+
+    def get_state_info(self):
+        info = self.env.get_state_info()
+
+        if self._shape is None:
+            self._shape = self.reset().shape
+
+        info.shape = self._shape
+
+        return info
+
+
+class RGB2GRAY(BaseStateWrapper):
+    def transform(self, state):
+        return cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)[..., None]
+
+
+class Rescale(BaseStateWrapper):
+    def __init__(self, env, shape):
+        super().__init__(env=env)
+        self.shape = shape
+
+    def transform(self, state):
+        assert state.ndim == 3 or state.ndim == 2
+        state = cv2.resize(state, self.shape, interpolation=cv2.INTER_NEAREST)
+
+        return state if state.ndim == 3 else state[:, :, None]
+
+
+class HWC2CHW(BaseStateWrapper):
+    def transform(self, state):
+        assert state.ndim == 3, 'frame have {} dims but must have 3'.format(state.ndim)
+        return np.rollaxis(state, -1)

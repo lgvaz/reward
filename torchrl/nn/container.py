@@ -75,7 +75,9 @@ class SequentialExtended(ModuleExtended):
 
     def forward(self, x):
         if len(self.layers) > 0:
-            return self.layers(self.to_tensor(x))
+            # return self.layers(self.to_tensor(x))
+            # TODO TODO TODO TODO
+            return self.layers(x)
         else:
             return x
 

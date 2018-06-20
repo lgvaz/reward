@@ -16,10 +16,10 @@ class ValueModel(BaseModel):
         Similar to PPOClip, limits the change between the new and old value function.
     '''
 
-    def __init__(self, model, env, *, num_mini_batches=4, num_epochs=10, **kwargs):
+    def __init__(self, model, batcher, *, num_mini_batches=4, num_epochs=10, **kwargs):
         super().__init__(
             model=model,
-            env=env,
+            batcher=batcher,
             num_mini_batches=num_mini_batches,
             num_epochs=num_epochs,
             **kwargs)
@@ -48,10 +48,12 @@ class ValueModel(BaseModel):
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        self.add_log('Old Explained Var', U.explained_var(batch.vtarget, batch.old_pred))
         self.memory.new_pred = self.forward(batch.state_t)
+        self.add_log('Old Explained Var', U.explained_var(batch.vtarget, batch.old_pred))
         self.add_log('New Explained Var',
                      U.explained_var(batch.vtarget, self.memory.new_pred))
+        self.add_log('Target_mean', batch.vtarget.mean())
+        self.add_log('Pred_mean', self.memory.new_pred)
 
     @staticmethod
     def output_layer(input_shape, action_info):

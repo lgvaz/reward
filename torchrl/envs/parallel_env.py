@@ -69,7 +69,7 @@ class ParallelEnv:
         np.int64: c_int
     }
 
-    def __init__(self, envs, num_workers=None):
+    def __init__(self, envs, num_workers=None, seed=None):
         self.num_envs = len(envs)
         self.num_workers = num_workers or multiprocessing.cpu_count()
         self.num_steps = 0
@@ -86,6 +86,7 @@ class ParallelEnv:
         self.root_env = env
         self.rewards = self.root_env.rewards
 
+        self._set_seeds(envs, seed)
         self._create_shared_transitions()
         self._create_workers(envs)
         self._states = None
@@ -205,6 +206,27 @@ class ParallelEnv:
             self.workers.append(
                 WorkerNTuple(process=process, connection=queue, barrier=parent_conn))
 
+    def _get_shared(self, array):
+        """
+        A numpy array that can be shared between processes.
+        From: `alfredcv <https://sourcegraph.com/github.com/Alfredvc/paac/-/blob/runners.py#L20:9-20:20$references>`_.
+
+        Parameters
+        ----------
+        array: np.array
+            The shared to be shared
+
+        Returns
+        -------
+        A shared numpy array.
+        """
+
+        dtype = self.NUMPY_TO_C_DTYPE[array.dtype.type]
+
+        shape = array.shape
+        shared = RawArray(dtype, array.reshape(-1))
+        return np.frombuffer(shared, dtype).reshape(shape)
+
     # def _preprocess_state(self, state):
     #     '''
     #     Perform transformations on the state (scaling, normalizing, cropping, etc).
@@ -258,8 +280,8 @@ class ParallelEnv:
         for worker in self.workers:
             worker.connection.put(None)
         # Receive results
-        states = self.shared_tran.state
         self.sync()
+        states = self.shared_tran.state.copy()
 
         # states = self._preprocess_state(raw_states)
         return states
@@ -284,10 +306,10 @@ class ParallelEnv:
         self.sync()
         self.num_steps += self.num_envs
 
-        next_states = self.shared_tran.state
-        rewards = self.shared_tran.reward
-        dones = self.shared_tran.done
-        infos = self.shared_tran.info
+        next_states = self.shared_tran.state.copy()
+        rewards = self.shared_tran.reward.copy()
+        dones = self.shared_tran.done.copy()
+        infos = self.shared_tran.info.copy()
 
         # Accumulate rewards
         self.envs_rewards += rewards
@@ -302,114 +324,114 @@ class ParallelEnv:
 
         return next_states, rewards, dones, infos
 
-    @profile
-    # TODO: Name -> auto_step ?
-    def run_one_step(self, select_action_fn):
-        '''
-        Performs a single action on each environment and automatically reset if needed.
+    # @profile
+    # # TODO: Name -> auto_step ?
+    # def run_one_step(self, select_action_fn):
+    #     '''
+    #     Performs a single action on each environment and automatically reset if needed.
 
-        Parameters
-        ----------
-        select_action_fn: function
-            A function that receives the states and returns the actions.
+    #     Parameters
+    #     ----------
+    #     select_action_fn: function
+    #         A function that receives the states and returns the actions.
 
-        Returns
-        -------
-        torch.utils.SimpleMemory
-            A object containing the transition information.
-        '''
-        if self._states is None:
-            # self._raw_states, self._states = self.reset()
-            self._states = self.reset()
+    #     Returns
+    #     -------
+    #     torch.utils.SimpleMemory
+    #         A object containing the transition information.
+    #     '''
+    #     if self._states is None:
+    #         # self._raw_states, self._states = self.reset()
+    #         self._states = self.reset()
 
-        actions = select_action_fn(np.array(self._states))
-        next_states, rewards, dones = self.step(actions)
+    #     actions = select_action_fn(np.array(self._states))
+    #     next_states, rewards, dones = self.step(actions)
 
-        # TODO: raw states
-        # transition = [
-        #     U.SimpleMemory(
-        #         # raw_state_t=rst,
-        #         # raw_state_tp1=rstp1,
-        #         state_t=st,
-        #         state_tp1=stp1,
-        #         action=act,
-        #         reward=rew,
-        #         step=self.num_steps,
-        #         done=d)
-        #     for rst, rstp1, st, stp1, act, rew, d in
-        #     zip(self._raw_states, raw_next_states, self._states, next_states, actions,
-        #         rewards, dones)
-        # ]
+    #     # TODO: raw states
+    #     # transition = [
+    #     #     U.SimpleMemory(
+    #     #         # raw_state_t=rst,
+    #     #         # raw_state_tp1=rstp1,
+    #     #         state_t=st,
+    #     #         state_tp1=stp1,
+    #     #         action=act,
+    #     #         reward=rew,
+    #     #         step=self.num_steps,
+    #     #         done=d)
+    #     #     for rst, rstp1, st, stp1, act, rew, d in
+    #     #     zip(self._raw_states, raw_next_states, self._states, next_states, actions,
+    #     #         rewards, dones)
+    #     # ]
 
-        # self._raw_states = raw_next_states
-        self._states = next_states
+    #     # self._raw_states = raw_next_states
+    #     self._states = next_states
 
-        return self._states, next_states, actions, rewards, dones
+    #     return self._states, next_states, actions, rewards, dones
 
-    @profile
-    def run_n_steps(self, select_action_fn, num_steps):
-        '''
-        Runs the enviroments for ``num_steps`` steps,
-        sampling actions from select_action_fn.
+    # @profile
+    # def run_n_steps(self, select_action_fn, num_steps):
+    #     '''
+    #     Runs the enviroments for ``num_steps`` steps,
+    #     sampling actions from select_action_fn.
 
-        Parameters
-        ----------
-        select_action_fn: function
-            A function that receives a state and returns an action.
-        num_steps: int
-            Number of steps to run.
+    #     Parameters
+    #     ----------
+    #     select_action_fn: function
+    #         A function that receives a state and returns an action.
+    #     num_steps: int
+    #         Number of steps to run.
 
-        Returns
-        -------
-        SimpleMemory
-            A ``SimpleMemory`` obj containing information about the trajectory.
-        '''
-        horizon = num_steps // self.num_envs
-        batch = self._create_batch(horizon)
-        # transitions = []
+    #     Returns
+    #     -------
+    #     SimpleMemory
+    #         A ``SimpleMemory`` obj containing information about the trajectory.
+    #     '''
+    #     horizon = num_steps // self.num_envs
+    #     batch = self._create_batch(horizon)
+    #     # transitions = []
 
-        for i in range(horizon):
-            state_t, state_tp1, action, reward, done = self.run_one_step(select_action_fn)
-            # transitions.append(transition)
-            batch.state_t_and_tp1[i] = state_t
-            batch.action[i] = action
-            batch.reward[i] = reward
-            batch.done[i] = done
-        batch.state_t_and_tp1[i + 1] = state_tp1
+    #     for i in range(horizon):
+    #         state_t, state_tp1, action, reward, done = self.run_one_step(select_action_fn)
+    #         # transitions.append(transition)
+    #         batch.state_t_and_tp1[i] = state_t
+    #         batch.action[i] = action
+    #         batch.reward[i] = reward
+    #         batch.done[i] = done
+    #     batch.state_t_and_tp1[i + 1] = state_tp1
 
-        batch.state_t = batch.state_t_and_tp1[:-1]
-        batch.state_tp1 = batch.state_t_and_tp1[1:]
+    #     batch.state_t = batch.state_t_and_tp1[:-1]
+    #     batch.state_tp1 = batch.state_t_and_tp1[1:]
 
-        # return [U.join_transitions(t) for t in zip(*transitions)]
-        return batch
+    #     # return [U.join_transitions(t) for t in zip(*transitions)]
+    #     return batch
 
-    def run_n_episodes(self, select_action_fn, num_episodes):
-        '''
-        Runs the enviroments for ``num_episodes`` episodes,
-        sampling actions from select_action_fn.
+    # def run_n_episodes(self, select_action_fn, num_episodes):
+    #     '''
+    #     Runs the enviroments for ``num_episodes`` episodes,
+    #     sampling actions from select_action_fn.
 
-        Parameters
-        ----------
-        select_action_fn: function
-            A function that receives a state and returns an action.
-        num_episodes: int
-            Number of episodes to run.
+    #     Parameters
+    #     ----------
+    #     select_action_fn: function
+    #         A function that receives a state and returns an action.
+    #     num_episodes: int
+    #         Number of episodes to run.
 
-        Returns
-        -------
-        SimpleMemory
-            A ``SimpleMemory`` obj containing information about the trajectory.
-        '''
-        transitions = []
-        dones = 0
+    #     Returns
+    #     -------
+    #     SimpleMemory
+    #         A ``SimpleMemory`` obj containing information about the trajectory.
+    #     '''
+    #     transitions = []
+    #     dones = 0
 
-        while dones < num_episodes:
-            transition = self.run_one_step(select_action_fn)
-            transitions.append(transition)
+    #     while dones < num_episodes:
+    #         transition = self.run_one_step(select_action_fn)
+    #         transitions.append(transition)
 
-            dones += sum(t['done'] for t in transition)
+    #         dones += sum(t['done'] for t in transition)
 
-        return [U.join_transitions(t) for t in zip(*transitions)]
+    #     return [U.join_transitions(t) for t in zip(*transitions)]
 
     def split(self, array):
         '''
@@ -437,23 +459,11 @@ class ParallelEnv:
     def update_config(self, config):
         return self.root_env.update_config(config)
 
-    def _get_shared(self, array):
-        """
-        A numpy array that can be shared between processes.
-        From: `alfredcv <https://sourcegraph.com/github.com/Alfredvc/paac/-/blob/runners.py#L20:9-20:20$references>`_.
+    def _set_seeds(self, envs, seed):
+        if seed is not None:
+            np.random.seed(seed)
+            seeds = np.random.choice(10000, size=self.num_envs)
 
-        Parameters
-        ----------
-        array: np.array
-            The shared to be shared
-
-        Returns
-        -------
-        A shared numpy array.
-        """
-
-        dtype = self.NUMPY_TO_C_DTYPE[array.dtype.type]
-
-        shape = array.shape
-        shared = RawArray(dtype, array.reshape(-1))
-        return np.frombuffer(shared, dtype).reshape(shape)
+            for i, (env, s) in enumerate(zip(envs, seeds)):
+                print('Seed for env {}: {}'.format(i, s))
+                env.seed(int(s))

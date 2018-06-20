@@ -30,13 +30,13 @@ class BaseEnv(ABC):
         If True, use the running std to scale the rewards (Default is False).
     '''
 
-    def __new__(cls, env_name):
-        self = super().__new__(cls)
-        self.__init__(env_name)
-        self = FinalWrapper(self)
-        self = StatsRecorder(self)
+    # def __new__(cls, env_name):
+    #     self = super().__new__(cls)
+    #     self.__init__(env_name)
+    #     self = FinalWrapper(self)
+    #     self = StatsRecorder(self)
 
-        return self
+    #     return self
 
     def __init__(self, env_name):
         # *,
@@ -136,6 +136,7 @@ class BaseEnv(ABC):
         numpy.ndarray
             A numpy array with the state information.
         '''
+        pass
 
     @abstractmethod
     def step(self, action):
@@ -161,6 +162,7 @@ class BaseEnv(ABC):
         info: dict
             Dict containing additional information about the state.
         '''
+        pass
 
     # def auto_step(self, action):
     #     '''
@@ -413,27 +415,30 @@ class BaseEnv(ABC):
 
         return [U.join_transitions(transitions)]
 
-    def write_logs(self, logger):
-        print('Need to write env log')
-        # new_eps = abs(self.last_logged_ep - self.num_episodes)
-        # if new_eps != 0:
-        #     self.new_rewards = self.rewards[-new_eps:]
-        # self.last_logged_ep = self.num_episodes
+    # def write_logs(self, logger):
+    #     print('Need to write env log')
+    # new_eps = abs(self.last_logged_ep - self.num_episodes)
+    # if new_eps != 0:
+    #     self.new_rewards = self.rewards[-new_eps:]
+    # self.last_logged_ep = self.num_episodes
 
-        # logger.add_log('Env/Reward/Episode (New Episodes)', np.mean(self.new_rewards))
-        # logger.add_log('Env/Reward/Episode (Last 50)', np.mean(self.rewards[-50:]))
+    # logger.add_log('Env/Reward/Episode (New Episodes)', np.mean(self.new_rewards))
+    # logger.add_log('Env/Reward/Episode (Last 50)', np.mean(self.rewards[-50:]))
 
-        # if self.state_normalizer is not None:
-        #     logger.add_tf_only_log('Env/States/Mean',
-        #                            np.mean(self.state_normalizer.means))
-        #     logger.add_tf_only_log('Env/States/Vars', np.mean(self.state_normalizer.vars))
-        # if self.state_normalizer is not None:
-        #     logger.add_tf_only_log('Env/Rewards/Mean', np.mean(self.reward_scaler.means))
-        #     logger.add_tf_only_log('Env/Rewards/Vars', np.mean(self.reward_scaler.vars))
-        #     # TODO
-        #     # logger.add_histogram('Env/Rewards/Vars_hist', self.reward_scaler.vars)
+    # if self.state_normalizer is not None:
+    #     logger.add_tf_only_log('Env/States/Mean',
+    #                            np.mean(self.state_normalizer.means))
+    #     logger.add_tf_only_log('Env/States/Vars', np.mean(self.state_normalizer.vars))
+    # if self.state_normalizer is not None:
+    #     logger.add_tf_only_log('Env/Rewards/Mean', np.mean(self.reward_scaler.means))
+    #     logger.add_tf_only_log('Env/Rewards/Vars', np.mean(self.reward_scaler.vars))
+    #     # TODO
+    #     # logger.add_histogram('Env/Rewards/Vars_hist', self.reward_scaler.vars)
 
     def record(self, path):
+        raise NotImplementedError
+
+    def close(self):
         raise NotImplementedError
 
     def update_config(self, config):

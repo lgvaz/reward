@@ -25,8 +25,8 @@ class BaseModel(ModuleExtended, ABC):
     ----------
     model: nn.Module
         A pytorch model.
-    env: torchrl.envs
-            A torchrl environment.
+    batcher: torchrl.batcher
+        A torchrl batcher.
     num_epochs: int
         How many times to train over the entire dataset (Default is 1).
     num_mini_batches: int
@@ -49,12 +49,12 @@ class BaseModel(ModuleExtended, ABC):
 
     def __init__(self,
                  model,
-                 env,
+                 batcher,
                  *,
                  num_epochs=1,
                  num_mini_batches=1,
                  opt_fn=None,
-                 opt_params=dict(),
+                 opt_params=None,
                  lr_schedule=None,
                  clip_grad_norm=float('inf'),
                  loss_coef=1.,
@@ -62,7 +62,7 @@ class BaseModel(ModuleExtended, ABC):
         super().__init__()
 
         self.model = model
-        self.env = env
+        self.batcher = batcher
         self.num_epochs = num_epochs
         self.num_mini_batches = num_mini_batches
         self.lr_schedule = U.make_callable(lr_schedule or opt_params['lr'])
@@ -87,6 +87,7 @@ class BaseModel(ModuleExtended, ABC):
         # self.to(self.device)
 
         # Create optimizer
+        opt_params = opt_params or dict()
         opt_fn = opt_fn or torch.optim.Adam
         self.opt = opt_fn(self.parameters(), **opt_params)
 
@@ -320,7 +321,7 @@ class BaseModel(ModuleExtended, ABC):
 
     # TODO: Env and batcher are needed?
     @classmethod
-    def from_config(cls, config, env=None, batcher=None, body=None, head=None, **kwargs):
+    def from_config(cls, config, batcher=None, body=None, head=None, **kwargs):
         '''
         Creates a model from a configuration file.
 
@@ -338,8 +339,8 @@ class BaseModel(ModuleExtended, ABC):
         torchrl.models
             A TorchRL model.
         '''
-        env = env or U.env_from_config(config)
-        config.pop('env', None)
+        # env = env or U.env_from_config(config)
+        # config.pop('env', None)
 
         if not 'body' in config.nn_config:
             config.nn_config.body = []
@@ -350,17 +351,17 @@ class BaseModel(ModuleExtended, ABC):
         model = U.nn_from_config(
             config=nn_config,
             state_info=batcher.get_state_info(),
-            action_info=env.get_action_info(),
+            action_info=batcher.get_action_info(),
             body=body,
             head=head)
 
         output_layer = cls.output_layer(
             input_shape=model.get_output_shape(batcher.get_state_info().shape),
-            action_info=env.get_action_info())
+            action_info=batcher.get_action_info())
 
         model.layers.head.append(output_layer)
 
-        return cls(model=model, env=env, **config.as_dict(), **kwargs)
+        return cls(model=model, batcher=batcher, **config.as_dict(), **kwargs)
 
     @classmethod
     def from_file(cls, file_path, *args, **kwargs):

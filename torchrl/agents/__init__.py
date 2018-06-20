@@ -5,7 +5,6 @@
 |
 '''
 from .base_agent import BaseAgent
-from .batch_agent import BatchAgent
 from .pg_agent import PGAgent
 
-__all__ = ['BaseAgent', 'BatchAgent', 'PGAgent']
+__all__ = ['BaseAgent', 'PGAgent']
