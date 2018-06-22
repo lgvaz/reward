@@ -9,6 +9,30 @@ def profile(x):
     return lambda *args, **kwargs: x(*args, **kwargs)
 
 
+class DelayedStart(BaseWrapper):
+    '''
+    Perform random actions only at the start. Useful for parallel envs ensuring
+    every env will be exploring a different part of the state.
+    '''
+
+    def __init__(self, env, max_delay=1000):
+        self.max_delay = max_delay
+        self.woke = False
+        self.wake_step = np.random.choice(self.max_delay)
+        self._step = 0
+        super().__init__(env=env)
+
+    def step(self, action):
+        if not self.woke:
+            action = self.sample_random_action()
+        if self._step == self.wake_step:
+            self.woke = True
+            self.reset()
+
+        self._step += 1
+        return self.env.step(action)
+
+
 class EpisodicLife(BaseWrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
@@ -50,12 +74,13 @@ class EpisodicLife(BaseWrapper):
 class RandomReset(BaseWrapper):
     def __init__(self, env, num_actions=30):
         self.num_actions = num_actions
+        self.wake_step = np.random.choice(self.num_actions) + 1
         super().__init__(env=env)
 
     def reset(self):
         self.env.reset()
 
-        for _ in range(self.num_actions):
+        for _ in range(self.wake_step):
             action = self.env.sample_random_action()
             state, reward, done, info = self.env.step(action)
 

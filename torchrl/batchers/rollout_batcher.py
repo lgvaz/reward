@@ -15,7 +15,7 @@ class RolloutBatcher(BaseBatcher):
         batch = U.Batch()
 
         for i in range(horizon):
-            action = select_action_fn(self._state_t)
+            action = select_action_fn(self._state_t, self.runner.num_steps)
 
             # TODO: Add info to batch
             state_tp1, reward, done, info = self.runner.act(action)

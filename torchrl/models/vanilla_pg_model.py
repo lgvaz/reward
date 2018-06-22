@@ -22,10 +22,6 @@ class VanillaPGModel(BasePGModel):
         self.register_loss(self.pg_loss)
         self.register_loss(self.entropy_loss)
 
-    def register_callbacks(self):
-        super().register_callbacks()
-        self.callbacks.register_on_train_start(self.add_dist)
-
     def add_dist(self, batch):
         parameters = self.forward(batch.state_t)
         self.memory.dists = self.create_dist(parameters)
@@ -40,8 +36,13 @@ class VanillaPGModel(BasePGModel):
             The batch should contain all the information necessary
             to compute the gradients.
         '''
-        log_prob = self.memory.dists.log_prob(batch.action).sum(-1)
-        objective = log_prob * batch.advantage
+        objective = batch.log_prob * batch.advantage
         loss = -objective.mean()
 
         return loss
+
+    def train_step(self, batch):
+        self.add_dist(batch)
+        batch.log_prob = self.memory.dists.log_prob(batch.action).sum(-1)
+
+        super().train_step(batch=batch)

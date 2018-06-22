@@ -48,7 +48,8 @@ class PGAgent(BaseAgent):
         self.vtarget = vtarget
 
         self._register_model('policy', policy_model)
-        self._register_model('value', value_model)
+        if value_model is not None:
+            self._register_model('value', value_model)
 
     @profile
     def step(self):
@@ -63,10 +64,10 @@ class PGAgent(BaseAgent):
         if self.normalize_advantages:
             batch.advantage = U.normalize(batch.advantage)
 
-        # TODO: make to tensor more general, state_t and state_tp1, can cuda only one
-        batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
-        self.models.policy.train(batch_tensor, step=self.num_steps)
-        self.models.value.train(batch_tensor, step=self.num_steps)
+        self.train_models(batch)
+        # batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
+        # self.models.policy.train(batch_tensor, step=self.num_steps)
+        # self.models.value.train(batch_tensor, step=self.num_steps)
 
     @profile
     def add_state_value(self, batch):

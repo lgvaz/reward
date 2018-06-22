@@ -37,21 +37,21 @@ class BasePGModel(BaseModel):
         loss = -self.entropy * self.entropy_coef
         return loss
 
-    def select_action(self, state):
-        '''
-        Define how the actions are selected, in this case the actions
-        are sampled from a distribution which values are given be a NN.
+    # def select_action(self, state, step):
+    #     '''
+    #     Define how the actions are selected, in this case the actions
+    #     are sampled from a distribution which values are given be a NN.
 
-        Parameters
-        ----------
-        state: np.array
-            The state of the environment (can be a batch of states).
-        '''
-        parameters = self.forward(state)
-        dist = self.create_dist(parameters)
-        action = dist.sample()
+    #     Parameters
+    #     ----------
+    #     state: np.array
+    #         The state of the environment (can be a batch of states).
+    #     '''
+    #     parameters = self.forward(state)
+    #     dist = self.create_dist(parameters)
+    #     action = dist.sample()
 
-        return U.to_np(action)
+    #     return U.to_np(action)
 
     def create_dist(self, parameters):
         '''
@@ -81,7 +81,25 @@ class BasePGModel(BaseModel):
     def write_logs(self, batch):
         super().write_logs(batch)
         self.add_log('Entropy', self.entropy)
+        self.add_log('Policy/log_prob', batch.log_prob)
 
     @staticmethod
     def output_layer(input_shape, action_info):
         return ActionLinear(in_features=input_shape, action_info=action_info)
+
+    @staticmethod
+    def select_action(model, state, step):
+        '''
+        Define how the actions are selected, in this case the actions
+        are sampled from a distribution which values are given be a NN.
+
+        Parameters
+        ----------
+        state: np.array
+            The state of the environment (can be a batch of states).
+        '''
+        parameters = model.forward(state)
+        dist = model.create_dist(parameters)
+        action = dist.sample()
+
+        return U.to_np(action)

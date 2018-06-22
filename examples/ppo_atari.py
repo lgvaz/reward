@@ -1,16 +1,21 @@
 from torchrl.agents import PGAgent
-from torchrl.envs import GymEnv, ParallelEnv, AtariEnv
-from torchrl.models import PPOClipModel, ValueClipModel
-from torchrl.utils import piecewise_linear_schedule
-from torchrl.batchers import ImgRolloutBatcher
+from torchrl.batchers import RolloutBatcher
+from torchrl.batchers.wrappers import CommonWraps
+from torchrl.envs import AtariEnv
 from torchrl.envs.wrappers import AtariWrapper
+from torchrl.models import PPOClipModel, ValueClipModel
+from torchrl.runners import PAACRunner, SingleRunner
+from torchrl.utils import piecewise_linear_schedule
 
 MAX_STEPS = 15e6
+HORIZON = 128
+NUM_ENVS = 8
 
 # Create environment
-envs = [AtariWrapper(AtariEnv('PongNoFrameskip-v4')) for _ in range(16)]
-env = ParallelEnv(envs)
-batcher = ImgRolloutBatcher(env, batch_size=80)
+envs = [AtariWrapper(AtariEnv('PongNoFrameskip-v4')) for _ in range(NUM_ENVS)]
+runner = PAACRunner(envs)
+# runner = SingleRunner(envs[0])
+batcher = CommonWraps.atari_wrap(RolloutBatcher(runner, batch_size=HORIZON * NUM_ENVS))
 
 lr_schedule = piecewise_linear_schedule(
     values=[4e-4, 4e-4, 1e-4, 5e-5],
@@ -21,24 +26,22 @@ clip_schedule = piecewise_linear_schedule(
 
 policy_model = PPOClipModel.from_arch(
     arch='a3c',
-    env=env,
     batcher=batcher,
     num_epochs=4,
     num_mini_batches=4,
     # ppo_clip_range=clip_schedule,
     entropy_coef=0.01,
-    opt_params=dict(lr=4e-4, eps=1e-5),
+    opt_params=dict(lr=2.5e-4, eps=1e-5),
     # lr_schedule=lr_schedule,
     clip_grad_norm=0.5)
 
 value_model = ValueClipModel.from_arch(
     arch='a3c',
-    env=env,
     batcher=batcher,
     body=policy_model.body,
     num_epochs=4,
     num_mini_batches=4,
-    opt_params=dict(lr=4e-4, eps=1e-5),
+    opt_params=dict(lr=2.5e-4, eps=1e-5),
     # lr_schedule=lr_schedule,
     clip_range=0.1,
     # clip_range=clip_schedule,
@@ -47,10 +50,9 @@ value_model = ValueClipModel.from_arch(
 
 # Create agent
 agent = PGAgent(
-    env,
     batcher=batcher,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='tests/pong/16parallel-p_e4_nmb4-0ent-v_nmb4_e4_vlc05_gc05-b2048-v4-2')
+    log_dir='logs/pong/nv/paper-v0-3')
 
-agent.train(max_steps=MAX_STEPS, steps_per_batch=80, log_freq=10)
+agent.train(max_steps=MAX_STEPS, log_freq=10)

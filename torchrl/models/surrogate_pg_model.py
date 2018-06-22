@@ -27,7 +27,7 @@ class SurrogatePGModel(BasePGModel):
 
     @property
     def batch_keys(self):
-        return ['state_t', 'action', 'advantage', 'old_log_prob']
+        return ['state_t', 'action', 'advantage', 'log_prob']
 
     def register_losses(self):
         self.register_loss(self.surrogate_pg_loss)
@@ -42,13 +42,13 @@ class SurrogatePGModel(BasePGModel):
         self.memory.new_dists = self.create_dist(parameters)
         batch.new_log_prob = self.memory.new_dists.log_prob(batch.action).sum(-1)
         self.memory.prob_ratio = self.calculate_prob_ratio(batch.new_log_prob,
-                                                           batch.old_log_prob)
+                                                           batch.log_prob)
 
     def train_step(self, batch):
         with torch.no_grad():
             parameters = self.forward(batch.state_t)
             self.memory.old_dists = self.create_dist(parameters)
-            batch.old_log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
+            batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
         super().train_step(batch)
         self.add_new_dist(batch)
@@ -61,7 +61,7 @@ class SurrogatePGModel(BasePGModel):
         ----------
             batch: Batch
         '''
-        prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.old_log_prob)
+        prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
         surrogate = prob_ratio * batch.advantage
         loss = -surrogate.mean()
 

@@ -25,6 +25,8 @@ class BaseAgent(ABC):
         self.gamma = gamma
 
         self.models = U.DefaultMemory()
+        # Can be changed later by the user, None goes to the default (from policy)
+        self.select_action_fn = None
 
     @abstractmethod
     def step(self):
@@ -71,6 +73,12 @@ class BaseAgent(ABC):
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
 
+    def train_models(self, batch):
+        # TODO: make to tensor more general
+        batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
+        for model in self.models.values():
+            model.train(batch_tensor, step=self.num_steps)
+
     def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1, log_freq=1):
         '''
         Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
@@ -97,7 +105,8 @@ class BaseAgent(ABC):
             if self._check_termination():
                 break
 
-    def select_action(self, state):
+    # TODO, this need to be more modular
+    def select_action(self, state, step):
         '''
         Receive a state and use the model to select an action.
 
@@ -111,7 +120,8 @@ class BaseAgent(ABC):
         action: int or numpy.ndarray
             The selected action.
         '''
-        return self.models.policy.select_action(state)
+        action_fn = self.select_action_fn or self.models.policy.select_action
+        return action_fn(model=self.models.policy, state=state, step=step)
 
     # def run_one_episode(self):
     #     '''
