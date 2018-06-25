@@ -19,8 +19,9 @@ class BaseAgent(ABC):
         Directory where logs will be written (Default is `runs`).
     '''
 
-    def __init__(self, batcher, *, gamma=0.99, log_dir='runs'):
+    def __init__(self, batcher, optimizer, *, gamma=0.99, log_dir='runs'):
         self.batcher = batcher
+        self.opt = optimizer
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
 
@@ -76,8 +77,9 @@ class BaseAgent(ABC):
     def train_models(self, batch):
         # TODO: make to tensor more general
         batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
-        for model in self.models.values():
-            model.train(batch_tensor, step=self.num_steps)
+        # for model in self.models.values():
+        #     model.train(batch_tensor, step=self.num_steps)
+        self.opt.learn_from_batch(batch_tensor, step=self.num_steps)
 
     def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1, log_freq=1):
         '''

@@ -155,7 +155,11 @@ class BaseModel(ModuleExtended, ABC):
         self.losses.append(func)
 
     def register_callbacks(self):
-        pass
+        self.callbacks.register_cleanup(self.write_logs)
+        self.callbacks.register_cleanup(self.clear_memory)
+
+    def clear_memory(self, batch):
+        self.memory.clear()
 
     def calculate_loss(self, batch):
         losses = {f.__name__: f(batch) for f in self.losses}
@@ -163,92 +167,92 @@ class BaseModel(ModuleExtended, ABC):
 
         return sum(losses.values())
 
-    def learn_from_batch(self, batch, num_epochs, num_mini_batches, shuffle=True):
-        '''
-        Define the model training procedure.
+    # def learn_from_batch(self, batch, num_epochs, num_mini_batches, shuffle=True):
+    #     '''
+    #     Define the model training procedure.
 
-        Parameters
-        ----------
-        batch: torchrl.utils.Batch
-            The batch should contain all the information necessary
-            to compute the gradients.
-        num_epochs: int
-            How many times to train over the entire dataset.
-        num_mini_batches: int
-            How many mini-batches to subset the batch.
-        shuffle: bool
-            Whether to shuffle dataset.
-        '''
-        for i_epoch in range(num_epochs):
-            if self.callbacks.on_epoch_start(batch):
-                break
+    #     Parameters
+    #     ----------
+    #     batch: torchrl.utils.Batch
+    #         The batch should contain all the information necessary
+    #         to compute the gradients.
+    #     num_epochs: int
+    #         How many times to train over the entire dataset.
+    #     num_mini_batches: int
+    #         How many mini-batches to subset the batch.
+    #     shuffle: bool
+    #         Whether to shuffle dataset.
+    #     '''
+    #     for i_epoch in range(num_epochs):
+    #         if self.callbacks.on_epoch_start(batch):
+    #             break
 
-            for mini_batch in batch.sample_keys(
-                    keys=self.batch_keys, num_mini_batches=num_mini_batches,
-                    shuffle=shuffle):
-                if self.callbacks.on_mini_batch_start(mini_batch):
-                    break
+    #         for mini_batch in batch.sample_keys(
+    #                 keys=self.batch_keys, num_mini_batches=num_mini_batches,
+    #                 shuffle=shuffle):
+    #             if self.callbacks.on_mini_batch_start(mini_batch):
+    #                 break
 
-                self.optimizer_step(mini_batch)
+    #             self.optimizer_step(mini_batch)
 
-                if self.callbacks.on_mini_batch_end(mini_batch):
-                    break
+    #             if self.callbacks.on_mini_batch_end(mini_batch):
+    #                 break
 
-            if self.callbacks.on_epoch_end(batch):
-                break
+    #         if self.callbacks.on_epoch_end(batch):
+    #             break
 
-    def train_step(self, batch):
-        '''
-        The most basic learning step. Just calls :func:`self.learn_from_batch`
-        '''
-        if self.callbacks.on_train_start(batch):
-            return
+    # def train_step(self, batch):
+    #     '''
+    #     The most basic learning step. Just calls :func:`self.learn_from_batch`
+    #     '''
+    #     if self.callbacks.on_train_start(batch):
+    #         return
 
-        self.learn_from_batch(
-            batch, num_epochs=self.num_epochs, num_mini_batches=self.num_mini_batches)
+    #     self.learn_from_batch(
+    #         batch, num_epochs=self.num_epochs, num_mini_batches=self.num_mini_batches)
 
-        if self.callbacks.on_train_end(batch):
-            return
+    #     if self.callbacks.on_train_end(batch):
+    #         return
 
-    @profile
-    def train(self, batch, step):
-        '''
-        Wrapper around :meth:`train_step`, adds functionalities
-        to before and after the training step.
+    # @profile
+    # def train(self, batch, step):
+    #     '''
+    #     Wrapper around :meth:`train_step`, adds functionalities
+    #     to before and after the training step.
 
-        Parameters
-        ----------
-        batch: torchrl.utils.Batch
-            The batch should contain all the information necessary
-            to compute the gradients.
-        '''
-        self.step = step
-        self.set_lr(value=self.lr)
-        # TODO: Transform to tensor only one time, maybe in agent
-        # batch = batch.apply_to_all(self.to_tensor)
-        # batch = batch.apply_to_keys(func=self.to_tensor, keys=self.batch_keys)
+    #     Parameters
+    #     ----------
+    #     batch: torchrl.utils.Batch
+    #         The batch should contain all the information necessary
+    #         to compute the gradients.
+    #     '''
+    #     self.step = step
+    #     self.set_lr(value=self.lr)
+    #     # TODO: Transform to tensor only one time, maybe in agent
+    #     # batch = batch.apply_to_all(self.to_tensor)
+    #     # batch = batch.apply_to_keys(func=self.to_tensor, keys=self.batch_keys)
 
-        self.train_step(batch)
+    #     self.train_step(batch)
 
-        if self.logger is not None:
-            self.write_logs(batch)
+    #     # if self.logger is not None:
+    #     #     self.write_logs(batch)
 
-        self.memory.clear()
+    #     # self.memory.clear()
 
-    def optimizer_step(self, batch):
-        '''
-        Apply the gradients in respect to the losses defined by :meth:`add_losses`.
+    # def optimizer_step(self, batch):
+    #     '''
+    #     Apply the gradients in respect to the losses defined by :meth:`add_losses`.
 
-        Should use the batch to compute and apply gradients to the network.
-        '''
-        self.opt.zero_grad()
-        loss = self.calculate_loss(batch) * self.loss_coef
-        loss.backward()
-        norm = torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
-        self.opt.step()
+    #     Should use the batch to compute and apply gradients to the network.
+    #     '''
+    #     self.opt.zero_grad()
+    #     loss = self.calculate_loss(batch) * self.loss_coef
+    #     loss.backward()
+    #     norm = torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
+    #     self.opt.step()
 
-        self.memory.grad_norm.append(norm)
-        self.num_updates += 1
+    #     self.memory.grad_norm.append(norm)
+    #     self.num_updates += 1
 
     def forward(self, x):
         '''
@@ -261,17 +265,17 @@ class BaseModel(ModuleExtended, ABC):
         '''
         return self.model(x)
 
-    def set_lr(self, value):
-        '''
-        Change the learning rate of the optimizer.
+    # def set_lr(self, value):
+    #     '''
+    #     Change the learning rate of the optimizer.
 
-        Parameters
-        ----------
-        value: float
-            The new learning rate.
-        '''
-        for param_group in self.opt.param_groups:
-            param_group['lr'] = value
+    #     Parameters
+    #     ----------
+    #     value: float
+    #         The new learning rate.
+    #     '''
+    #     for param_group in self.opt.param_groups:
+    #         param_group['lr'] = value
 
     def attach_logger(self, logger):
         '''
