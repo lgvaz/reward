@@ -85,7 +85,14 @@ from torchrl.utils.memories import SimpleMemory, DefaultMemory
 import torch
 
 
-class Batch(DefaultMemory):
+class Batch(SimpleMemory):
+    def __init__(self, *args, initial_keys=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        initial_keys = initial_keys or []
+        for k in initial_keys:
+            self[k] = []
+
     def __len__(self):
         return len(self['state_t'])
 

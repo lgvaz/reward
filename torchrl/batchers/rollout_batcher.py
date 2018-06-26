@@ -12,7 +12,8 @@ class RolloutBatcher(BaseBatcher):
     def get_batch(self, select_action_fn):
         super().get_batch(select_action_fn=select_action_fn)
         horizon = self.batch_size // self.runner.num_envs
-        batch = U.Batch()
+        batch = U.Batch(
+            initial_keys=['state_t_and_tp1', 'action', 'reward', 'done', 'info'])
 
         for i in range(horizon):
             action = select_action_fn(self._state_t, self.runner.num_steps)
