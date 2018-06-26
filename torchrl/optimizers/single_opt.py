@@ -14,4 +14,5 @@ class SingleOpt(BaseOpt):
         return self.model.parameters()
 
     def calculate_loss(self, batch):
-        return self.model.calculate_loss(batch)
+        loss_coef = self.loss_coef or 1.
+        return self.model.calculate_loss(batch) * loss_coef

@@ -53,7 +53,7 @@ class ValueModel(BaseModel):
         self.add_log('New Explained Var',
                      U.explained_var(batch.vtarget, self.memory.new_pred))
         self.add_log('Target_mean', batch.vtarget.mean())
-        self.add_log('Pred_mean', self.memory.new_pred)
+        self.add_log('Pred_mean', self.memory.new_pred.mean())
 
     @staticmethod
     def output_layer(input_shape, action_info):

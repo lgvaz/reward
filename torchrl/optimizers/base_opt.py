@@ -13,12 +13,14 @@ class BaseOpt:
                  shuffle=True,
                  opt_fn=None,
                  opt_params=None,
-                 clip_grad_norm=float('inf')):
+                 clip_grad_norm=float('inf'),
+                 loss_coef=None):
         self.model = model
         self.num_epochs = num_epochs
         self.num_mini_batches = num_mini_batches
         self.shuffle = shuffle
         self.clip_grad_norm = clip_grad_norm
+        self.loss_coef = loss_coef
 
         opt_fn = opt_fn or Adam
         opt_params = opt_params or dict()
