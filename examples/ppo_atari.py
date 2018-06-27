@@ -6,8 +6,9 @@ from torchrl.envs.wrappers import AtariWrapper
 from torchrl.models import PPOClipModel, ValueClipModel
 from torchrl.runners import PAACRunner, SingleRunner
 from torchrl.utils import piecewise_linear_schedule
+from torchrl.optimizers import SingleOpt, JointOpt
 
-MAX_STEPS = 15e6
+MAX_STEPS = 50e6
 HORIZON = 128
 NUM_ENVS = 8
 
@@ -48,11 +49,20 @@ value_model = ValueClipModel.from_arch(
     clip_grad_norm=0.5,
     loss_coef=0.5)
 
+opt = JointOpt(
+    model=[policy_model, value_model],
+    num_epochs=4,
+    num_mini_batches=4,
+    opt_params=dict(lr=3e-4, eps=1e-5),
+    clip_grad_norm=0.5,
+    loss_coef=[1., 0.5])
+
 # Create agent
 agent = PGAgent(
     batcher=batcher,
+    optimizer=opt,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/pong/nv/paper-v0-3')
+    log_dir='logs/pong/nv/paper-nv2-v2-0')
 
 agent.train(max_steps=MAX_STEPS, log_freq=10)

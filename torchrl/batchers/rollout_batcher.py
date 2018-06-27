@@ -3,12 +3,7 @@ import torchrl.utils as U
 from torchrl.batchers import BaseBatcher
 
 
-def profile(x):
-    return lambda *args, **kwargs: x(*args, **kwargs)
-
-
 class RolloutBatcher(BaseBatcher):
-    @profile
     def get_batch(self, select_action_fn):
         super().get_batch(select_action_fn=select_action_fn)
         horizon = self.batch_size // self.runner.num_envs
@@ -18,7 +13,6 @@ class RolloutBatcher(BaseBatcher):
         for i in range(horizon):
             action = select_action_fn(self._state_t, self.runner.num_steps)
 
-            # TODO: Add info to batch
             state_tp1, reward, done, info = self.runner.act(action)
             state_tp1 = self.transform_state(state_tp1)
 
@@ -32,7 +26,6 @@ class RolloutBatcher(BaseBatcher):
 
         batch.state_t_and_tp1.append(self._state_t)
         batch = batch.to_array_or_tensor()
-        # batch = batch.apply_to_all(np.array)
 
         batch.state_t = batch.state_t_and_tp1[:-1]
         batch.state_tp1 = batch.state_t_and_tp1[1:]
@@ -42,11 +35,11 @@ class RolloutBatcher(BaseBatcher):
         return batch
 
 
+# TODO
 # class RolloutBatcher(BaseBatcher):
 #     def _allocate_batch(self, num_steps):
 #         if self.batch is None or self.steps_per_batch != num_steps:
 #             self.steps_per_batch = num_steps
-#             #TODO: DTYPE
 #             state_t_and_tp1 = np.empty(
 #                 [num_steps + 1, self.env.num_envs] +
 #                 list(self.env.get_state_info().shape),

@@ -16,7 +16,6 @@ class SurrogatePGModel(BasePGModel):
 
     '''
 
-    # TODO: Fix kl div for adaptive model, need to be calculated every mini-batch
     @property
     def kl_div(self):
         return kl_divergence(self.memory.old_dists, self.memory.new_dists).sum(-1).mean()
@@ -35,8 +34,8 @@ class SurrogatePGModel(BasePGModel):
 
     def register_callbacks(self):
         super().register_callbacks()
-        self.callbacks.register_on_mini_batch_start(self.add_new_dist)
         self.callbacks.register_on_train_start(self.add_old_dist)
+        self.callbacks.register_on_mini_batch_start(self.add_new_dist)
         self.callbacks.register_on_train_end(self.add_new_dist)
 
     def add_new_dist(self, batch):

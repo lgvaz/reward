@@ -75,8 +75,6 @@ class SequentialExtended(ModuleExtended):
 
     def forward(self, x):
         if len(self.layers) > 0:
-            # return self.layers(self.to_tensor(x))
-            # TODO TODO TODO TODO
             return self.layers(x)
         else:
             return x
@@ -90,7 +88,6 @@ class SequentialExtended(ModuleExtended):
         return cls(layers_config, **kwargs)
 
 
-# TODO: This is useful?
 class Flatten(nn.Module):
     '''
     Flatten the input and apply a linear layer.

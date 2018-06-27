@@ -11,7 +11,7 @@ class CompleteReturn(BaseEstimator):
         return discounted_sum_rewards(
             rewards=batch.reward,
             dones=batch.done,
-            # TODO: Which one is right??
+            # TODO: Which one is right??, if no baseline is used the later is impossible
             last_state_value_t=None,
             # last_state_value_t=batch.state_value_t[-1],
             gamma=self.gamma)

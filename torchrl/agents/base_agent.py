@@ -75,11 +75,9 @@ class BaseAgent(ABC):
         model.attach_logger(self.logger)
 
     def train_models(self, batch):
-        # TODO: make to tensor more general
-        batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
         # for model in self.models.values():
         #     model.train(batch_tensor, step=self.num_steps)
-        self.opt.learn_from_batch(batch_tensor, step=self.num_steps)
+        self.opt.learn_from_batch(batch, step=self.num_steps)
 
     def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1, log_freq=1):
         '''
@@ -107,7 +105,6 @@ class BaseAgent(ABC):
             if self._check_termination():
                 break
 
-    # TODO, this need to be more modular
     def select_action(self, state, step):
         '''
         Receive a state and use the model to select an action.

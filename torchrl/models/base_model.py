@@ -228,7 +228,6 @@ class BaseModel(ModuleExtended, ABC):
     #     '''
     #     self.step = step
     #     self.set_lr(value=self.lr)
-    #     # TODO: Transform to tensor only one time, maybe in agent
     #     # batch = batch.apply_to_all(self.to_tensor)
     #     # batch = batch.apply_to_keys(func=self.to_tensor, keys=self.batch_keys)
 

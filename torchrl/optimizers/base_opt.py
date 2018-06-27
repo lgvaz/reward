@@ -79,7 +79,9 @@ class BaseOpt:
         shuffle: bool
             Whether to shuffle dataset.
         '''
-        # TODO, BATCH TO TENSOR HERE
+        # TODO: Currently always CUDA if possible (no choice)
+        batch = batch.apply_to_all(U.to_tensor)
+
         if self.callbacks.on_train_start(batch):
             return
 

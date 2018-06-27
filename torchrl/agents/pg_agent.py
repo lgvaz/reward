@@ -3,10 +3,6 @@ import torchrl.utils as U
 from torchrl.agents import BaseAgent
 
 
-def profile(x):
-    return lambda *args, **kwargs: x(*args, **kwargs)
-
-
 # TODO: docstring
 class PGAgent(BaseAgent):
     '''
@@ -51,7 +47,6 @@ class PGAgent(BaseAgent):
         if value_model is not None:
             self._register_model('value', value_model)
 
-    @profile
     def step(self):
         batch = self.generate_batch()
 
@@ -69,7 +64,6 @@ class PGAgent(BaseAgent):
         # self.models.policy.train(batch_tensor, step=self.num_steps)
         # self.models.value.train(batch_tensor, step=self.num_steps)
 
-    @profile
     def add_state_value(self, batch):
         if self.models.value is not None:
             s = batch.state_t_and_tp1

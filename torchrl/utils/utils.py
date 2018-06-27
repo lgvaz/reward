@@ -133,39 +133,3 @@ def make_callable(x):
         return x
     else:
         return lambda *args, **kwargs: x
-
-
-# def rgb_to_gray():
-#     @wraps(rgb_to_gray)
-#     def get(frame):
-#         return cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)[..., None]
-
-#     return get
-
-# def rescale_img(shape):
-#     @wraps(rescale_img)
-#     def get(frame):
-#         assert frame.ndim == 3 or frame.ndim == 2
-#         frame = cv2.resize(frame, shape, interpolation=cv2.INTER_NEAREST)
-
-#         return frame if frame.ndim == 3 else frame[:, :, None]
-
-#     return get
-
-# # def force_shape(ndim=4):
-# #     def get(frame):
-# #         assert frame.ndim >= 2, \
-# #             'frame have {} dimensions and should have at least 2'.format(frame.ndim)
-# #         for _ in range(ndim - frame.ndim):
-# #             frame = frame[None]
-# #         return frame
-
-# #     return get
-
-# def hwc_to_chw():
-#     @wraps(hwc_to_chw)
-#     def get(frame):
-#         assert frame.ndim == 3, 'frame have {} dims but must have 3'.format(frame.ndim)
-#         return np.rollaxis(frame, -1)
-
-#     return get

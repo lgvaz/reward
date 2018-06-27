@@ -16,8 +16,8 @@ from torchrl.batchers.wrappers import CommonWraps
 MAX_STEPS = 1.5e8
 NUM_ENVS = 32
 HORIZON = 5
-LR = 0.0007 * NUM_ENVS
-# LR = 2.5e-4
+# LR = 0.0007 * NUM_ENVS
+LR = 1e-3
 
 # Create environment
 envs = [AtariWrapper(AtariEnv('PongNoFrameskip-v4')) for _ in range(NUM_ENVS)]
@@ -37,7 +37,6 @@ policy_model = A2CModel.from_arch(
 value_model = ValueModel.from_arch(
     arch='a3c',
     batcher=batcher,
-    # TODO TODO TODO
     body=policy_model.body,
     num_epochs=1,
     num_mini_batches=1,
@@ -52,6 +51,6 @@ agent = PGAgent(
     value_model=value_model,
     advantage=U.estimators.advantage.Baseline(gamma=0.99),
     vtarget=U.estimators.value.TDTarget(gamma=0.99),
-    log_dir='logs/pong/nv/a2c-paac-separete-v2-0')
+    log_dir='logs/pong/nv/a2c-paac-separete-v2-2')
 
 agent.train(max_steps=MAX_STEPS, log_freq=10)

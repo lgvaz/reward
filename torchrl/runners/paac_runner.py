@@ -20,7 +20,6 @@ class PAACRunner(BaseRunner):
     }
 
     def __init__(self, env, num_workers=None):
-        # TODO: check env is a list of envs
         super().__init__(env=env)
         self.num_workers = num_workers or multiprocessing.cpu_count()
         self._envs_rewards_sum = np.zeros(self.num_envs)

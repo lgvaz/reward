@@ -38,7 +38,6 @@ class BaseBatcher:
         '''
         return batch
 
-    # TODO: Add get_state shape method
     def get_state_info(self):
         info = self.runner.get_state_info()
 

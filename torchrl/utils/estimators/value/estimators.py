@@ -28,5 +28,4 @@ class TDTarget(BaseEstimator):
 
 class FromAdvantage(BaseEstimator):
     def __call__(self, batch):
-        # TODO: check shapes
         return batch.advantage + batch.state_value_t
