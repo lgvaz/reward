@@ -5,10 +5,6 @@ import numpy as np
 from torchrl.envs.wrappers import BaseWrapper
 
 
-def profile(x):
-    return lambda *args, **kwargs: x(*args, **kwargs)
-
-
 class DelayedStart(BaseWrapper):
     '''
     Perform random actions only at the start. Useful for parallel envs ensuring
@@ -42,7 +38,6 @@ class EpisodicLife(BaseWrapper):
         self.was_real_done = True
         super().__init__(env=env)
 
-    @profile
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.was_real_done = done
@@ -117,7 +112,6 @@ class ActionRepeat(BaseWrapper):
             [2] + list(self.env.get_state_info().shape), dtype=np.uint8)
         self._skip = skip
 
-    @profile
     def step(self, action):
         """Repeat action, sum reward, and max over last observations."""
         total_reward = 0.0

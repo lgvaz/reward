@@ -143,6 +143,4 @@ class BaseEnv(ABC):
             obj=dict(func=self.simulator, env_name=self.env_name),
             state_info=dict((key, value) for key, value in self.get_state_info().items()
                             if key not in ('low_bound', 'high_bound')),
-            action_info=self.get_action_info(),
-            running_normalize_states=self.running_normalize_states,
-            running_scale_rewards=self.running_scale_rewards)
+            action_info=self.get_action_info())
