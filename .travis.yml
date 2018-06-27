@@ -15,8 +15,8 @@ install:
 
   - conda env create -f environment.yml
   - source activate torchrl
-  # - python setup.py install
   - pip install -e .
 
 script:
   python -m unittest discover
+  
