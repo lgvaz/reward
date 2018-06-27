@@ -1,9 +1,12 @@
 # Tests dir
 tests/
+test/
 scratch/
 logs/
 runs/
 logs*/
+*.prof
+*.lprof
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
