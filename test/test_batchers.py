@@ -50,7 +50,7 @@ class TestBatchers(unittest.TestCase):
         # Get real batch
         env.seed(self.seed)
         action_gen = (a for a in actions)
-        action_fn = lambda state: next(action_gen)
+        action_fn = lambda state, step: next(action_gen)
 
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
@@ -83,7 +83,7 @@ class TestBatchers(unittest.TestCase):
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
         action_gen = (a for a in actions)
-        action_fn = lambda state: next(action_gen)
+        action_fn = lambda state, step: next(action_gen)
         for i in range(0, self.num_steps // self.num_envs, horizon):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
