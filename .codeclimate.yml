@@ -1,0 +1,6 @@
+plugins:
+  sonar-python:
+    enabled: true
+    config:
+      tests_patterns:
+        - test/**
