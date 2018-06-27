@@ -1,8 +1,12 @@
 import torch
 from torch.distributions import kl
+from torchrl.distributions import BaseDist
 
 
-class Categorical(torch.distributions.Categorical):
+class Categorical(torch.distributions.Categorical, BaseDist):
+    def __getitem__(self, key):
+        return Categorical(logits=self.logits[key])
+
     def log_prob(self, value):
         return super().log_prob(value)[..., None]
 
