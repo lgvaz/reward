@@ -1,7 +1,7 @@
 TorchRL
 ========
 
-|docs|  |chat|  |climate|
+|build|  |docs|  |chat|  |climate|
 
 Documentation
 -------------
@@ -22,6 +22,9 @@ A series of benchmarks can be found in the benchmarks_ folder.
 .. |climate| image:: https://api.codeclimate.com/v1/badges/6abc930bae3dcc81f772/maintainability
    :target: https://codeclimate.com/github/lgvaz/torchrl/maintainability
    :alt: Maintainability
+
+.. |build| image:: https://travis-ci.com/lgvaz/torchrl.svg?branch=master
+    :target: https://travis-ci.com/lgvaz/torchrl
 
 .. _here: https://torchrl.readthedocs.io/en/master/
 
