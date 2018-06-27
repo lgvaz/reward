@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import torchrl.utils as U
-from timer import timeit
+from .timer import timeit
 
 
 class MeanStdFilterTest(unittest.TestCase):

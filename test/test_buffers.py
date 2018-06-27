@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from torchrl.utils.memories import RingBuffer
-from timer import timeit
+from .timer import timeit
 
 MAXLEN = 4
 

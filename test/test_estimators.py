@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from timer import timeit
 from torchrl.utils.estimators.estimation_funcs import (discounted_sum_rewards,
                                                        gae_estimation, td_target)
+from .timer import timeit
 
 
 class BaseEstimationTest(unittest.TestCase):

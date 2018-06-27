@@ -5,7 +5,8 @@ from torchrl.envs import GymEnv, AtariEnv
 from torchrl.envs.wrappers import RGB2GRAY, Rescale
 from torchrl.runners import SingleRunner, PAACRunner
 from torchrl.batchers import RolloutBatcher
-from timer import timeit
+
+from .timer import timeit
 
 
 class TestBatchers(unittest.TestCase):

@@ -4,7 +4,7 @@ import numpy as np
 from torchrl.envs import GymEnv, AtariEnv
 from torchrl.envs.wrappers import RGB2GRAY, Rescale
 from torchrl.runners import SingleRunner, PAACRunner
-from timer import timeit
+from .timer import timeit
 
 
 class TestRunners(unittest.TestCase):
