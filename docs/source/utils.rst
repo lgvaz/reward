@@ -32,19 +32,6 @@ Memories
   :show-inheritance:
   :members:
 
-Preprocessing
--------------
-
-.. automodule:: torchrl.utils.preprocessing
-.. currentmodule:: torchrl.utils.preprocessing
-
-:hidden:`Normalizer`
-~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: Normalizer
-  :members:
-
-
 Logger
 ------
 

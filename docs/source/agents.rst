@@ -16,14 +16,6 @@ BaseAgent
   :members:
   :private-members:
 
-BatchAgent
-----------
-
-.. autoclass:: BatchAgent
-  :show-inheritance:
-  :members:
-  :private-members:
-
 PGAgent
 -------
 

@@ -30,11 +30,3 @@ RoboschoolEnv
   :show-inheritance:
   :members:
   :inherited-members:
-
-ParallelEnv
------------
-
-.. autoclass:: ParallelEnv
-  :show-inheritance:
-  :members:
-  :inherited-members:
