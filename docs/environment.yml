@@ -14,7 +14,7 @@ dependencies:
   - pip:
       - pyyaml
       - sphinx
-      - 'gym[all]'
+      - gym
       - pandas
       - tensorflow
       - tensorboardX
