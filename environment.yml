@@ -3,6 +3,7 @@ name: torchrl
 channels:
   - pytorch
   - conda-forge
+  - anaconda
 
 dependencies:
   - python>=3.5
@@ -11,10 +12,11 @@ dependencies:
   - scipy
   - opencv
   - pip
+  - swig
   - pip:
       - pyyaml
       - sphinx
-      - 'gym[atari]'
+      - 'gym[all]'
       - pandas
       - tensorflow
       - tensorboardX
