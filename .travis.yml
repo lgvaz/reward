@@ -25,8 +25,12 @@ addons:
     token:
       secure: LFqhGTJQTuicO0z9JNq3YGeAIHyaV2xTLAcUbeS7y7ZzfYgPfOLzbyVEV59fGT0wX+fqpZYMktkRmxpQ1gpYKScTIJwzhxA/1vHvnwTg95vuXK2zbwhb3M8eL/Moiq9LHSAyGn812nUIKHokcY29q+eyFO1g1dIICKJlozzfmeRcyIRznMwzfegDv1MbNpXSKjvDsVq8kt4Mt8AkK7LZ8/Ad/5RzNNYgRU80Z6HuiOwDp16TnCg1cF+WpYVjzZBTdnZsAV/PbVJ43rPQnfmcCAjZ0h31+W+jp2Q6DQc62/2kKTHHtVGuFqsITTVEBnSdKIEyVwQCXt77M086Svo6XoGLveBjzuoiDIpTBZ7ed29iQcakROND19gPuVURF/ZFnk/+4YwaG5L/L15c6YqvgZhZmib9dPczPHKfwPFyPcvHKsL7FMlKmzElVzM6XFg+tmnEOPWYmoppDq4ZjPEvPT40MlB+G71I3HvbJXxQPgXKg2935ZMinzT6xn3gLMXxUh3krrMAUK76a+po23fHSEyPII411JZeg+1Sb1qhtLHhZM70lZ4VRtU0atOma9jR6UdWSST+Onr9XDYaKciM9fqSSH2TBO5GyTpT1tdOVceLWdeWP2ZK1hjnlUOC86Ai95GzlzJxyHM57nECN8Wvn1Nvkg0wFK3zkN7AtuNonJo=
 
+jdk:
+  - oraclejdk8
+
 script:
-  python -m unittest discover
+  - sonar-scanner
+  - python -m unittest discover
 
 notifications:
   email:
@@ -35,7 +39,4 @@ notifications:
 
 cache:
   directories:
-    $HOME/.m2/repository
-    $HOME/.sonar/cache
-    $HOME/.gradle
-    .gradle
+    - '$HOME/.sonar/cache'
