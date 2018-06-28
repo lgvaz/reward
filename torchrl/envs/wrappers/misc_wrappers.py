@@ -130,19 +130,3 @@ class ActionRepeat(BaseWrapper):
         max_frame = self._obs_buffer.max(axis=0)
 
         return max_frame, total_reward, done, info
-
-
-# class HWC_to_CHW(BaseWrapper):
-#     def reset(self):
-#         state = self.env.reset()
-#         assert state.ndim == 3, 'state have {} dims and must have 3'.format(state.ndim)
-#         state = np.rollaxis(state, -1)
-
-#         return state
-
-#     def step(self, action):
-#         state, reward, done, info = self.env.step(action)
-#         assert state.ndim == 3, 'state have {} dims and must have 3'.format(state.ndim)
-#         state = np.rollaxis(state, -1)
-
-#         return state, reward, done, info

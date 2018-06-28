@@ -143,7 +143,6 @@ class PAACRunner(BaseRunner):
         self.sync()
         states = self.shared_tran.state.copy()
 
-        # states = self._preprocess_state(raw_states)
         return states
 
     def sample_random_action(self):

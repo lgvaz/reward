@@ -60,9 +60,6 @@ class PGAgent(BaseAgent):
             batch.advantage = U.normalize(batch.advantage)
 
         self.train_models(batch)
-        # batch_tensor = batch.apply_to_all(self.models.policy.to_tensor)
-        # self.models.policy.train(batch_tensor, step=self.num_steps)
-        # self.models.value.train(batch_tensor, step=self.num_steps)
 
     def add_state_value(self, batch):
         if self.models.value is not None:

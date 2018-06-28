@@ -46,9 +46,3 @@ class VanillaPGModel(BasePGModel):
         loss = -objective.mean()
 
         return loss
-
-    # def train_step(self, batch):
-    #     self.add_dist(batch)
-    #     batch.log_prob = self.memory.dists.log_prob(batch.action).sum(-1)
-
-    #     super().train_step(batch=batch)

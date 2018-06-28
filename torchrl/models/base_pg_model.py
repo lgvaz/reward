@@ -37,22 +37,6 @@ class BasePGModel(BaseModel):
         loss = -self.entropy * self.entropy_coef
         return loss
 
-    # def select_action(self, state, step):
-    #     '''
-    #     Define how the actions are selected, in this case the actions
-    #     are sampled from a distribution which values are given be a NN.
-
-    #     Parameters
-    #     ----------
-    #     state: np.array
-    #         The state of the environment (can be a batch of states).
-    #     '''
-    #     parameters = self.forward(state)
-    #     dist = self.create_dist(parameters)
-    #     action = dist.sample()
-
-    #     return U.to_np(action)
-
     def create_dist(self, parameters):
         '''
         Specify how the policy distributions should be created.

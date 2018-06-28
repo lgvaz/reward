@@ -48,6 +48,6 @@ agent = PGAgent(
     optimizer=opt,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='tests/pong/nv/paper-nv2-v2-1')
+    log_dir='logs/pong/nv/paper-nv2-v2-1')
 
 agent.train(max_steps=MAX_STEPS, log_freq=10)

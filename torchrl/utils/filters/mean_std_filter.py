@@ -42,16 +42,16 @@ class MeanStdFilter:
         self.n += n_new
         self.xs = []
 
-        x_M = x.mean(axis=0)
-        x_S = ((x - x_M)**2).sum(axis=0)
+        x_mean = x.mean(axis=0)
+        x_std = ((x - x_mean)**2).sum(axis=0)
         # First update
         if self.n == n_new:
-            self.M = x_M
-            self.S = x_S
+            self.M = x_mean
+            self.S = x_std
         else:
-            new_M = (n_old * self.M + n_new * x_M) / self.n
-            self.S = self.S + x_S + (self.M - x_M)**2 * n_old * n_new / self.n
-            self.M = new_M
+            new_mean = (n_old * self.M + n_new * x_mean) / self.n
+            self.S = self.S + x_std + (self.M - x_mean)**2 * n_old * n_new / self.n
+            self.M = new_mean
 
     def normalize(self, x):
         self.xs.extend(x)

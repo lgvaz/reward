@@ -39,6 +39,5 @@ def gae_estimation(rewards, dones, state_value_t_and_tp1, *, gamma, gae_lambda):
         dones=dones,
         last_state_value_t=None,
         gamma=gamma * gae_lambda)
-    # vtarget = advantages + state_values
 
     return advantages

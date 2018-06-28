@@ -51,15 +51,6 @@ class SurrogatePGModel(BasePGModel):
             self.memory.old_dists = self.create_dist(parameters)
             batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
 
-    # def train_step(self, batch):
-    #     with torch.no_grad():
-    #         parameters = self.forward(batch.state_t)
-    #         self.memory.old_dists = self.create_dist(parameters)
-    #         batch.log_prob = self.memory.old_dists.log_prob(batch.action).sum(-1)
-
-    #     super().train_step(batch)
-    #     self.add_new_dist(batch)
-
     def surrogate_pg_loss(self, batch):
         '''
         The surrogate pg loss, as described before.

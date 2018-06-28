@@ -150,7 +150,6 @@ class Logger:
         new_time = time.time()
         steps_sec = steps / (new_time - self.time)
         self.time_header = 'Steps/Second: {}'.format(int(steps_sec))
-        # self.add_log('Steps_per_second', steps_sec)
         self.time = new_time
         self.steps_sum += steps
 
@@ -159,6 +158,8 @@ class Logger:
             # Format days, hours, minutes, seconds and remove milliseconds
             eta = str(timedelta(seconds=eta_seconds)).split('.')[0]
             self.eta = 'ETA: {}'.format(eta)
+
+        self.add_tf_only_log('Steps_per_second', steps_sec)
 
 
 def print_table(tags_and_values_dict, header=None, width=62):

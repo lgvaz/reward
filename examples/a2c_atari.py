@@ -12,9 +12,10 @@ from torchrl.optimizers import JointOpt
 from torchrl.runners import PAACRunner
 
 MAX_STEPS = 1.5e8
-NUM_ENVS = 32
-HORIZON = 5
-LR = 0.0007 * NUM_ENVS
+NUM_ENVS = 16
+HORIZON = 128
+# LR = 0.0007 * NUM_ENVS
+LR = 3e-4
 
 # Create environment
 envs = [AtariWrapper(AtariEnv('PongNoFrameskip-v4')) for _ in range(NUM_ENVS)]
@@ -29,7 +30,7 @@ value_model = ValueModel.from_arch(arch='a3c', batcher=batcher, body=policy_mode
 opt = JointOpt(
     [policy_model, value_model],
     opt_params=dict(lr=LR, eps=1e-5),
-    clip_grad_norm=40,
+    clip_grad_norm=float('inf'),
     loss_coef=[1., 0.5])
 
 # Create agent
@@ -40,6 +41,6 @@ agent = PGAgent(
     value_model=value_model,
     # advantage=U.estimators.advantage.Baseline(gamma=0.99),
     # vtarget=U.estimators.value.TDTarget(gamma=0.99),
-    log_dir='logs/pong/nv/a2c-paac-v3-0')
+    log_dir='logs/pong/nv/16a2c-128H-v4-0')
 
 agent.train(max_steps=MAX_STEPS, log_freq=10)

@@ -2,6 +2,7 @@ import numpy as np
 from torchrl.envs.wrappers import BaseWrapper
 
 
+# TODO: Is this wrapper needed?
 class StatsRecorder(BaseWrapper):
     def __init__(self, env):
         self.real_num_steps = 0

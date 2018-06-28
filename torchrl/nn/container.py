@@ -7,8 +7,6 @@ from torch.autograd import Variable
 
 from torchrl.utils import get_obj, to_tensor
 
-# import torchrl.utils as U
-
 
 class ModuleExtended(nn.Module):
     '''
