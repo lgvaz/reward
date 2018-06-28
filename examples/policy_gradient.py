@@ -1,14 +1,16 @@
 import torch.nn as nn
 
-from torchrl.utils import Config
-from torchrl.models import PPOClipModel, ValueClipModel
 from torchrl.agents import PGAgent
-from torchrl.envs import GymEnv, ParallelEnv
-from torchrl.nn import ActionLinear
+from torchrl.batchers import RolloutBatcher
+from torchrl.batchers.wrappers import RewardRunScaler, StateRunNorm
+from torchrl.envs import GymEnv
+from torchrl.models import PPOClipModel, ValueClipModel
+from torchrl.optimizers import JointOpt
+from torchrl.runners import PAACRunner
+from torchrl.utils import Config
 
 MAX_STEPS = 10e6
 
-# activation = nn.ReLU
 activation = nn.Tanh
 # Define networks configs
 policy_nn_config = Config(body=[
@@ -17,6 +19,7 @@ policy_nn_config = Config(body=[
     dict(func=nn.Linear, in_features=64, out_features=64),
     dict(func=activation)
 ])
+# head=[dict(func=ActionLinear)])
 value_nn_config = Config(body=[
     dict(func=nn.Linear, out_features=64),
     dict(func=activation),
@@ -25,46 +28,34 @@ value_nn_config = Config(body=[
 ])
 
 # Create environment
-# env = GymEnv('HalfCheetah-v2', running_normalize_states=True, running_scale_rewards=True)
-envs = [
-    GymEnv('HalfCheetah-v2', running_normalize_states=True, running_scale_rewards=True)
-    for _ in range(16)
-]
+envs = [GymEnv('HalfCheetah-v2') for _ in range(16)]
+runner = PAACRunner(envs)
+# runner = SingleRunner(envs[0])
 
-env = ParallelEnv(envs)
+batcher = RolloutBatcher(runner, batch_size=2048)
+batcher = StateRunNorm(batcher)
+batcher = RewardRunScaler(batcher)
 
 policy_model_config = Config(nn_config=policy_nn_config)
-policy_model = PPOClipModel.from_config(
-    # policy_model = PPOAdaptiveModel.from_config(
-    config=policy_model_config,
-    env=env,
-    # ppo_clip_range=piecewise_linear_schedule(
-    #     values=[0.3, 0.3, 0.2, 0.2, 0.1],
-    #     boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.2, MAX_STEPS * 0.5, MAX_STEPS * 0.7]),
-    num_epochs=10,
-    num_mini_batches=1,
-    opt_params=dict(lr=3e-4, eps=1e-5),
-    # lr_schedule=piecewise_linear_schedule(
-    #     values=[3e-4, 3e-4, 1e-4], boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5]),
-    clip_grad_norm=float('inf'))
+policy_model = PPOClipModel.from_config(config=policy_model_config, batcher=batcher)
 
 value_model_config = Config(nn_config=value_nn_config)
-value_model = ValueClipModel.from_config(
-    config=value_model_config,
-    env=env,
+value_model = ValueClipModel.from_config(config=value_model_config, batcher=batcher)
+
+jopt = JointOpt(
+    model=[policy_model, value_model],
+    num_epochs=4,
+    num_mini_batches=4,
     opt_params=dict(lr=3e-4, eps=1e-5),
-    # lr_schedule=piecewise_linear_schedule(
-    #     values=[3e-4, 3e-4, 1e-4], boundaries=[MAX_STEPS * 0.1, MAX_STEPS * 0.5]),
-    num_mini_batches=8,
-    num_epochs=10,
-    clip_range=0.2,
-    clip_grad_norm=float('inf'))
+    clip_grad_norm=0.5)
 
 # Create agent
 agent = PGAgent(
-    env,
+    batcher=batcher,
+    optimizer=jopt,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/cheetah/new/16parallel_p_nmb1_e10-v_nmb8_e10-cr02-gcNone-v9-1',
+    log_dir='logs/nv2/cheetah/16p-nv-v17-0',
     normalize_advantages=True)
-agent.train(max_steps=MAX_STEPS, steps_per_batch=2048)
+
+agent.train(max_steps=MAX_STEPS)

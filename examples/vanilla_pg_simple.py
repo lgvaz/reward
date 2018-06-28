@@ -48,6 +48,6 @@ agent = PGAgent(
     value_model=value_model,
     # advantage=U.estimators.advantage.Baseline(gamma=0.99),
     # vtarget=U.estimators.value.CompleteReturn(gamma=0.99),
-    log_dir='logs/vanilla/cp/1p-opt-v7-1')
+    log_dir='logs/vanilla/cp/1p-opt-v8-0')
 
 agent.train(max_steps=1e6, log_freq=10)

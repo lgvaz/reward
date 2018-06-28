@@ -16,13 +16,8 @@ class ValueModel(BaseModel):
         Similar to PPOClip, limits the change between the new and old value function.
     '''
 
-    def __init__(self, model, batcher, *, num_mini_batches=4, num_epochs=10, **kwargs):
-        super().__init__(
-            model=model,
-            batcher=batcher,
-            num_mini_batches=num_mini_batches,
-            num_epochs=num_epochs,
-            **kwargs)
+    def __init__(self, model, batcher, **kwargs):
+        super().__init__(model=model, batcher=batcher, **kwargs)
 
     @property
     def batch_keys(self):

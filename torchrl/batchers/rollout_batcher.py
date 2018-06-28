@@ -11,7 +11,7 @@ class RolloutBatcher(BaseBatcher):
             initial_keys=['state_t_and_tp1', 'action', 'reward', 'done', 'info'])
 
         for i in range(horizon):
-            action = select_action_fn(self._state_t, self.runner.num_steps)
+            action = select_action_fn(self._state_t, self.num_steps)
 
             state_tp1, reward, done, info = self.runner.act(action)
             state_tp1 = self.transform_state(state_tp1)

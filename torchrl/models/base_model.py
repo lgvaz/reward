@@ -12,10 +12,7 @@ from torchrl.nn import ModuleExtended
 from multiprocessing import Process
 
 
-def profile(x):
-    return lambda *args, **kwargs: x(*args, **kwargs)
-
-
+# TODO; Paramters changes, change doc
 class BaseModel(ModuleExtended, ABC):
     '''
     Basic TorchRL model. Takes two :obj:`Config` objects that identify
@@ -47,32 +44,13 @@ class BaseModel(ModuleExtended, ABC):
         If True and cuda is supported, use it (Default is True).
     '''
 
-    def __init__(self,
-                 model,
-                 batcher,
-                 *,
-                 num_epochs=1,
-                 num_mini_batches=1,
-                 opt_fn=None,
-                 opt_params=None,
-                 lr_schedule=None,
-                 clip_grad_norm=float('inf'),
-                 loss_coef=1.,
-                 cuda_default=True):
+    def __init__(self, model, batcher, *, cuda_default=True):
         super().__init__()
 
         self.model = model
         self.batcher = batcher
-        self.num_epochs = num_epochs
-        self.num_mini_batches = num_mini_batches
-        self.opt_params = opt_params or dict(lr=1e-3)
-        self.lr_schedule = U.make_callable(lr_schedule or self.opt_params['lr'])
-        self.clip_grad_norm = clip_grad_norm
-        self.loss_coef_fn = U.make_callable(loss_coef)
 
         self.memory = U.DefaultMemory()
-        self.num_updates = 0
-        self.step = 0
         self.losses = []
         self.register_losses()
         self.callbacks = U.Callback()
@@ -87,11 +65,8 @@ class BaseModel(ModuleExtended, ABC):
         #                            else 'cpu')
         # self.to(self.device)
 
-        # Create optimizer
-        opt_fn = opt_fn or torch.optim.Adam
-        self.opt = opt_fn(self.parameters(), **self.opt_params)
-
-    @abstractproperty
+    @property
+    @abstractmethod
     def batch_keys(self):
         '''
         The batch keys needed for computing all losses.
@@ -99,6 +74,7 @@ class BaseModel(ModuleExtended, ABC):
         it makes sure only the requested keys are being sampled.
         '''
 
+    @property
     @abstractmethod
     def register_losses(self):
         '''
@@ -140,16 +116,11 @@ class BaseModel(ModuleExtended, ABC):
         return self.model.layers[1]
 
     @property
-    def lr(self):
-        return self.lr_schedule(self.step)
-
-    @property
-    def loss_coef(self):
-        return self.loss_coef_fn(self.step)
-
-    @property
     def name(self):
         return self.__class__.__name__
+
+    def num_steps(self):
+        return self.batcher.num_steps
 
     def register_loss(self, func):
         self.losses.append(func)
@@ -214,7 +185,6 @@ class BaseModel(ModuleExtended, ABC):
     #     if self.callbacks.on_train_end(batch):
     #         return
 
-    # @profile
     # def train(self, batch, step):
     #     '''
     #     Wrapper around :meth:`train_step`, adds functionalities
@@ -226,7 +196,6 @@ class BaseModel(ModuleExtended, ABC):
     #         The batch should contain all the information necessary
     #         to compute the gradients.
     #     '''
-    #     self.step = step
     #     self.set_lr(value=self.lr)
     #     # batch = batch.apply_to_all(self.to_tensor)
     #     # batch = batch.apply_to_keys(func=self.to_tensor, keys=self.batch_keys)
@@ -264,18 +233,6 @@ class BaseModel(ModuleExtended, ABC):
         '''
         return self.model(x)
 
-    # def set_lr(self, value):
-    #     '''
-    #     Change the learning rate of the optimizer.
-
-    #     Parameters
-    #     ----------
-    #     value: float
-    #         The new learning rate.
-    #     '''
-    #     for param_group in self.opt.param_groups:
-    #         param_group['lr'] = value
-
     def attach_logger(self, logger):
         '''
         Register a logger to this model.
@@ -310,9 +267,6 @@ class BaseModel(ModuleExtended, ABC):
         batch: Batch
             Some logs might need the batch for calculation.
         '''
-        self.add_tf_only_log('LR', self.lr, precision=4)
-        self.add_tf_only_log('Grad Norm', np.mean(self.memory.grad_norm))
-
         total_loss = 0
         for k in self.memory.losses[0]:
             partial_loss = 0

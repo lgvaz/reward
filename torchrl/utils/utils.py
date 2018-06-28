@@ -131,5 +131,7 @@ def one_hot(array, num_classes):
 def make_callable(x):
     if callable(x):
         return x
-    else:
+    try:
+        return [make_callable(v) for v in x]
+    except TypeError:
         return lambda *args, **kwargs: x

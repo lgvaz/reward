@@ -16,13 +16,13 @@ class PPOClipModel(SurrogatePGModel):
         How many times to train over the entire dataset (Default is 10).
     '''
 
-    def __init__(self, model, batcher, *, ppo_clip_range=0.2, num_epochs=10, **kwargs):
-        super().__init__(model=model, batcher=batcher, num_epochs=num_epochs, **kwargs)
+    def __init__(self, model, batcher, ppo_clip_range=0.2, **kwargs):
+        super().__init__(model=model, batcher=batcher, **kwargs)
         self.ppo_clip_range_fn = U.make_callable(ppo_clip_range)
 
     @property
     def ppo_clip_range(self):
-        return self.ppo_clip_range_fn(self.step)
+        return self.ppo_clip_range_fn(self.num_steps)
 
     def register_losses(self):
         self.register_loss(self.ppo_clip_loss)

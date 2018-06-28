@@ -28,26 +28,11 @@ clip_schedule = piecewise_linear_schedule(
 policy_model = PPOClipModel.from_arch(
     arch='a3c',
     batcher=batcher,
-    num_epochs=4,
-    num_mini_batches=4,
     # ppo_clip_range=clip_schedule,
-    entropy_coef=0.01,
-    opt_params=dict(lr=2.5e-4, eps=1e-5),
-    # lr_schedule=lr_schedule,
-    clip_grad_norm=0.5)
+    entropy_coef=0.01)
 
 value_model = ValueClipModel.from_arch(
-    arch='a3c',
-    batcher=batcher,
-    body=policy_model.body,
-    num_epochs=4,
-    num_mini_batches=4,
-    opt_params=dict(lr=2.5e-4, eps=1e-5),
-    # lr_schedule=lr_schedule,
-    clip_range=0.1,
-    # clip_range=clip_schedule,
-    clip_grad_norm=0.5,
-    loss_coef=0.5)
+    arch='a3c', batcher=batcher, body=policy_model.body, clip_range=0.1)
 
 opt = JointOpt(
     model=[policy_model, value_model],
@@ -63,6 +48,6 @@ agent = PGAgent(
     optimizer=opt,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/pong/nv/paper-nv2-v2-0')
+    log_dir='tests/pong/nv/paper-nv2-v2-1')
 
 agent.train(max_steps=MAX_STEPS, log_freq=10)

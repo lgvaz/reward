@@ -24,6 +24,7 @@ class BaseAgent(ABC):
         self.opt = optimizer
         self.logger = U.Logger(log_dir)
         self.gamma = gamma
+        self.num_iters = 1
 
         self.models = U.DefaultMemory()
         # Can be changed later by the user, None goes to the default (from policy)
@@ -38,11 +39,11 @@ class BaseAgent(ABC):
 
     @property
     def num_steps(self):
-        return self.batcher.runner.num_steps
+        return self.batcher.num_steps
 
     @property
     def num_episodes(self):
-        return self.batcher.runner.num_episodes
+        return self.batcher.num_episodes
 
     def _check_termination(self):
         '''
@@ -53,7 +54,7 @@ class BaseAgent(ABC):
         bool
         True if done, False otherwise.
         '''
-        if (self.models.policy.num_updates // self.max_updates >= 1
+        if (self.num_iters // self.max_iters >= 1
                 or self.num_episodes // self.max_episodes >= 1
                 or self.num_steps // self.max_steps >= 1):
             return True
@@ -79,7 +80,7 @@ class BaseAgent(ABC):
         #     model.train(batch_tensor, step=self.num_steps)
         self.opt.learn_from_batch(batch, step=self.num_steps)
 
-    def train(self, *, max_updates=-1, max_episodes=-1, max_steps=-1, log_freq=1):
+    def train(self, *, max_iters=-1, max_episodes=-1, max_steps=-1, log_freq=1):
         '''
         Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
 
@@ -92,7 +93,7 @@ class BaseAgent(ABC):
         max_steps: int
             Maximum number of steps (Default is -1, meaning it doesn't matter).
         '''
-        self.max_updates = max_updates
+        self.max_iters = max_iters
         self.max_episodes = max_episodes
         self.max_steps = max_steps
 
@@ -102,6 +103,7 @@ class BaseAgent(ABC):
             self.step()
             self.write_logs()
 
+            self.num_iters += 1
             if self._check_termination():
                 break
 
@@ -139,11 +141,12 @@ class BaseAgent(ABC):
         Use the logger to write general information about the training process.
         '''
         self.batcher.write_logs(logger=self.logger)
+        self.opt.write_logs(logger=self.logger)
 
         self.logger.timeit(self.num_steps, max_steps=self.max_steps)
         # Instead of Update should be Iter?
-        self.logger.log('Update {} | Episode {} | Step {}'.format(
-            self.models.policy.num_updates, self.num_episodes, self.num_steps))
+        self.logger.log('Iter {} | Episode {} | Step {}'.format(
+            self.num_iters, self.num_episodes, self.num_steps))
 
     def generate_batch(self):
         batch = self.batcher.get_batch(select_action_fn=self.select_action)

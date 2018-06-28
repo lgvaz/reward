@@ -1,3 +1,4 @@
+from functools import wraps
 from torchrl.utils import to_np
 
 
@@ -7,6 +8,7 @@ def linear_schedule(initial_value, final_value, final_step, initial_step=0):
     '''
     decay_rate = -(initial_value - final_value) / (final_step - initial_step)
 
+    @wraps(linear_schedule)
     def get(step):
         step = to_np(step)
         if step <= final_step:
@@ -29,6 +31,7 @@ def piecewise_linear_schedule(values, boundaries):
                                    boundaries[:-1])
     ]
 
+    @wraps(piecewise_linear_schedule)
     def get(step):
         step = to_np(step)
         for i, bound in enumerate(boundaries[1:]):

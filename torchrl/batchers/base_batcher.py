@@ -21,6 +21,14 @@ class BaseBatcher:
     def unwrapped(self):
         return self
 
+    @property
+    def num_steps(self):
+        return self.runner.num_steps
+
+    @property
+    def num_episodes(self):
+        return self.runner.num_episodes
+
     def get_batch(self, select_action_fn):
         if self._state_t is None:
             self._state_t = self.transform_state(self.runner.reset())

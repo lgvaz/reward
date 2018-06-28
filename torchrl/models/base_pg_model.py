@@ -21,7 +21,7 @@ class BasePGModel(BaseModel):
 
     @property
     def entropy_coef(self):
-        return self.entropy_coef_fn(self.step)
+        return self.entropy_coef_fn(self.num_steps)
 
     def entropy_loss(self, batch):
         '''

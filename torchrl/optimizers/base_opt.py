@@ -13,6 +13,7 @@ class BaseOpt:
                  shuffle=True,
                  opt_fn=None,
                  opt_params=None,
+                 lr_schedule=None,
                  clip_grad_norm=float('inf'),
                  loss_coef=None):
         self.model = model
@@ -20,11 +21,21 @@ class BaseOpt:
         self.num_mini_batches = num_mini_batches
         self.shuffle = shuffle
         self.clip_grad_norm = clip_grad_norm
-        self.loss_coef = loss_coef
+        self.num_steps = 0
+        self.num_updates = 0
+        self.memory = U.DefaultMemory()
 
         opt_fn = opt_fn or Adam
         opt_params = opt_params or dict()
         self.opt = self._create_opt(opt_fn=opt_fn, opt_params=opt_params)
+
+        self.lr_schedule = U.make_callable(lr_schedule or self.opt.defaults['lr'])
+        self.loss_coef_sched = U.make_callable(loss_coef)
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
 
     @property
     @abstractmethod
@@ -36,6 +47,11 @@ class BaseOpt:
     def callbacks(self):
         pass
 
+    @property
+    @abstractmethod
+    def loss_coef(self):
+        pass
+
     @abstractmethod
     def model_parameters(self):
         pass
@@ -44,8 +60,27 @@ class BaseOpt:
     def calculate_loss(self, batch):
         pass
 
+    @property
+    def lr(self):
+        return self.lr_schedule(self.num_steps)
+
     def _create_opt(self, opt_fn, opt_params):
         return opt_fn(self.model_parameters(), **opt_params)
+
+    def set_lr(self, value):
+        '''
+        Change the learning rate of the optimizer.
+
+        Parameters
+        ----------
+        value: float
+            The new learning rate.
+        '''
+        for param_group in self.opt.param_groups:
+            param_group['lr'] = value
+
+    def update_lr(self):
+        self.set_lr(self.lr)
 
     def optimizer_step(self, batch):
         '''
@@ -53,6 +88,7 @@ class BaseOpt:
 
         Should use the batch to compute and apply gradients to the network.
         '''
+        self.update_lr()
         self.opt.zero_grad()
         loss = self.calculate_loss(batch)
         loss.backward()
@@ -60,9 +96,12 @@ class BaseOpt:
                                               self.clip_grad_norm)
         self.opt.step()
 
-        # self.memory.grad_norm.append(norm)
-        # self.num_updates += 1
+        self.memory.loss.append(loss)
+        self.memory.grad_norm.append(norm)
 
+        self.num_updates += 1
+
+    # TODO: Wrong docs
     def learn_from_batch(self, batch, step):
         '''
         Define the model training procedure.
@@ -80,6 +119,8 @@ class BaseOpt:
             Whether to shuffle dataset.
         '''
         # TODO: Currently always CUDA if possible (no choice)
+        self.num_steps = step
+        self.memory.clear()
         batch = batch.apply_to_all(U.to_tensor)
 
         if self.callbacks.on_train_start(batch):
@@ -109,3 +150,11 @@ class BaseOpt:
 
         if self.callbacks.cleanups(batch):
             return
+
+    def wrap_name(self, name):
+        return '/'.join([self.name, name])
+
+    def write_logs(self, logger):
+        logger.add_tf_only_log(self.wrap_name('LR'), self.lr, precision=4)
+        logger.add_tf_only_log(
+            self.wrap_name('Grad Norm'), self.memory.grad_norm, precision=4)
