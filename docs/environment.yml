@@ -2,16 +2,15 @@ name: torchrl
 
 channels:
   - pytorch
-  - conda-forge
 
 dependencies:
   - python>=3.5
   - pytorch>=0.4
   - numpy
   - scipy
-  - opencv
   - pip
   - pip:
+      - opencv-python-headless
       - pyyaml
       - sphinx
       - gym
