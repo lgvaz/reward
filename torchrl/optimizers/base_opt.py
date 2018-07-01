@@ -156,5 +156,6 @@ class BaseOpt:
 
     def write_logs(self, logger):
         logger.add_tf_only_log(self.wrap_name('LR'), self.lr, precision=4)
+        logger.add_tf_only_log(self.wrap_name('Loss'), self.memory.loss, precision=4)
         logger.add_tf_only_log(
             self.wrap_name('Grad Norm'), self.memory.grad_norm, precision=4)

@@ -124,18 +124,6 @@ class BaseAgent(ABC):
         action_fn = self.select_action_fn or self.models.policy.select_action
         return action_fn(model=self.models.policy, state=state, step=step)
 
-    # def run_one_episode(self):
-    #     '''
-    #     Run an entire episode using the current model.
-
-    #     Returns
-    #     -------
-    #     batch: dict
-    #         Dictionary containing information about the episode.
-    #     '''
-    #     return self.env.run_n_episodes(
-    #         select_action_fn=self.select_action, num_episodes=1)
-
     def write_logs(self):
         '''
         Use the logger to write general information about the training process.

@@ -6,6 +6,7 @@ class SingleRunner(BaseRunner):
     def __init__(self, env):
         super().__init__(env=env)
         self._ep_reward_sum = 0
+        self._ep_num_steps = 0
 
     @property
     def num_envs(self):
@@ -19,10 +20,13 @@ class SingleRunner(BaseRunner):
         state, reward, done, info = self.env.step(action)
 
         self._ep_reward_sum += reward
-        self._steps += 1
+        self.num_steps += 1
+        self._ep_num_steps += 1
         if done:
-            self._rewards.append(self._ep_reward_sum)
+            self.rewards.append(self._ep_reward_sum)
+            self.ep_lengths.append(self._ep_num_steps)
             self._ep_reward_sum = 0
+            self._ep_num_steps = 0
             state = self.env.reset()
 
         return state[None], np.array(reward)[None], np.array(done)[None], info

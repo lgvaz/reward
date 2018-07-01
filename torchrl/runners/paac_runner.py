@@ -23,6 +23,7 @@ class PAACRunner(BaseRunner):
         super().__init__(env=env)
         self.num_workers = num_workers or multiprocessing.cpu_count()
         self._envs_rewards_sum = np.zeros(self.num_envs)
+        self._envs_ep_lengths = np.zeros(self.num_envs)
         self.manager = Manager()
 
         self._create_shared_transitions()
@@ -116,7 +117,7 @@ class PAACRunner(BaseRunner):
         for worker in self.workers:
             worker.connection.put(True)
         self.sync()
-        self._steps += self.num_envs
+        self.num_steps += self.num_envs
 
         next_states = self.shared_tran.state.copy()
         rewards = self.shared_tran.reward.copy()
@@ -125,10 +126,13 @@ class PAACRunner(BaseRunner):
 
         # Accumulate rewards
         self._envs_rewards_sum += rewards
+        self._envs_ep_lengths += 1
         for i, done in enumerate(dones):
             if done:
-                self._rewards.append(self._envs_rewards_sum[i])
+                self.rewards.append(self._envs_rewards_sum[i])
+                self.ep_lengths.append(self._envs_ep_lengths[i])
                 self._envs_rewards_sum[i] = 0
+                self._envs_ep_lengths[i] = 0
 
         return next_states, rewards, dones, infos
 

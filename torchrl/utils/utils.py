@@ -75,7 +75,7 @@ def to_np(value):
     if isinstance(value, np.ndarray):
         return value
     if isinstance(value, (list, tuple)):
-        return np.array(value)
+        return np.array([to_np(v) for v in value])
 
     return value.detach().cpu().numpy()
 
