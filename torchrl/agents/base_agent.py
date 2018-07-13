@@ -29,6 +29,7 @@ class BaseAgent(ABC):
         self.models = U.DefaultMemory()
         # Can be changed later by the user, None goes to the default (from policy)
         self.select_action_fn = None
+        self.eval_select_action_fn = None
 
     @abstractmethod
     def step(self):
@@ -61,6 +62,17 @@ class BaseAgent(ABC):
 
         return False
 
+    def _check_evaluation(self, env):
+        if self.eval_freq is not None and self.num_steps >= self.next_eval:
+            action_fn = self.eval_select_action_fn or self.models.policy.select_action
+            action_fn_pre = lambda state: action_fn(model=self.models.policy,
+                                                state=state,
+                                                step=self.num_steps)
+            self.batcher.evaluate(
+                select_action_fn=action_fn_pre, logger=self.logger, env=env)
+
+            self.next_eval += self.eval_freq
+
     def _register_model(self, name, model):
         '''
         Save a torchrl model to the internal memory.
@@ -80,7 +92,14 @@ class BaseAgent(ABC):
         #     model.train(batch_tensor, step=self.num_steps)
         self.opt.learn_from_batch(batch, step=self.num_steps)
 
-    def train(self, *, max_iters=-1, max_episodes=-1, max_steps=-1, log_freq=1):
+    def train(self,
+              *,
+              max_iters=-1,
+              max_episodes=-1,
+              max_steps=-1,
+              log_freq=1,
+              eval_env=None,
+              eval_freq=None):
         '''
         Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
 
@@ -96,6 +115,8 @@ class BaseAgent(ABC):
         self.max_iters = max_iters
         self.max_episodes = max_episodes
         self.max_steps = max_steps
+        self.eval_freq = eval_freq
+        self.next_eval = 0
 
         self.logger.set_log_freq(log_freq=log_freq)
 
@@ -104,6 +125,8 @@ class BaseAgent(ABC):
             self.write_logs()
 
             self.num_iters += 1
+
+            self._check_evaluation(env=eval_env)
             if self._check_termination():
                 break
 

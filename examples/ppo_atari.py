@@ -7,13 +7,17 @@ from torchrl.models import PPOClipModel, ValueClipModel
 from torchrl.runners import PAACRunner, SingleRunner
 from torchrl.utils import piecewise_linear_schedule
 from torchrl.optimizers import SingleOpt, JointOpt
+from torchrl.envs.wrappers import GymRecorder
 
 MAX_STEPS = 50e6
 HORIZON = 128
 NUM_ENVS = 8
+LOG_DIR = 'tests/breakout/nv/paper-nv2-v2-1'
 
 # Create environment
-envs = [AtariWrapper(AtariEnv('PongNoFrameskip-v4')) for _ in range(NUM_ENVS)]
+envs = [AtariWrapper(AtariEnv('BreakoutNoFrameskip-v4')) for _ in range(NUM_ENVS)]
+eval_env = GymRecorder(
+    AtariWrapper(AtariEnv('BreakoutNoFrameskip-v4')), directory=LOG_DIR)
 runner = PAACRunner(envs)
 # runner = SingleRunner(envs[0])
 batcher = CommonWraps.atari_wrap(RolloutBatcher(runner, batch_size=HORIZON * NUM_ENVS))
@@ -48,6 +52,6 @@ agent = PGAgent(
     optimizer=opt,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir='logs/pong/nv/paper-nv2-v2-1')
+    log_dir=LOG_DIR)
 
-agent.train(max_steps=MAX_STEPS, log_freq=10)
+agent.train(max_steps=MAX_STEPS, log_freq=10, eval_env=eval_env, eval_freq=1e6)

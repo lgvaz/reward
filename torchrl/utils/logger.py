@@ -18,6 +18,7 @@ class Logger:
     '''
 
     def __init__(self, log_dir=None, *, debug=False, log_freq=1):
+        self.log_dir = log_dir
         self.debug = debug
         self.log_freq = log_freq
         self.num_logs = 0

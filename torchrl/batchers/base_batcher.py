@@ -33,18 +33,25 @@ class BaseBatcher:
         if self._state_t is None:
             self._state_t = self.transform_state(self.runner.reset())
 
-    def transform_state(self, state):
+    def transform_state(self, state, training=True):
         '''
         Apply functions to state, called before selecting an action.
         '''
         state = U.to_tensor(state)
         return state
 
-    def transform_batch(self, batch):
+    def transform_batch(self, batch, training=True):
         '''
         Apply functions to batch.
         '''
         return batch
+
+    def evaluate(self, env, select_action_fn, logger):
+        self.runner.evaluate(
+            env=env,
+            select_action_fn=select_action_fn,
+            state_transform=self.transform_state,
+            logger=logger)
 
     def get_state_info(self):
         info = self.runner.get_state_info()

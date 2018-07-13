@@ -4,7 +4,19 @@ from collections import defaultdict
 class SimpleMemory(dict):
     '''
     A dict whose keys can be accessed as attributes.
+
+    Parameters
+    ----------
+    initial_keys: list of strings
+        Each key will be initialized as an empty list.
     '''
+
+    def __init__(self, *args, initial_keys=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        initial_keys = initial_keys or []
+        for k in initial_keys:
+            self[k] = []
 
     def __setattr__(self, *args, **kwargs):
         return self.__setitem__(*args, **kwargs)

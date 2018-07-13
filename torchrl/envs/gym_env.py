@@ -17,35 +17,18 @@ class GymEnv(BaseEnv):
         Each wrapper should be a function that receives and returns the env.
     '''
 
-    def __init__(self,
-                 env_name,
-                 *,
-                 wrappers=[],
-                 monitor_dir=None,
-                 monitor_force=True,
-                 record_freq=None,
-                 **kwargs):
-        self.wrappers = wrappers
-        self.monitor_dir = monitor_dir
-        self.monitor_force = monitor_force
-        self.record_freq = record_freq
+    def __init__(self, env_name, **kwargs):
 
         super().__init__(env_name, **kwargs)
 
     def _create_env(self):
         env = gym.make(self.env_name)
-        for wrapper in self.wrappers:
-            env = wrapper(env)
-
-        if self.monitor_dir is not None:
-            env = gym.wrappers.Monitor(
-                env=env,
-                directory=self.monitor_dir,
-                force=self.monitor_force,
-                video_callable=
-                lambda x: self.record_freq is not None and x % self.record_freq == True)
 
         return env
+
+    @property
+    def simulator(self):
+        return GymEnv
 
     def reset(self):
         '''
@@ -84,6 +67,9 @@ class GymEnv(BaseEnv):
         next_state, reward, done, info = self.env.step(action)
         return next_state, reward, done, info
 
+    def record(self, path):
+        self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
+
     def get_state_info(self):
         '''
         Dictionary containing the shape and type of the state space.
@@ -97,10 +83,6 @@ class GymEnv(BaseEnv):
         If it is continuous, also contains the minimum and maximum value.
         '''
         return GymEnv.get_space_info(self.env.action_space)
-
-    @property
-    def simulator(self):
-        return GymEnv
 
     def sample_random_action(self):
         return self.env.action_space.sample()

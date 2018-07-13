@@ -53,11 +53,13 @@ class MeanStdFilter:
             self.S = self.S + x_std + (self.M - x_mean)**2 * n_old * n_new / self.n
             self.M = new_mean
 
-    def normalize(self, x):
-        self.xs.extend(x)
+    def normalize(self, x, add_sample=True):
+        if add_sample:
+            self.xs.extend(x)
         return ((x - self.mean) / (self.std + EPSILON)).clip(
             min=-self.clip_range, max=self.clip_range)
 
-    def scale(self, x):
-        self.xs.extend(x)
+    def scale(self, x, add_sample=True):
+        if add_sample:
+            self.xs.extend(x)
         return (x / (self.std + EPSILON)).clip(min=-self.clip_range, max=self.clip_range)
