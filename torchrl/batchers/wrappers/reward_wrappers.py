@@ -2,6 +2,17 @@ from torchrl.batchers.wrappers import BaseWrapper
 from torchrl.utils.filters import MeanStdFilter
 
 
+class RewardConstScaler(BaseWrapper):
+    def __init__(self, batcher, factor=0.01):
+        super().__init__(batcher=batcher)
+        self.factor = factor
+
+    def transform_batch(self, batch, training=True):
+        batch.reward *= self.factor
+
+        return self.old_transform_batch(batch, training=training)
+
+
 class RewardRunScaler(BaseWrapper):
     def __init__(self, batcher):
         super().__init__(batcher=batcher)
