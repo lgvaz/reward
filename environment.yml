@@ -12,6 +12,7 @@ dependencies:
   - opencv
   - pip
   - pip:
+      - pytest
       - pyyaml
       - sphinx
       - 'gym[all]'

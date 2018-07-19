@@ -33,7 +33,8 @@ jdk:
 
 script:
   - sonar-scanner
-  - python -m unittest discover
+  # - python -m unittest discover
+  - pytest test
 
 notifications:
   email:

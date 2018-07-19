@@ -1,6 +1,6 @@
 from torchrl.agents import PGAgent
 from torchrl.batchers import RolloutBatcher
-from torchrl.batchers.wrappers import CommonWraps
+from torchrl.batchers.wrappers import CommonWraps, RewardConstScaler
 from torchrl.envs import AtariEnv
 from torchrl.envs.wrappers import AtariWrapper
 from torchrl.models import PPOClipModel, ValueClipModel
@@ -11,16 +11,16 @@ from torchrl.envs.wrappers import GymRecorder
 
 MAX_STEPS = 50e6
 HORIZON = 128
-NUM_ENVS = 8
-LOG_DIR = 'tests/breakout/nv/paper-nv2-v2-1'
+NUM_ENVS = 16
+LOG_DIR = 'tests/pong/nv/paper-16env-rewconstscaler-v3-0'
 
 # Create environment
-envs = [AtariWrapper(AtariEnv('BreakoutNoFrameskip-v4')) for _ in range(NUM_ENVS)]
-eval_env = GymRecorder(
-    AtariWrapper(AtariEnv('BreakoutNoFrameskip-v4')), directory=LOG_DIR)
-runner = PAACRunner(envs)
-# runner = SingleRunner(envs[0])
+envs = [AtariWrapper(AtariEnv('PongNoFrameskip-v4')) for _ in range(NUM_ENVS)]
+eval_env = GymRecorder(AtariWrapper(AtariEnv('PongNoFrameskip-v4')), directory=LOG_DIR)
+# runner = PAACRunner(envs)
+runner = SingleRunner(envs[0])
 batcher = CommonWraps.atari_wrap(RolloutBatcher(runner, batch_size=HORIZON * NUM_ENVS))
+batcher = RewardConstScaler(batcher)
 
 lr_schedule = piecewise_linear_schedule(
     values=[4e-4, 4e-4, 1e-4, 5e-5],

@@ -14,6 +14,24 @@ class TestBatchers(unittest.TestCase):
         self.seed = np.random.choice(4200)
         self.batch_size = 200
 
+    def create_runner_trajs(self, runner, actions):
+        states, rewards, dones, infos = [], [], [], []
+
+        state = runner.reset()
+        for a in actions:
+            next_state, reward, done, info = runner.act(a)
+
+            states.append(state)
+            rewards.append(reward)
+            dones.append(done)
+            infos.append(info)
+
+            state = next_state
+
+        return list(map(np.array, [states, rewards, dones, infos]))
+
+
+class TestRolloutBatcher(TestBatchers):
     @timeit
     def test_rollout_batcher_simple(self):
         self.num_steps = 1000
@@ -47,7 +65,7 @@ class TestBatchers(unittest.TestCase):
         runner = SingleRunner(env)
         exp_s, exp_r, exp_d, exp_i = self.create_runner_trajs(runner, actions)
 
-        # Get real batch
+        # Get actual batch
         env.seed(self.seed)
         action_gen = (a for a in actions)
         action_fn = lambda state, step: next(action_gen)
@@ -94,19 +112,3 @@ class TestBatchers(unittest.TestCase):
 
         runner.close()
         batcher.close()
-
-    def create_runner_trajs(self, runner, actions):
-        states, rewards, dones, infos = [], [], [], []
-
-        state = runner.reset()
-        for a in actions:
-            next_state, reward, done, info = runner.act(a)
-
-            states.append(state)
-            rewards.append(reward)
-            dones.append(done)
-            infos.append(info)
-
-            state = next_state
-
-        return list(map(np.array, [states, rewards, dones, infos]))
