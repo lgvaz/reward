@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from torchrl.utils.memories import SimpleMemory
-from torchrl.utils import to_tensor
+from torchrl.utils import to_tensor, join_first_dims
 
 
 class Batch(SimpleMemory):
@@ -39,7 +39,9 @@ class Batch(SimpleMemory):
             yield self
 
     def concat_batch(self):
-        func = lambda x: x.reshape((-1, *x.shape[2:])) if (
+        # func = lambda x: x.reshape((-1, *x.shape[2:])) if (
+        #     isinstance(x, (np.ndarray, torch.Tensor))) else x
+        func = lambda x: join_first_dims(x, num_dims=2) if (
             isinstance(x, (np.ndarray, torch.Tensor))) else x
         return self.apply_to_all(func)
 

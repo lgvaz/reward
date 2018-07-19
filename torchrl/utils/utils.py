@@ -125,3 +125,7 @@ def make_callable(x):
         return [make_callable(v) for v in x]
     except TypeError:
         return lambda *args, **kwargs: x
+
+
+def join_first_dims(x, num_dims):
+    return x.reshape((-1, *x.shape[num_dims:]))
