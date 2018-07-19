@@ -1,5 +1,5 @@
 import itertools
-from torchrl.utils import SimpleMemory
+from torchrl.utils.memories import SimpleMemory
 
 
 class Callback:

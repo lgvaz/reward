@@ -1,8 +1,6 @@
 from .constants import EPSILON
-# TODO: Memories should not be imported here
-from .memories import SimpleMemory, DefaultMemory
-from .utils import (get_obj, env_from_config, join_transitions, to_np, to_tensor,
-                    explained_var, normalize, one_hot, make_callable)
+from .utils import (get_obj, env_from_config, to_np, to_tensor, explained_var, normalize,
+                    one_hot, make_callable, join_first_dims)
 from .batch import Batch
 from .callback import Callback
 from .config import Config
@@ -14,9 +12,9 @@ import torchrl.utils.estimators
 import torchrl.utils.filters
 
 __all__ = [
-    'EPSILON', 'Config', 'Logger', 'get_obj', 'env_from_config', 'join_transitions',
-    'to_np', 'explained_var', 'normalize', 'one_hot', 'auto_input_shape',
-    'get_module_list', 'nn_from_config', 'Batch', 'SimpleMemory', 'DefaultMemory',
-    'linear_schedule', 'piecewise_linear_schedule', 'make_callable', 'Callback',
-    'to_tensor'
+    'EPSILON', 'Config', 'Logger', 'get_obj', 'env_from_config', 'to_np', 'explained_var',
+    'normalize', 'one_hot', 'auto_input_shape', 'get_module_list', 'nn_from_config',
+    'Batch', 'SimpleMemory', 'DefaultMemory', 'linear_schedule',
+    'piecewise_linear_schedule', 'make_callable', 'Callback', 'to_tensor',
+    'join_first_dims'
 ]

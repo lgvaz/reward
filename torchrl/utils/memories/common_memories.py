@@ -24,6 +24,10 @@ class SimpleMemory(dict):
     def __getattr__(self, *args, **kwargs):
         return self.__getitem__(*args, **kwargs)
 
+    @classmethod
+    def from_list_of_dicts(cls, dicts):
+        return cls({k: [d[k] for d in dicts] for k in dicts[0]})
+
 
 class DefaultMemory(defaultdict):
     '''

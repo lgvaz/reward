@@ -1,6 +1,7 @@
 import multiprocessing
 from collections import namedtuple
 from ctypes import c_double, c_float, c_int, c_uint8
+# from torch.multiprocessing import Manager, Pipe, Process, Queue
 from multiprocessing import Manager, Pipe, Process, Queue
 from multiprocessing.sharedctypes import RawArray
 
@@ -41,7 +42,7 @@ class PAACRunner(BaseRunner):
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         info = [self.manager.dict() for _ in range(self.num_envs)]
 
-        self.shared_tran = U.SimpleMemory(
+        self.shared_tran = U.memories.SimpleMemory(
             state=state, reward=reward, done=done, action=action, info=info)
 
     def _create_workers(self):
@@ -63,7 +64,7 @@ class PAACRunner(BaseRunner):
                 self.split(self.shared_tran.done),
                 self.split(self.shared_tran.action), self.split(self.shared_tran.info)):
 
-            shared_tran = U.SimpleMemory(
+            shared_tran = U.memories.SimpleMemory(
                 state=s_s, reward=s_r, done=s_d, action=s_a, info=s_i)
             parent_conn, child_conn = Pipe()
             queue = Queue()

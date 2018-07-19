@@ -3,7 +3,7 @@ import torch
 from numbers import Number
 from collections import OrderedDict
 from torch.autograd import Variable
-from torchrl.utils import EPSILON, SimpleMemory
+from torchrl.utils import EPSILON
 import cv2
 from functools import wraps
 
@@ -54,16 +54,6 @@ def env_from_config(config):
         raise ValueError('The env must be defined in the config '
                          'or passed as an argument')
     return env
-
-
-def join_transitions(transitions):
-    '''
-    Joins a list of transitions into a single trajectory.
-    '''
-    trajectory = SimpleMemory(
-        (key, np.array([t[key] for t in transitions])) for key in transitions[0])
-
-    return trajectory
 
 
 def to_np(value):

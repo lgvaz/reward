@@ -1,4 +1,8 @@
 from torchrl.envs import GymEnv
+try:
+    import roboschool
+except ImportError:
+    pass  # soft dep
 
 
 class RoboschoolEnv(GymEnv):
@@ -7,5 +11,4 @@ class RoboschoolEnv(GymEnv):
     '''
 
     def __init__(self, *args, **kwargs):
-        import roboschool
         super().__init__(*args, **kwargs)

@@ -23,7 +23,7 @@ class BaseOpt:
         self.clip_grad_norm = clip_grad_norm
         self.num_steps = 0
         self.num_updates = 0
-        self.memory = U.DefaultMemory()
+        self.memory = U.memories.DefaultMemory()
 
         opt_fn = opt_fn or Adam
         opt_params = opt_params or dict()

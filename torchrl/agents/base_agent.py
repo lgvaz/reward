@@ -26,7 +26,7 @@ class BaseAgent(ABC):
         self.gamma = gamma
         self.num_iters = 1
 
-        self.models = U.DefaultMemory()
+        self.models = U.memories.DefaultMemory()
         # Can be changed later by the user, None goes to the default (from policy)
         self.select_action_fn = None
         self.eval_select_action_fn = None

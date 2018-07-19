@@ -55,7 +55,7 @@ class BaseRunner(ABC):
 
         state = env.reset()[None]
         state = state_transform(state, training=False)
-        traj = U.SimpleMemory(initial_keys=['rewards'])
+        traj = U.memories.SimpleMemory(initial_keys=['rewards'])
         traj.length = 0
 
         done = False

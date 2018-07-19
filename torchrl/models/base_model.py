@@ -50,7 +50,7 @@ class BaseModel(ModuleExtended, ABC):
         self.model = model
         self.batcher = batcher
 
-        self.memory = U.DefaultMemory()
+        self.memory = U.memories.DefaultMemory()
         self.losses = []
         self.register_losses()
         self.callbacks = U.Callback()

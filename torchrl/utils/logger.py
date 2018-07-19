@@ -2,7 +2,8 @@ import time
 from collections import defaultdict
 from datetime import timedelta
 from tensorboardX import SummaryWriter
-from torchrl.utils import to_np, DefaultMemory
+from torchrl.utils import to_np
+from torchrl.utils.memories import DefaultMemory
 
 import numpy as np
 

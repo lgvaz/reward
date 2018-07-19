@@ -121,14 +121,15 @@ class GymEnv(BaseEnv):
             Dictionary containing the space shape and type
         '''
         if isinstance(space, gym.spaces.Box):
-            return U.SimpleMemory(
+            return U.memories.SimpleMemory(
                 shape=space.shape,
                 low_bound=space.low,
                 high_bound=space.high,
                 space='continuous',
                 dtype=space.dtype)
         if isinstance(space, gym.spaces.Discrete):
-            return U.SimpleMemory(shape=space.n, space='discrete', dtype=space.dtype)
+            return U.memories.SimpleMemory(
+                shape=space.n, space='discrete', dtype=space.dtype)
         if isinstance(space, gym.spaces.MultiDiscrete):
-            return U.SimpleMemory(
+            return U.memories.SimpleMemory(
                 shape=space.shape, space='multi_discrete', dtype=space.dtype)
