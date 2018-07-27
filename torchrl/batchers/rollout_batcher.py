@@ -34,6 +34,15 @@ class RolloutBatcher(BaseBatcher):
 
         return batch
 
+    def transform_state(self, state, training=True):
+        '''
+        Apply functions to state, called before selecting an action.
+        '''
+        # TODO
+        state = U.to_np(state)
+        state = U.to_tensor(state)
+        return state
+
 
 # TODO
 # class RolloutBatcher(BaseBatcher):

@@ -10,7 +10,6 @@ class BaseBatcher:
         self.runner = runner
         self.batch_size = batch_size
         self.batch = None
-        self.steps_per_batch = None
         self._state_t = None
         self._state_shape = None
 
@@ -37,7 +36,9 @@ class BaseBatcher:
         '''
         Apply functions to state, called before selecting an action.
         '''
-        state = U.to_tensor(state)
+        # TODO
+        # state = U.to_tensor(state)
+        # state = U.to_np(state)
         return state
 
     def transform_batch(self, batch, training=True):

@@ -1,3 +1,4 @@
+import torchrl.utils as U
 from torchrl.batchers.wrappers import BaseWrapper
 from torchrl.utils.filters import MeanStdFilter
 
@@ -16,18 +17,26 @@ class RewardConstScaler(BaseWrapper):
 class RewardRunScaler(BaseWrapper):
     def __init__(self, batcher):
         super().__init__(batcher=batcher)
-        self.filt = MeanStdFilter(shape=(1, ))
+        self.filt = MeanStdFilter(num_features=1)
 
     def transform_batch(self, batch, training=True):
-        batch.reward = self.filt.scale(batch.reward, add_sample=training)
+        rew_shape = batch.reward.shape
+        assert (
+            len(rew_shape) == 2
+        ), "Reward shape should be in the form (num_steps, num_envs) and is {}".format(
+            rew_shape)
+
+        batch.reward = U.to_np(
+            self.filt.scale(batch.reward.reshape(-1, 1), add_sample=training))
+        batch.reward = batch.reward.reshape(rew_shape)
         if training:
             self.filt.update()
 
         return self.old_transform_batch(batch, training=training)
 
     def write_logs(self, logger):
-        logger.add_tf_only_log('Env/Reward/mean', self.filt.mean.mean())
-        logger.add_tf_only_log('Env/Reward/std', self.filt.std.mean())
+        logger.add_tf_only_log("Env/Reward/mean", self.filt.mean.mean())
+        logger.add_tf_only_log("Env/Reward/std", self.filt.std.mean())
 
         self.old_write_logs(logger)
 

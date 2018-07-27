@@ -57,17 +57,22 @@ def env_from_config(config):
 
 
 def to_np(value):
-    '''
-    Convert a value to a numpy array.
-    '''
     if isinstance(value, Number):
         return np.array(value)
     if isinstance(value, np.ndarray):
         return value
-    if isinstance(value, (list, tuple)):
-        return np.array([to_np(v) for v in value])
+    if isinstance(value, torch.Tensor):
+        return value.detach().cpu().numpy()
+    if isinstance(value, LazyArray):
+        return np.array(value)
 
-    return value.detach().cpu().numpy()
+    # If iterable
+    try:
+        return np.array([to_np(v) for v in value])
+    except TypeError:
+        return np.array(value)
+
+    raise ValueError('Data type {} not supported'.format(value.__class__.__name__))
 
 
 def to_tensor(x, cuda_default=True):
@@ -129,3 +134,40 @@ def make_callable(x):
 
 def join_first_dims(x, num_dims):
     return x.reshape((-1, *x.shape[num_dims:]))
+
+
+class LazyArray:
+    '''
+    Inspired by OpenAI `LazyFrames <https://goo.gl/nTmVW8>`_ this object stores numpy
+    arrays as lists, so no unnecessary memory is used when storing arrays that point to
+    the same memory, this is a memory optimization trick for the `ReplayBuffer`.
+
+    Beyond this optimization, an optional transform function can be passed, this function
+    is executed lazily only when `LazyFrames` gets converted to a numpy array.
+
+    Parameters
+    ----------
+    data: list
+        A list of numpy arrays.
+    transform: function
+        A function that is applied lazily to the array.
+    '''
+
+    def __init__(self, data, transform=None, **kwargs):
+        self.data = data
+        self.transform = transform
+        self.kwargs = kwargs
+
+    def __array__(self):
+        arr = to_np(self.data, **self.kwargs)
+        if self.transform is not None:
+            arr = self.transform(arr)
+        return arr
+
+    def __iter__(self):
+        for v in self.data:
+            yield LazyArray(v, **self.kwargs)
+
+    @property
+    def shape(self):
+        return self.__array__().shape

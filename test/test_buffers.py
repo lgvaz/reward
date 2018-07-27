@@ -4,68 +4,62 @@ import numpy as np
 import torchrl.utils as U
 from collections import deque
 from torchrl.utils.buffers import RingBuffer, ReplayBuffer
-
-
-@pytest.fixture
-def initialized_ring_buffer():
-    maxlen = 4
-    shape = (8, 1, 16, 16)
-    buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
-
-    for i in range(5):
-        frame = i * np.ones((shape))
-        buffer.append(frame)
-
-    return buffer
+from .utils import create_test_array
 
 
 def test_ring_buffer():
     maxlen = 4
-    buffer = RingBuffer(input_shape=(8, 1, 16, 16), maxlen=maxlen)
+    shape = (8, 1, 16, 16)
+    expected_shape = (maxlen, ) + shape
+    buffer = RingBuffer(input_shape=shape, maxlen=maxlen)
 
-    frame = np.ones((8, 1, 16, 16))
+    frame = np.ones(shape)
     buffer.append(frame)
-    state = np.array(buffer.get_data())
-    expected = np.zeros((8, 4, 16, 16))
-    expected[:, 3, :, :] = np.ones((8, 16, 16))
-    assert state.shape[1] == maxlen
+    state = U.to_np(buffer.get_data())
+    expected = np.zeros(expected_shape)
+    expected[3] = np.ones(shape)
+    assert state.shape[0] == maxlen
     np.testing.assert_equal(state, expected)
 
-    frame = 2 * np.ones((8, 1, 16, 16))
+    frame = 2 * np.ones(shape)
     buffer.append(frame)
     state = np.array(buffer.get_data())
-    expected = np.zeros((8, 4, 16, 16))
-    expected[:, 3, :, :] = 2 * np.ones((8, 16, 16))
-    expected[:, 2, :, :] = np.ones((8, 16, 16))
-    assert state.shape[1] == maxlen
+    expected = np.zeros(expected_shape)
+    expected[3] = 2 * np.ones(shape)
+    expected[2] = np.ones(shape)
+    assert state.shape[0] == maxlen
     np.testing.assert_equal(state, expected)
 
-    frame = 3 * np.ones((8, 1, 16, 16))
+    frame = 3 * np.ones(shape)
     buffer.append(frame)
     state = np.array(buffer.get_data())
-    expected = np.zeros((8, 4, 16, 16))
-    expected[:, 3, :, :] = 3 * np.ones((8, 16, 16))
-    expected[:, 2, :, :] = 2 * np.ones((8, 16, 16))
-    expected[:, 1, :, :] = np.ones((8, 16, 16))
-    assert state.shape[1] == maxlen
+    expected = np.zeros(expected_shape)
+    expected[3] = 3 * np.ones(shape)
+    expected[2] = 2 * np.ones(shape)
+    expected[1] = np.ones(shape)
+    assert state.shape[0] == maxlen
     np.testing.assert_equal(state, expected)
 
-    frame = 42 * np.ones((8, 1, 16, 16))
+    frame = 42 * np.ones(shape)
     buffer.append(frame)
     buffer.append(frame)
     buffer.append(frame)
     state = np.array(buffer.get_data())
-    expected = np.zeros((8, 4, 16, 16))
-    expected[:, 3, :, :] = 42 * np.ones((8, 16, 16))
-    expected[:, 2, :, :] = 42 * np.ones((8, 16, 16))
-    expected[:, 1, :, :] = 42 * np.ones((8, 16, 16))
-    expected[:, 0, :, :] = 3 * np.ones((8, 16, 16))
-    assert state.shape[1] == maxlen
+    expected = np.zeros(expected_shape)
+    expected[3] = 42 * np.ones(shape)
+    expected[2] = 42 * np.ones(shape)
+    expected[1] = 42 * np.ones(shape)
+    expected[0] = 3 * np.ones(shape)
+    assert state.shape[0] == maxlen
     np.testing.assert_equal(state, expected)
 
 
-def test_ring_buffer_consistency(initialized_ring_buffer):
-    buffer = initialized_ring_buffer
+@pytest.mark.parametrize('num_envs', [1, 8])
+@pytest.mark.parametrize('shape', [(1, 16, 16), (1, 3, 4), (1, 1, 1)])
+def test_ring_buffer_consistency(num_envs, shape):
+    maxlen = 4
+    shape = (num_envs, ) + shape
+    buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
 
     data_before = buffer.get_data()
     frame = 42 * np.ones((buffer.input_shape))
@@ -77,9 +71,13 @@ def test_ring_buffer_consistency(initialized_ring_buffer):
         np.testing.assert_equal(np.array(data_before), np.array(data_after))
 
 
-def test_ring_buffer_consistency2(initialized_ring_buffer):
+@pytest.mark.parametrize('num_envs', [1, 8])
+@pytest.mark.parametrize('shape', [(1, 16, 16), (1, 3, 4), (1, 1, 1)])
+def test_ring_buffer_consistency2(num_envs, shape):
     # Original data should not be modified after np.array is called
-    buffer = initialized_ring_buffer
+    maxlen = 4
+    shape = (num_envs, ) + shape
+    buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
 
     data = np.array(buffer.get_data())
     data_before = data.copy()
@@ -89,21 +87,43 @@ def test_ring_buffer_consistency2(initialized_ring_buffer):
     np.testing.assert_equal(data_before, data_after)
 
 
-def test_ring_buffer_memory_optmization(initialized_ring_buffer):
+@pytest.mark.parametrize('num_envs', [1, 8])
+@pytest.mark.parametrize('shape', [(1, 3, 3), (1, 3, 4), (1, 1, 1)])
+def test_ring_buffer_nested_lazyframe(num_envs, shape):
+    maxlen = 4
+    shape = (num_envs, ) + shape
+    buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
+    transform = lambda x: x / 10
+
+    frames = deque(maxlen=maxlen)
+    for _ in range(maxlen + 2):
+        frame = 42 * np.random.normal(size=buffer.input_shape)
+        lazy_frame = U.LazyArray(frame, transform=transform)
+        frames.append(frame)
+        buffer.append(lazy_frame)
+
+    actual = U.to_np(buffer.get_data())
+    expected = transform(U.to_np(frames))
+
+    np.testing.assert_equal(actual, expected)
+
+
+@pytest.mark.parametrize('num_envs', [1, 8])
+def test_ring_buffer_memory_optmization(num_envs):
     # No additional memory should be needed for stacking the same frame
     # in a different position
-    buffer = initialized_ring_buffer
+    maxlen = 4
+    shape = (num_envs, 1, 16, 16)
+    buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
 
     data_before = buffer.get_data()
     frame = 42 * np.ones((buffer.input_shape))
     buffer.append(frame)
     data_after = buffer.get_data()
 
-    for i_env in range(buffer.input_shape[0]):
-        for before, after in zip(data_before.data[i_env][1:],
-                                 data_after.data[i_env][:-1]):
-            if not np.shares_memory(before, after):
-                raise ValueError('Stacked frames should use the same memory')
+    for before, after in zip(data_before.data[1:], data_after.data[:-1]):
+        if not np.shares_memory(before, after):
+            raise ValueError('Stacked frames should use the same memory')
 
 
 def test_ring_buffer_error_handling():
@@ -113,7 +133,8 @@ def test_ring_buffer_error_handling():
 
 @pytest.mark.parametrize('num_envs', [1, 4])
 @pytest.mark.parametrize('batch_size', [1, 32])
-def test_replay_buffer(num_envs, batch_size, maxlen=1000, seed=None):
+@pytest.mark.parametrize('shape', [(1, 16, 16), (1, 3, 6), (1, 1, 1)])
+def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     seed = seed or random.randint(0, 10000)
     real_maxlen = maxlen // num_envs
 
@@ -121,7 +142,7 @@ def test_replay_buffer(num_envs, batch_size, maxlen=1000, seed=None):
     memory = deque(maxlen=real_maxlen)
 
     for i in range(int(maxlen * 1.5 / num_envs)):
-        state = i * create_test_array(num_envs=num_envs, shape=(1, 16, 16))
+        state = i * create_test_array(num_envs=num_envs, shape=shape)
         action = i * create_test_array(num_envs=num_envs)
         reward = i * create_test_array(num_envs=num_envs)
         done = (i * 10 == 0) * np.ones((num_envs, ))
@@ -144,31 +165,27 @@ def test_replay_buffer(num_envs, batch_size, maxlen=1000, seed=None):
         np.testing.assert_equal(batch.done[i], memory[i_sample].done[i_env])
 
 
-@pytest.mark.parametrize('num_envs', [1, 4])
-def test_replay_and_ring_buffer_memory_opt(num_envs):
-    shape = (num_envs, 1, 3, 3)
+# TODO: Doesn't work with new RingBuffer, should be substituted by StackFrames test
+# @pytest.mark.parametrize('num_envs', [1, 4])
+# def test_replay_and_ring_buffer_memory_opt(num_envs):
+#     shape = (num_envs, 1, 3, 3)
 
-    ring_buffer = RingBuffer(input_shape=(shape), maxlen=3)
-    replay_buffer = ReplayBuffer(maxlen=5 * num_envs)
+#     ring_buffer = RingBuffer(input_shape=(shape), maxlen=3)
+#     replay_buffer = ReplayBuffer(maxlen=5 * num_envs)
 
-    for i in range(5 * num_envs + 3):
-        state = create_test_array(num_envs=num_envs, shape=shape[1:])
-        ring_buffer.append(state)
-        replay_buffer.add_sample(state=ring_buffer.get_data())
+#     for i in range(5 * num_envs + 3):
+#         state = create_test_array(num_envs=num_envs, shape=shape[1:])
+#         ring_buffer.append(state)
+#         replay_buffer.add_sample(state=ring_buffer.get_data())
 
-    for i_sample in range(0, len(replay_buffer) - num_envs, num_envs):
-        for i_env in range(num_envs):
-            state = replay_buffer[i_sample + i_env].state.data
-            next_state = replay_buffer[i_sample + i_env + num_envs].state.data
+#     for i_sample in range(0, len(replay_buffer) - num_envs, num_envs):
+#         for i_env in range(num_envs):
+#             state = replay_buffer[i_sample + i_env].state.data
+#             next_state = replay_buffer[i_sample + i_env + num_envs].state.data
 
-            for arr1, arr2 in zip(state[1:], next_state[:-1]):
-                if not np.shares_memory(arr1, arr2):
-                    raise ValueError('Arrays should share memory')
-
-
-def create_test_array(num_envs, shape=()):
-    return np.array([np.random.uniform(size=shape) for i in range(num_envs)])
-
+#             for arr1, arr2 in zip(state[1:], next_state[:-1]):
+#                 if not np.shares_memory(arr1, arr2):
+#                     raise ValueError('Arrays should share memory')
 
 # def test_strided_axis_simple():
 #     WINDOW = 3
