@@ -31,13 +31,15 @@ def gae_estimation(rewards, dones, state_value_t_and_tp1, *, gamma, gae_lambda):
         rewards=rewards,
         dones=dones,
         state_value_tp1=state_value_t_and_tp1[1:],
-        gamma=gamma)
+        gamma=gamma,
+    )
     td_residual = td_target_value - state_value_t_and_tp1[:-1]
 
     advantages = discounted_sum_rewards(
         rewards=td_residual,
         dones=dones,
         last_state_value_t=None,
-        gamma=gamma * gae_lambda)
+        gamma=gamma * gae_lambda,
+    )
 
     return advantages

@@ -1,6 +1,7 @@
 import multiprocessing
 from collections import namedtuple
 from ctypes import c_double, c_float, c_int, c_uint8
+
 # from torch.multiprocessing import Manager, Pipe, Process, Queue
 from multiprocessing import Manager, Pipe, Process, Queue
 from multiprocessing.sharedctypes import RawArray
@@ -17,7 +18,7 @@ class PAACRunner(BaseRunner):
         np.float64: c_double,
         np.uint8: c_uint8,
         np.int32: c_int,
-        np.int64: c_int
+        np.int64: c_int,
     }
 
     def __init__(self, env, num_workers=None):
@@ -36,36 +37,41 @@ class PAACRunner(BaseRunner):
 
     def _create_shared_transitions(self):
         state = self._get_shared(
-            np.zeros(self.get_state_info().shape, dtype=self.get_state_info().dtype))
+            np.zeros(self.get_state_info().shape, dtype=self.get_state_info().dtype)
+        )
         action = self._get_shared(self._get_action_array())
         reward = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         info = [self.manager.dict() for _ in range(self.num_envs)]
 
         self.shared_tran = U.memories.SimpleMemory(
-            state=state, reward=reward, done=done, action=action, info=info)
+            state=state, reward=reward, done=done, action=action, info=info
+        )
 
     def _create_workers(self):
-        '''
+        """
         Creates and starts each worker in a distinct process.
 
         Parameters
         ----------
         envs: list
             List of envs, each worker will have approximately the same number of envs.
-        '''
-        WorkerNTuple = namedtuple('Worker', ['process', 'connection', 'barrier'])
+        """
+        WorkerNTuple = namedtuple("Worker", ["process", "connection", "barrier"])
         self.workers = []
 
         for envs_i, s_s, s_r, s_d, s_a, s_i in zip(
-                self.split(self.env),
-                self.split(self.shared_tran.state),
-                self.split(self.shared_tran.reward),
-                self.split(self.shared_tran.done),
-                self.split(self.shared_tran.action), self.split(self.shared_tran.info)):
+            self.split(self.env),
+            self.split(self.shared_tran.state),
+            self.split(self.shared_tran.reward),
+            self.split(self.shared_tran.done),
+            self.split(self.shared_tran.action),
+            self.split(self.shared_tran.info),
+        ):
 
             shared_tran = U.memories.SimpleMemory(
-                state=s_s, reward=s_r, done=s_d, action=s_a, info=s_i)
+                state=s_s, reward=s_r, done=s_d, action=s_a, info=s_i
+            )
             parent_conn, child_conn = Pipe()
             queue = Queue()
 
@@ -73,21 +79,25 @@ class PAACRunner(BaseRunner):
                 envs=envs_i,
                 conn=queue,
                 barrier=child_conn,
-                shared_transition=shared_tran)
+                shared_transition=shared_tran,
+            )
             process.daemon = True
             process.start()
 
             self.workers.append(
-                WorkerNTuple(process=process, connection=queue, barrier=parent_conn))
+                WorkerNTuple(process=process, connection=queue, barrier=parent_conn)
+            )
 
     def _get_action_array(self):
         action_info = self.get_action_info()
-        if action_info.space == 'continuous':
+        if action_info.space == "continuous":
             shape = (self.num_envs, np.prod(action_info.shape))
-        elif action_info.space == 'discrete':
-            shape = (self.num_envs, )
+        elif action_info.space == "discrete":
+            shape = (self.num_envs,)
         else:
-            raise ValueError('Action dtype {} not implemented'.format(action_info.dtype))
+            raise ValueError(
+                "Action dtype {} not implemented".format(action_info.dtype)
+            )
 
         return np.zeros(shape, dtype=action_info.dtype)
 
@@ -138,9 +148,9 @@ class PAACRunner(BaseRunner):
         return next_states, rewards, dones, infos
 
     def reset(self):
-        '''
+        """
         Reset all workers in parallel, using Pipe for communication.
-        '''
+        """
         # Send signal to reset
         for worker in self.workers:
             worker.connection.put(None)
@@ -158,7 +168,7 @@ class PAACRunner(BaseRunner):
             worker.barrier.recv()
 
     def split(self, array):
-        '''
+        """
         Divide the input in approximately equal chunks for all workers.
 
         Parameters
@@ -170,16 +180,16 @@ class PAACRunner(BaseRunner):
         -------
         list
             The divided object.
-        '''
+        """
         q, r = divmod(self.num_envs, self.num_workers)
         return [
-            array[i * q + min(i, r):(i + 1) * q + min(i + 1, r)]
+            array[i * q + min(i, r) : (i + 1) * q + min(i + 1, r)]
             for i in range(self.num_workers)
         ]
 
     def get_state_info(self):
         info = self.env[0].get_state_info()
-        info.shape = (self.num_envs, ) + info.shape
+        info.shape = (self.num_envs,) + info.shape
         return info
 
     def get_action_info(self):

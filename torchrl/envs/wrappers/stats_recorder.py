@@ -26,4 +26,4 @@ class StatsRecorder(BaseWrapper):
 
     def write_logs(self, logger):
         self.env.write_logs(logger)
-        logger.add_log('Env/Reward/Episode (Last 50)', np.mean(self.rewards[-50:]))
+        logger.add_log("Env/Reward/Episode (Last 50)", np.mean(self.rewards[-50:]))

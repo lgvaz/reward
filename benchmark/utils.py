@@ -6,19 +6,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import style
-from tensorboard.backend.event_processing.event_accumulator import \
-    EventAccumulator
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 import torchrl.utils as U
 
-style.use('ggplot')
+style.use("ggplot")
 
 
 class NoDaemonProcess(multiprocessing.Process):
-    '''
+    """
     Run process inside processes, from:
     https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic.
-    '''
+    """
 
     def _get_daemon(self):
         return False
@@ -34,40 +33,40 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 
 
 def get_initials(s):
-    if s == 'lr' or s == 'eps':
+    if s == "lr" or s == "eps":
         return s
     else:
-        return ''.join(w[0] for w in s.split('_'))
+        return "".join(w[0] for w in s.split("_"))
 
 
 def bool2str(x, suffix):
-    return ['d', ''][int(x)] + get_initials(suffix)
+    return ["d", ""][int(x)] + get_initials(suffix)
 
 
 def dict2str(d):
-    return '_'.join(get_initials(k) + str(v) for k, v in d.items())
+    return "_".join(get_initials(k) + str(v) for k, v in d.items())
 
 
 def config2str(config):
     tags = []
-    trial = config.pop('trial')
+    trial = config.pop("trial")
 
     for k, v in config.items():
-        if k == 'env_name':
+        if k == "env_name":
             continue
         elif isinstance(v, bool):
             tags.append(bool2str(v, k))
         elif isinstance(v, dict):
-            tags.append('{}({})'.format(get_initials(k), dict2str(v)))
+            tags.append("{}({})".format(get_initials(k), dict2str(v)))
         elif isinstance(v, U.estimators.BaseEstimator):
-            tags.append('{}({})'.format(v.__class__.__name__, dict2str(v.__dict__)))
-        elif k == 'activation':
+            tags.append("{}({})".format(v.__class__.__name__, dict2str(v.__dict__)))
+        elif k == "activation":
             tags.append(v.__name__)
         else:
             tags.append(get_initials(k) + str(v))
-    tags.append('t{}'.format(trial))
+    tags.append("t{}".format(trial))
 
-    return '-'.join(tags)
+    return "-".join(tags)
 
 
 def read_tf_event(file_path):
@@ -76,22 +75,22 @@ def read_tf_event(file_path):
     event_acc.Reload()
     data = {}
 
-    for tag in event_acc.Tags()['scalars']:
-        _, data['steps'], data[tag] = zip(*event_acc.Scalars(tag))
+    for tag in event_acc.Tags()["scalars"]:
+        _, data["steps"], data[tag] = zip(*event_acc.Scalars(tag))
 
-    steps = data.pop('steps')
+    steps = data.pop("steps")
 
     min_len = min([len(v) for v in data.values()])
     data = {k: v[:min_len] for k, v in data.items()}
     df = pd.DataFrame(data)
-    df.insert(0, 'Steps', steps[:min_len])
+    df.insert(0, "Steps", steps[:min_len])
     return df
 
 
 def get_logs(log_dir, tag):
     log_dir = Path(log_dir)
-    tag += '*'
-    files_path = [list(p.glob('events.out.tfevents.*'))[0] for p in log_dir.glob(tag)]
+    tag += "*"
+    files_path = [list(p.glob("events.out.tfevents.*"))[0] for p in log_dir.glob(tag)]
 
     runs = {}
     for i, f in enumerate(files_path):
@@ -104,7 +103,7 @@ def plot_panel(panel, column, ax=None, label=None, window=10):
     if ax is None:
         fig, ax = plt.subplots()
 
-    steps = panel[0]['Steps']
+    steps = panel[0]["Steps"]
     panel_mean = panel.mean(0)[column].rolling(window).mean()
     panel_min = panel.min(0)[column].rolling(window).mean()
     panel_max = panel.max(0)[column].rolling(window).mean()
@@ -124,14 +123,17 @@ def plot_logs(log_dir, tags, window=10):
 
         if fig is None:
             fig, axs = plt.subplots(
-                len(columns) - 1, 1, figsize=(16, (len(columns) - 1) * 10))
+                len(columns) - 1, 1, figsize=(16, (len(columns) - 1) * 10)
+            )
             # Set non-repeating colors
             for ax in axs.flat:
-                ax.set_prop_cycle('color', plt.cm.gist_ncar(np.linspace(0, 1, len(tags))))
+                ax.set_prop_cycle(
+                    "color", plt.cm.gist_ncar(np.linspace(0, 1, len(tags)))
+                )
 
         i = 0
         for column in columns:
-            if column == 'Steps':
+            if column == "Steps":
                 continue
             plot_panel(panel, column=column, ax=axs.flat[i], label=tag, window=window)
             i += 1

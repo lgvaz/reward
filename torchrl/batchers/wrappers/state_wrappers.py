@@ -22,8 +22,8 @@ class StateRunNorm(BaseWrapper):
         return self.old_transform_batch(batch, training=training)
 
     def write_logs(self, logger):
-        logger.add_tf_only_log('Env/State/mean', self.filt.mean.mean())
-        logger.add_tf_only_log('Env/State/std', self.filt.std.mean())
+        logger.add_tf_only_log("Env/State/mean", self.filt.mean.mean())
+        logger.add_tf_only_log("Env/State/std", self.filt.std.mean())
 
         self.old_write_logs(logger)
 
@@ -60,9 +60,11 @@ class StackFrames(BaseWrapper):
 
     def transform(self, state):
         state = to_np(state)
-        assert state.shape[self.dim
-                           + 1] == 1, 'Dimension to stack must be 1 but it is {}'.format(
-                               state.shape[self.dim + 1])
+        assert (
+            state.shape[self.dim + 1] == 1
+        ), "Dimension to stack must be 1 but it is {}".format(
+            state.shape[self.dim + 1]
+        )
 
         return state.swapaxes(0, self.dim + 1)[0]
 
@@ -71,7 +73,7 @@ class StackFrames(BaseWrapper):
             self.ring_buffer = RingBuffer(input_shape=state.shape, maxlen=self.n)
         if self.eval_ring_buffer is None:
             # First dimension (num_envs) for evaluation is always 1
-            eval_shape = (1, ) + state.shape[1:]
+            eval_shape = (1,) + state.shape[1:]
             self.eval_ring_buffer = RingBuffer(input_shape=eval_shape, maxlen=self.n)
 
         if training:
@@ -88,7 +90,7 @@ class StackFrames(BaseWrapper):
 
 class Frame2Float(BaseWrapper):
     def transform_state(self, state, training=True):
-        state = state.astype('float32') / 255.
+        state = state.astype("float32") / 255.
 
         return self.old_transform_state(state, training=training)
 

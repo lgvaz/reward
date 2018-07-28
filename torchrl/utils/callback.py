@@ -11,7 +11,8 @@ class Callback:
             train_end=list(),
             epoch_end=list(),
             mini_batch_end=list(),
-            cleanup=list())
+            cleanup=list(),
+        )
 
     def _run_callbacks(self, batch, callbacks):
         return any(c(batch) for c in callbacks)
@@ -26,7 +27,9 @@ class Callback:
         return self._run_callbacks(batch=batch, callbacks=self.callbacks.epoch_start)
 
     def on_mini_batch_start(self, batch):
-        return self._run_callbacks(batch=batch, callbacks=self.callbacks.mini_batch_start)
+        return self._run_callbacks(
+            batch=batch, callbacks=self.callbacks.mini_batch_start
+        )
 
     def on_train_end(self, batch):
         return self._run_callbacks(batch=batch, callbacks=self.callbacks.train_end)
@@ -67,6 +70,7 @@ class Callback:
 
         for k in new_callback.callbacks:
             new_callback.callbacks[k] = itertools.chain(
-                *[c.callbacks[k] for c in callbacks])
+                *[c.callbacks[k] for c in callbacks]
+            )
 
         return new_callback

@@ -10,13 +10,13 @@ class BaseWrapper:
         # Automatically points unwrapped methods to last wrapper
         for attr in dir(batcher):
             # Don't get magic methods
-            if attr.startswith('__') or attr.startswith('old'):
+            if attr.startswith("__") or attr.startswith("old"):
                 continue
 
             value = getattr(batcher, attr)
             if inspect.ismethod(value):
                 # Store old method
-                setattr(self, 'old_' + attr, value)
+                setattr(self, "old_" + attr, value)
                 # Points to new method
                 setattr(batcher.unwrapped, attr, getattr(self, attr))
 
@@ -26,7 +26,7 @@ class BaseWrapper:
         self.batcher = batcher
 
     def __str__(self):
-        return '<{}{}>'.format(type(self).__name__, self.batcher)
+        return "<{}{}>".format(type(self).__name__, self.batcher)
 
     def __repr__(self):
         return str(self)

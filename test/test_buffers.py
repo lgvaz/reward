@@ -10,7 +10,7 @@ from .utils import create_test_array
 def test_ring_buffer():
     maxlen = 4
     shape = (8, 1, 16, 16)
-    expected_shape = (maxlen, ) + shape
+    expected_shape = (maxlen,) + shape
     buffer = RingBuffer(input_shape=shape, maxlen=maxlen)
 
     frame = np.ones(shape)
@@ -54,11 +54,11 @@ def test_ring_buffer():
     np.testing.assert_equal(state, expected)
 
 
-@pytest.mark.parametrize('num_envs', [1, 8])
-@pytest.mark.parametrize('shape', [(1, 16, 16), (1, 3, 4), (1, 1, 1)])
+@pytest.mark.parametrize("num_envs", [1, 8])
+@pytest.mark.parametrize("shape", [(1, 16, 16), (1, 3, 4), (1, 1, 1)])
 def test_ring_buffer_consistency(num_envs, shape):
     maxlen = 4
-    shape = (num_envs, ) + shape
+    shape = (num_envs,) + shape
     buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
 
     data_before = buffer.get_data()
@@ -71,12 +71,12 @@ def test_ring_buffer_consistency(num_envs, shape):
         np.testing.assert_equal(np.array(data_before), np.array(data_after))
 
 
-@pytest.mark.parametrize('num_envs', [1, 8])
-@pytest.mark.parametrize('shape', [(1, 16, 16), (1, 3, 4), (1, 1, 1)])
+@pytest.mark.parametrize("num_envs", [1, 8])
+@pytest.mark.parametrize("shape", [(1, 16, 16), (1, 3, 4), (1, 1, 1)])
 def test_ring_buffer_consistency2(num_envs, shape):
     # Original data should not be modified after np.array is called
     maxlen = 4
-    shape = (num_envs, ) + shape
+    shape = (num_envs,) + shape
     buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
 
     data = np.array(buffer.get_data())
@@ -87,11 +87,11 @@ def test_ring_buffer_consistency2(num_envs, shape):
     np.testing.assert_equal(data_before, data_after)
 
 
-@pytest.mark.parametrize('num_envs', [1, 8])
-@pytest.mark.parametrize('shape', [(1, 3, 3), (1, 3, 4), (1, 1, 1)])
+@pytest.mark.parametrize("num_envs", [1, 8])
+@pytest.mark.parametrize("shape", [(1, 3, 3), (1, 3, 4), (1, 1, 1)])
 def test_ring_buffer_nested_lazyframe(num_envs, shape):
     maxlen = 4
-    shape = (num_envs, ) + shape
+    shape = (num_envs,) + shape
     buffer = RingBuffer(input_shape=(shape), maxlen=maxlen)
     transform = lambda x: x / 10
 
@@ -108,7 +108,7 @@ def test_ring_buffer_nested_lazyframe(num_envs, shape):
     np.testing.assert_equal(actual, expected)
 
 
-@pytest.mark.parametrize('num_envs', [1, 8])
+@pytest.mark.parametrize("num_envs", [1, 8])
 def test_ring_buffer_memory_optmization(num_envs):
     # No additional memory should be needed for stacking the same frame
     # in a different position
@@ -123,7 +123,7 @@ def test_ring_buffer_memory_optmization(num_envs):
 
     for before, after in zip(data_before.data[1:], data_after.data[:-1]):
         if not np.shares_memory(before, after):
-            raise ValueError('Stacked frames should use the same memory')
+            raise ValueError("Stacked frames should use the same memory")
 
 
 def test_ring_buffer_error_handling():
@@ -131,9 +131,9 @@ def test_ring_buffer_error_handling():
         RingBuffer(input_shape=(42, 42), maxlen=1)
 
 
-@pytest.mark.parametrize('num_envs', [1, 4])
-@pytest.mark.parametrize('batch_size', [1, 32])
-@pytest.mark.parametrize('shape', [(1, 16, 16), (1, 3, 6), (1, 1, 1)])
+@pytest.mark.parametrize("num_envs", [1, 4])
+@pytest.mark.parametrize("batch_size", [1, 32])
+@pytest.mark.parametrize("shape", [(1, 16, 16), (1, 3, 6), (1, 1, 1)])
 def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     seed = seed or random.randint(0, 10000)
     real_maxlen = maxlen // num_envs
@@ -145,11 +145,14 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
         state = i * create_test_array(num_envs=num_envs, shape=shape)
         action = i * create_test_array(num_envs=num_envs)
         reward = i * create_test_array(num_envs=num_envs)
-        done = (i * 10 == 0) * np.ones((num_envs, ))
+        done = (i * 10 == 0) * np.ones((num_envs,))
 
         replay_buffer.add_sample(state=state, action=action, reward=reward, done=done)
         memory.append(
-            U.memories.SimpleMemory(state=state, action=action, reward=reward, done=done))
+            U.memories.SimpleMemory(
+                state=state, action=action, reward=reward, done=done
+            )
+        )
 
     random.seed(seed)
     batch = replay_buffer.sample(batch_size=batch_size)

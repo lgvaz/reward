@@ -54,5 +54,5 @@ class Rescale(BaseStateWrapper):
 
 class HWC2CHW(BaseStateWrapper):
     def transform(self, state):
-        assert state.ndim == 3, 'frame have {} dims but must have 3'.format(state.ndim)
+        assert state.ndim == 3, "frame have {} dims but must have 3".format(state.ndim)
         return np.rollaxis(state, -1)

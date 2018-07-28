@@ -7,21 +7,21 @@ from torchrl.nn import FlattenLinear
 
 
 class ValueModel(BaseModel):
-    '''
+    """
     A standard regression model, can be used to estimate the value of states or Q values.
 
     Parameters
     ----------
     clip_range: float
         Similar to PPOClip, limits the change between the new and old value function.
-    '''
+    """
 
     def __init__(self, model, batcher, **kwargs):
         super().__init__(model=model, batcher=batcher, **kwargs)
 
     @property
     def batch_keys(self):
-        return ['state_t', 'vtarget']
+        return ["state_t", "vtarget"]
 
     def register_losses(self):
         self.register_loss(self.mse_loss)
@@ -44,11 +44,14 @@ class ValueModel(BaseModel):
         super().write_logs(batch)
 
         self.memory.new_pred = self.forward(batch.state_t)
-        self.add_log('Old Explained Var', U.explained_var(batch.vtarget, batch.old_pred))
-        self.add_log('New Explained Var',
-                     U.explained_var(batch.vtarget, self.memory.new_pred))
-        self.add_log('Target_mean', batch.vtarget.mean())
-        self.add_log('Pred_mean', self.memory.new_pred.mean())
+        self.add_log(
+            "Old Explained Var", U.explained_var(batch.vtarget, batch.old_pred)
+        )
+        self.add_log(
+            "New Explained Var", U.explained_var(batch.vtarget, self.memory.new_pred)
+        )
+        self.add_log("Target_mean", batch.vtarget.mean())
+        self.add_log("Pred_mean", self.memory.new_pred.mean())
 
     @staticmethod
     def output_layer(input_shape, action_info):

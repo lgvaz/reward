@@ -6,8 +6,8 @@ import torchrl.utils as U
 class JointOpt(BaseOpt):
     @property
     def name(self):
-        models_name = '-'.join([m.name for m in self.model])
-        return '/'.join([self.__class__.__name__, models_name])
+        models_name = "-".join([m.name for m in self.model])
+        return "/".join([self.__class__.__name__, models_name])
 
     @property
     def batch_keys(self):

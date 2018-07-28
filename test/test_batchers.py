@@ -36,10 +36,11 @@ class TestRolloutBatcher(TestBatchers):
     def test_rollout_batcher_simple(self):
         self.num_steps = 1000
 
-        self._test_rollout_batcher_simple(GymEnv('CartPole-v1'))
-        self._test_rollout_batcher_simple(GymEnv('Pendulum-v0'))
+        self._test_rollout_batcher_simple(GymEnv("CartPole-v1"))
+        self._test_rollout_batcher_simple(GymEnv("Pendulum-v0"))
         self._test_rollout_batcher_simple(
-            Rescale(RGB2GRAY(AtariEnv('PongNoFrameskip-v4')), shape=(84, 84)))
+            Rescale(RGB2GRAY(AtariEnv("PongNoFrameskip-v4")), shape=(84, 84))
+        )
 
     @timeit
     def test_rollout_batcher_paac(self):
@@ -47,13 +48,17 @@ class TestRolloutBatcher(TestBatchers):
         self.num_steps = self.num_envs * 5
 
         self._test_rollout_batcher_paac(
-            [GymEnv('CartPole-v1') for _ in range(self.num_envs)])
+            [GymEnv("CartPole-v1") for _ in range(self.num_envs)]
+        )
         self._test_rollout_batcher_paac(
-            [GymEnv('Pendulum-v0') for _ in range(self.num_envs)])
-        self._test_rollout_batcher_paac([
-            Rescale(RGB2GRAY(AtariEnv('PongNoFrameskip-v4')), shape=(84, 84))
-            for _ in range(self.num_envs)
-        ])
+            [GymEnv("Pendulum-v0") for _ in range(self.num_envs)]
+        )
+        self._test_rollout_batcher_paac(
+            [
+                Rescale(RGB2GRAY(AtariEnv("PongNoFrameskip-v4")), shape=(84, 84))
+                for _ in range(self.num_envs)
+            ]
+        )
 
     def _test_rollout_batcher_simple(self, env):
         assert self.num_steps % self.batch_size == 0
@@ -75,10 +80,10 @@ class TestRolloutBatcher(TestBatchers):
         for i in range(0, self.num_steps, self.batch_size):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
-            np.testing.assert_allclose(batch.state_t, exp_s[i:i + self.batch_size])
-            np.testing.assert_allclose(batch.reward, exp_r[i:i + self.batch_size])
-            np.testing.assert_allclose(batch.done, exp_d[i:i + self.batch_size])
-            np.testing.assert_equal(batch.info, exp_i[i:i + self.batch_size])
+            np.testing.assert_allclose(batch.state_t, exp_s[i : i + self.batch_size])
+            np.testing.assert_allclose(batch.reward, exp_r[i : i + self.batch_size])
+            np.testing.assert_allclose(batch.done, exp_d[i : i + self.batch_size])
+            np.testing.assert_equal(batch.info, exp_i[i : i + self.batch_size])
 
         runner.close()
         batcher.close()
@@ -87,8 +92,11 @@ class TestRolloutBatcher(TestBatchers):
         seeds = np.random.choice(4200, self.num_envs)
         horizon = self.batch_size // self.num_envs
         actions = np.array(
-            [[envs[0].sample_random_action() for _ in range(self.num_steps)]
-             for _ in range(self.num_envs)]).swapaxes(0, 1)
+            [
+                [envs[0].sample_random_action() for _ in range(self.num_steps)]
+                for _ in range(self.num_envs)
+            ]
+        ).swapaxes(0, 1)
 
         # Expected
         [env.seed(int(seed)) for env, seed in zip(envs, seeds)]
@@ -105,10 +113,10 @@ class TestRolloutBatcher(TestBatchers):
         for i in range(0, self.num_steps // self.num_envs, horizon):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
-            np.testing.assert_allclose(batch.state_t, exp_s[i:i + horizon])
-            np.testing.assert_allclose(batch.reward, exp_r[i:i + horizon])
-            np.testing.assert_allclose(batch.done, exp_d[i:i + horizon])
-            np.testing.assert_equal(batch.info, exp_i[i:i + horizon])
+            np.testing.assert_allclose(batch.state_t, exp_s[i : i + horizon])
+            np.testing.assert_allclose(batch.reward, exp_r[i : i + horizon])
+            np.testing.assert_allclose(batch.done, exp_d[i : i + horizon])
+            np.testing.assert_equal(batch.info, exp_i[i : i + horizon])
 
         runner.close()
         batcher.close()

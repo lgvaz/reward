@@ -1,6 +1,15 @@
-from .container import (ActionLinear, Flatten, FlattenLinear, ModuleExtended,
-                        SequentialExtended)
+from .container import (
+    ActionLinear,
+    Flatten,
+    FlattenLinear,
+    ModuleExtended,
+    SequentialExtended,
+)
 
 __all__ = [
-    'ModuleExtended', 'SequentialExtended', 'Flatten', 'FlattenLinear', 'ActionLinear'
+    "ModuleExtended",
+    "SequentialExtended",
+    "Flatten",
+    "FlattenLinear",
+    "ActionLinear",
 ]

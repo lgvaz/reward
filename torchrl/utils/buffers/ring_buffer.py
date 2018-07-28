@@ -6,7 +6,7 @@ from torchrl.utils import LazyArray
 class RingBuffer:
     def __init__(self, *, input_shape, maxlen):
         if not maxlen > 1:
-            raise ValueError('maxlen is {} and must be greater than 1'.format(maxlen))
+            raise ValueError("maxlen is {} and must be greater than 1".format(maxlen))
         self.input_shape = input_shape
         self.maxlen = maxlen
 

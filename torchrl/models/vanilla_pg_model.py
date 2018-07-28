@@ -6,13 +6,13 @@ from torchrl.models import BasePGModel
 
 
 class VanillaPGModel(BasePGModel):
-    '''
+    """
     The classical Policy Gradient algorithm.
-    '''
+    """
 
     @property
     def batch_keys(self):
-        return ['state_t', 'action', 'advantage', 'log_prob']
+        return ["state_t", "action", "advantage", "log_prob"]
 
     @property
     def entropy(self):
@@ -33,7 +33,7 @@ class VanillaPGModel(BasePGModel):
         batch.log_prob = self.memory.dists.log_prob(batch.action).sum(-1)
 
     def pg_loss(self, batch):
-        '''
+        """
         Compute loss based on the policy gradient theorem.
 
         Parameters
@@ -41,7 +41,7 @@ class VanillaPGModel(BasePGModel):
         batch: Batch
             The batch should contain all the information necessary
             to compute the gradients.
-        '''
+        """
         objective = batch.log_prob * batch.advantage
         loss = -objective.mean()
 

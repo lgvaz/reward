@@ -14,7 +14,7 @@ from multiprocessing import Process
 
 # TODO; Paramters changes, change doc
 class BaseModel(ModuleExtended, ABC):
-    '''
+    """
     Basic TorchRL model. Takes two :obj:`Config` objects that identify
     the body(ies) and head(s) of the model.
 
@@ -42,7 +42,7 @@ class BaseModel(ModuleExtended, ABC):
         of the grads of each model.
     cuda_default: bool
         If True and cuda is supported, use it (Default is True).
-    '''
+    """
 
     def __init__(self, model, batcher, *, cuda_default=True):
         super().__init__()
@@ -65,16 +65,16 @@ class BaseModel(ModuleExtended, ABC):
     @property
     @abstractmethod
     def batch_keys(self):
-        '''
+        """
         The batch keys needed for computing all losses.
         This is done to reduce overhead when sampling a dataloader,
         it makes sure only the requested keys are being sampled.
-        '''
+        """
 
     @property
     @abstractmethod
     def register_losses(self):
-        '''
+        """
         Append losses to ``self.losses``, the losses are used
         at :meth:`optimizer_step` for calculating the gradients.
 
@@ -83,12 +83,12 @@ class BaseModel(ModuleExtended, ABC):
         batch: dict
             The batch should contain all the information necessary
             to compute the gradients.
-        '''
+        """
 
     @staticmethod
     @abstractmethod
     def output_layer(input_shape, action_info):
-        '''
+        """
         The final layer of the model, will be appended to the model head.
 
         Parameters
@@ -102,7 +102,7 @@ class BaseModel(ModuleExtended, ABC):
         --------
         The output of most PG models have the same dimension as the action,
         but the output of the Value models is rank 1. This is where this is defined.
-        '''
+        """
 
     @property
     def body(self):
@@ -136,28 +136,28 @@ class BaseModel(ModuleExtended, ABC):
         return sum(losses.values())
 
     def forward(self, x):
-        '''
+        """
         Defines the computation performed at every call.
 
         Parameters
         ----------
         x: numpy.ndarray
             The environment state.
-        '''
+        """
         return self.model(x)
 
     def attach_logger(self, logger):
-        '''
+        """
         Register a logger to this model.
 
         Parameters
         ----------
         logger: torchrl.utils.logger
-        '''
+        """
         self.logger = logger
 
     def wrap_name(self, name):
-        return '/'.join([self.name, name])
+        return "/".join([self.name, name])
 
     def add_log(self, name, value, **kwargs):
         self.logger.add_log(name=self.wrap_name(name), value=value, **kwargs)
@@ -172,14 +172,14 @@ class BaseModel(ModuleExtended, ABC):
         self.logger.add_histogram(name=self.wrap_name(name), values=values, **kwargs)
 
     def write_logs(self, batch):
-        '''
+        """
         Write logs to the terminal and to a tf log file.
 
         Parameters
         ----------
         batch: Batch
             Some logs might need the batch for calculation.
-        '''
+        """
         total_loss = 0
         for k in self.memory.losses[0]:
             partial_loss = 0
@@ -188,13 +188,13 @@ class BaseModel(ModuleExtended, ABC):
 
             partial_loss = partial_loss / len(self.memory.losses)
             total_loss += partial_loss
-            self.add_tf_only_log('/'.join(['Loss', k]), partial_loss, precision=4)
+            self.add_tf_only_log("/".join(["Loss", k]), partial_loss, precision=4)
 
-        self.add_log('Loss/Total', total_loss, precision=4)
+        self.add_log("Loss/Total", total_loss, precision=4)
 
     @classmethod
     def from_config(cls, config, batcher=None, body=None, head=None, **kwargs):
-        '''
+        """
         Creates a model from a configuration file.
 
         Parameters
@@ -210,26 +210,28 @@ class BaseModel(ModuleExtended, ABC):
         -------
         torchrl.models
             A TorchRL model.
-        '''
+        """
         # env = env or U.env_from_config(config)
         # config.pop('env', None)
 
-        if not 'body' in config.nn_config:
+        if not "body" in config.nn_config:
             config.nn_config.body = []
-        if not 'head' in config.nn_config:
+        if not "head" in config.nn_config:
             config.nn_config.head = []
 
-        nn_config = config.pop('nn_config')
+        nn_config = config.pop("nn_config")
         model = U.nn_from_config(
             config=nn_config,
             state_info=batcher.get_state_info(),
             action_info=batcher.get_action_info(),
             body=body,
-            head=head)
+            head=head,
+        )
 
         output_layer = cls.output_layer(
             input_shape=model.get_output_shape(batcher.get_state_info().shape),
-            action_info=batcher.get_action_info())
+            action_info=batcher.get_action_info(),
+        )
 
         model.layers.head.append(output_layer)
 
@@ -244,6 +246,6 @@ class BaseModel(ModuleExtended, ABC):
     @classmethod
     def from_arch(cls, arch, *args, **kwargs):
         module_path = os.path.abspath(os.path.dirname(__file__))
-        path = os.path.join(module_path, 'archs', arch)
+        path = os.path.join(module_path, "archs", arch)
 
         return cls.from_file(file_path=path, *args, **kwargs)

@@ -1,6 +1,9 @@
 from torchrl.utils.estimators import BaseEstimator
-from torchrl.utils.estimators.estimation_funcs import (discounted_sum_rewards,
-                                                       gae_estimation, td_target)
+from torchrl.utils.estimators.estimation_funcs import (
+    discounted_sum_rewards,
+    gae_estimation,
+    td_target,
+)
 
 
 class CompleteReturn(BaseEstimator):
@@ -14,7 +17,8 @@ class CompleteReturn(BaseEstimator):
             # TODO: Which one is right??, if no baseline is used the later is impossible
             last_state_value_t=None,
             # last_state_value_t=batch.state_value_t[-1],
-            gamma=self.gamma)
+            gamma=self.gamma,
+        )
 
 
 class Baseline(BaseEstimator):
@@ -26,7 +30,8 @@ class Baseline(BaseEstimator):
             rewards=batch.reward,
             dones=batch.done,
             last_state_value_t=batch.state_value_t[-1],
-            gamma=self.gamma)
+            gamma=self.gamma,
+        )
         return return_ - batch.state_value_t
 
 
@@ -35,11 +40,15 @@ class TD(BaseEstimator):
         self.gamma = gamma
 
     def __call__(self, batch):
-        return td_target(
-            rewards=batch.reward,
-            dones=batch.done,
-            state_value_tp1=batch.state_value_tp1,
-            gamma=self.gamma) - batch.state_value_t
+        return (
+            td_target(
+                rewards=batch.reward,
+                dones=batch.done,
+                state_value_tp1=batch.state_value_tp1,
+                gamma=self.gamma,
+            )
+            - batch.state_value_t
+        )
 
 
 class GAE(BaseEstimator):
@@ -53,4 +62,5 @@ class GAE(BaseEstimator):
             dones=batch.done,
             state_value_t_and_tp1=batch.state_value_t_and_tp1,
             gamma=self.gamma,
-            gae_lambda=self.gae_lambda)
+            gae_lambda=self.gae_lambda,
+        )

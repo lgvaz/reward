@@ -9,7 +9,7 @@ class BaseWrapper(object):
         return getattr(self.env, name)
 
     def __str__(self):
-        return '<{}{}>'.format(type(self).__name__, self.env)
+        return "<{}{}>".format(type(self).__name__, self.env)
 
     def __repr__(self):
         return str(self)

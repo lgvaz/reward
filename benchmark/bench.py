@@ -3,7 +3,7 @@ from torchrl.utils import Config
 
 def task_gen(tasks, config):
     for task in tasks:
-        trials = task.get('trials')
+        trials = task.get("trials")
 
         for i in range(trials):
             new_config = Config(**task)
@@ -12,20 +12,25 @@ def task_gen(tasks, config):
             yield new_config
 
 
-mujoco_essential_envs = ['Hopper-v2', 'HalfCheetah-v2', 'Walker2d-v2']
+mujoco_essential_envs = ["Hopper-v2", "HalfCheetah-v2", "Walker2d-v2"]
 
 mujoco_simple_envs = [
-    'Hopper-v2', 'HalfCheetah-v2', 'InvertedPendulum-v2', 'InvertedDoublePendulum-v2',
-    'Walker2d-v2', 'Reacher-v2', 'Swimmer-v2'
+    "Hopper-v2",
+    "HalfCheetah-v2",
+    "InvertedPendulum-v2",
+    "InvertedDoublePendulum-v2",
+    "Walker2d-v2",
+    "Reacher-v2",
+    "Swimmer-v2",
 ]
 
 roboschool_simple_envs = [
-    'RoboschoolHopper-v1',
-    'RoboschoolHalfCheetah-v1',
-    'RoboschoolInvertedPendulum-v1',
-    'RoboschoolInvertedDoublePendulum-v1',
-    'RoboschoolWalker2d-v1',
-    'RoboschoolReacher-v1',
+    "RoboschoolHopper-v1",
+    "RoboschoolHalfCheetah-v1",
+    "RoboschoolInvertedPendulum-v1",
+    "RoboschoolInvertedDoublePendulum-v1",
+    "RoboschoolWalker2d-v1",
+    "RoboschoolReacher-v1",
 ]
 
 MUJOCO_ESSENTIAL_BENCH = [

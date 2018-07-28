@@ -10,7 +10,7 @@ def before_after_equal(func):
 
         yield v
 
-        np.testing.assert_equal(v, v_copy, err_msg='array should not be modified')
+        np.testing.assert_equal(v, v_copy, err_msg="array should not be modified")
 
     return wrapper
 

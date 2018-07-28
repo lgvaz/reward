@@ -6,7 +6,7 @@ import torchrl.utils as U
 
 # TODO: Docstring
 class BaseAgent(ABC):
-    '''
+    """
     Basic TorchRL agent. Encapsulate an environment and a model.
 
     Parameters
@@ -17,9 +17,9 @@ class BaseAgent(ABC):
         Discount factor on future rewards (Default is 0.99).
     log_dir: string
         Directory where logs will be written (Default is `runs`).
-    '''
+    """
 
-    def __init__(self, batcher, optimizer, *, gamma=0.99, log_dir='runs'):
+    def __init__(self, batcher, optimizer, *, gamma=0.99, log_dir="runs"):
         self.batcher = batcher
         self.opt = optimizer
         self.logger = U.Logger(log_dir)
@@ -33,10 +33,10 @@ class BaseAgent(ABC):
 
     @abstractmethod
     def step(self):
-        '''
+        """
         This method is called at each interaction of the training loop,
         and defines the training procedure.
-        '''
+        """
 
     @property
     def num_steps(self):
@@ -47,17 +47,19 @@ class BaseAgent(ABC):
         return self.batcher.num_episodes
 
     def _check_termination(self):
-        '''
+        """
         Check if the training loop reached the end.
 
         Returns
         -------
         bool
         True if done, False otherwise.
-        '''
-        if (self.num_iters // self.max_iters >= 1
-                or self.num_episodes // self.max_episodes >= 1
-                or self.num_steps // self.max_steps >= 1):
+        """
+        if (
+            self.num_iters // self.max_iters >= 1
+            or self.num_episodes // self.max_episodes >= 1
+            or self.num_steps // self.max_steps >= 1
+        ):
             return True
 
         return False
@@ -65,16 +67,17 @@ class BaseAgent(ABC):
     def _check_evaluation(self, env):
         if self.eval_freq is not None and self.num_steps >= self.next_eval:
             action_fn = self.eval_select_action_fn or self.models.policy.select_action
-            action_fn_pre = lambda state: action_fn(model=self.models.policy,
-                                                state=state,
-                                                step=self.num_steps)
+            action_fn_pre = lambda state: action_fn(
+                model=self.models.policy, state=state, step=self.num_steps
+            )
             self.batcher.evaluate(
-                select_action_fn=action_fn_pre, logger=self.logger, env=env)
+                select_action_fn=action_fn_pre, logger=self.logger, env=env
+            )
 
             self.next_eval += self.eval_freq
 
     def _register_model(self, name, model):
-        '''
+        """
         Save a torchrl model to the internal memory.
 
         Parameters
@@ -83,7 +86,7 @@ class BaseAgent(ABC):
             Desired name for the model.
         model: torchrl.models
             The model to register.
-        '''
+        """
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
 
@@ -92,15 +95,17 @@ class BaseAgent(ABC):
         #     model.train(batch_tensor, step=self.num_steps)
         self.opt.learn_from_batch(batch, step=self.num_steps)
 
-    def train(self,
-              *,
-              max_iters=-1,
-              max_episodes=-1,
-              max_steps=-1,
-              log_freq=1,
-              eval_env=None,
-              eval_freq=None):
-        '''
+    def train(
+        self,
+        *,
+        max_iters=-1,
+        max_episodes=-1,
+        max_steps=-1,
+        log_freq=1,
+        eval_env=None,
+        eval_freq=None
+    ):
+        """
         Defines the training loop of the algorithm, calling :meth:`step` at every iteration.
 
         Parameters
@@ -111,7 +116,7 @@ class BaseAgent(ABC):
             Maximum number of episodes (Default is -1, meaning it doesn't matter).
         max_steps: int
             Maximum number of steps (Default is -1, meaning it doesn't matter).
-        '''
+        """
         self.max_iters = max_iters
         self.max_episodes = max_episodes
         self.max_steps = max_steps
@@ -131,7 +136,7 @@ class BaseAgent(ABC):
                 break
 
     def select_action(self, state, step):
-        '''
+        """
         Receive a state and use the model to select an action.
 
         Parameters
@@ -143,21 +148,24 @@ class BaseAgent(ABC):
         -------
         action: int or numpy.ndarray
             The selected action.
-        '''
+        """
         action_fn = self.select_action_fn or self.models.policy.select_action
         return action_fn(model=self.models.policy, state=state, step=step)
 
     def write_logs(self):
-        '''
+        """
         Use the logger to write general information about the training process.
-        '''
+        """
         self.batcher.write_logs(logger=self.logger)
         self.opt.write_logs(logger=self.logger)
 
         self.logger.timeit(self.num_steps, max_steps=self.max_steps)
         # Instead of Update should be Iter?
-        self.logger.log('Iter {} | Episode {} | Step {}'.format(
-            self.num_iters, self.num_episodes, self.num_steps))
+        self.logger.log(
+            "Iter {} | Episode {} | Step {}".format(
+                self.num_iters, self.num_episodes, self.num_steps
+            )
+        )
 
     def generate_batch(self):
         batch = self.batcher.get_batch(select_action_fn=self.select_action)

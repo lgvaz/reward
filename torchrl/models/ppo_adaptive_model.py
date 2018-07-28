@@ -5,7 +5,7 @@ from torch.distributions.kl import kl_divergence
 
 
 class PPOAdaptiveModel(SurrogatePGModel):
-    '''
+    """
     Proximal Policy Optimization as described in https://arxiv.org/pdf/1707.06347.pdf.
 
 
@@ -13,7 +13,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
     ----------
     num_epochs: int
         How many times to train over the entire dataset (Default is 10).
-    '''
+    """
 
     def __init__(self, model, batcher, *, kl_target=0.01, kl_penalty=1., **kwargs):
         super().__init__(model=model, batcher=batcher, **kwargs)
@@ -43,13 +43,16 @@ class PPOAdaptiveModel(SurrogatePGModel):
         return loss
 
     def hinge_loss(self, batch):
-        loss = 50 * max(0, batch.kl_div - 2. * self.kl_target)**2
+        loss = 50 * max(0, batch.kl_div - 2. * self.kl_target) ** 2
 
         return loss
 
     def add_kl_div(self, batch):
-        batch.kl_div = kl_divergence(self.memory.old_dists[batch.idxs],
-                                     self.memory.new_dists).sum(-1).mean()
+        batch.kl_div = (
+            kl_divergence(self.memory.old_dists[batch.idxs], self.memory.new_dists)
+            .sum(-1)
+            .mean()
+        )
 
     def kl_penalty_adjust(self, batch):
         # Adjust KL penalty
@@ -60,11 +63,11 @@ class PPOAdaptiveModel(SurrogatePGModel):
 
     def kl_early_stopping(self, batch):
         if self.kl_div > 4 * self.kl_target:
-            print('Early stopping')
+            print("Early stopping")
             return True
 
     def write_logs(self, batch):
         super().write_logs(batch)
 
-        self.add_log('KL Target', self.kl_target, precision=4)
-        self.add_log('KL Penalty', self.kl_penalty, precision=4)
+        self.add_log("KL Target", self.kl_target, precision=4)
+        self.add_log("KL Penalty", self.kl_penalty, precision=4)

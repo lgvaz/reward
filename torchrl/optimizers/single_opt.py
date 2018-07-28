@@ -4,7 +4,7 @@ from torchrl.optimizers import BaseOpt
 class SingleOpt(BaseOpt):
     @property
     def name(self):
-        return '/'.join([self.__class__.__name__, self.model.name])
+        return "/".join([self.__class__.__name__, self.model.name])
 
     @property
     def batch_keys(self):

@@ -24,13 +24,13 @@ def check_meanstd_filter(filter_, data, mean, *, std=None, var=None, rtol=1e-7):
     np.testing.assert_allclose(actual, expected, rtol=rtol)
 
 
-@pytest.mark.parametrize('num_features', [1, 5])
+@pytest.mark.parametrize("num_features", [1, 5])
 def test_meanstd_filter_errors(num_features):
     filter_ = U.filters.MeanStdFilter(num_features=num_features)
     filter_.normalize(np.random.normal(size=(1, num_features)))
     filter_.normalize(np.random.normal(size=(3, num_features)))
     with pytest.raises(ValueError):
-        filter_.normalize(np.random.normal(size=(num_features, )))
+        filter_.normalize(np.random.normal(size=(num_features,)))
     with pytest.raises(ValueError):
         filter_.normalize(np.random.normal(size=(4, num_features * 2)))
     with pytest.raises(ValueError):
@@ -60,10 +60,12 @@ def test_meanstd_filter_simple():
 
     # Test normalization and scaling
     data = np.array([[7], [42]])
-    check_meanstd_filter(filter_=filter_, data=data, mean=expected_mean, var=expected_var)
+    check_meanstd_filter(
+        filter_=filter_, data=data, mean=expected_mean, var=expected_var
+    )
 
 
-@pytest.mark.parametrize('use_latest', [True, False])
+@pytest.mark.parametrize("use_latest", [True, False])
 def test_meanstd_filter_lazy_transform(use_latest):
     filter_ = U.filters.MeanStdFilter(num_features=1, clip_range=np.inf)
 
@@ -71,9 +73,11 @@ def test_meanstd_filter_lazy_transform(use_latest):
     filter_.update()
 
     norm_value = filter_.normalize(
-        np.array([[4]]), add_sample=False, use_latest_update=use_latest)
+        np.array([[4]]), add_sample=False, use_latest_update=use_latest
+    )
     scaled_value = filter_.scale(
-        np.array([[4]]), add_sample=False, use_latest_update=use_latest)
+        np.array([[4]]), add_sample=False, use_latest_update=use_latest
+    )
     expected_norm = normalize(np.array([[4]]), mean=filter_.mean, std=filter_.std)
     expected_scaled = scale(np.array([[4]]), std=filter_.std)
     np.testing.assert_allclose(U.to_np(norm_value), expected_norm)
@@ -88,8 +92,8 @@ def test_meanstd_filter_lazy_transform(use_latest):
     np.testing.assert_allclose(U.to_np(scaled_value), expected_scaled)
 
 
-@pytest.mark.parametrize('num_features', [1, 5])
-@pytest.mark.parametrize('shift', [0, 10e8])
+@pytest.mark.parametrize("num_features", [1, 5])
+@pytest.mark.parametrize("shift", [0, 10e8])
 def test_meanstd_filter_random(num_features, shift):
     update_prob = 0.2
 
@@ -103,8 +107,8 @@ def test_meanstd_filter_random(num_features, shift):
         if np.random.rand() < update_prob and i > 1:
             filter_.update()
             mean, var = filter_.mean, filter_.var
-            expected_mean = data[:(i + 1) * chunks].mean(axis=0)
-            expected_var = data[:(i + 1) * chunks].var(axis=0, ddof=1)
+            expected_mean = data[: (i + 1) * chunks].mean(axis=0)
+            expected_var = data[: (i + 1) * chunks].var(axis=0, ddof=1)
             np.testing.assert_allclose(mean, expected_mean)
             np.testing.assert_allclose(var, expected_var)
 
@@ -116,4 +120,5 @@ def test_meanstd_filter_random(num_features, shift):
 
     data = np.random.normal(size=(3, num_features))
     check_meanstd_filter(
-        filter_=filter_, data=data, mean=expected_mean, var=expected_var, rtol=1e-7)
+        filter_=filter_, data=data, mean=expected_mean, var=expected_var, rtol=1e-7
+    )

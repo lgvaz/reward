@@ -4,7 +4,7 @@ from torchrl.utils import EPSILON, to_np, LazyArray
 
 
 class MeanStdFilter:
-    '''
+    """
     Calculates the exact mean and std deviation, originally by `ray_rllib
     <https://goo.gl/fMv49b>`_.
 
@@ -18,7 +18,7 @@ class MeanStdFilter:
     clip_range: float
         The output of :meth:`self.normalize` and :meth:`self.scale` will be clipped
         to this range, use np.inf for no clipping. (Default is 5)
-    '''
+    """
 
     def __init__(self, num_features, clip_range=5.):
         # if len(shape) > 2:
@@ -26,7 +26,9 @@ class MeanStdFilter:
         #         UserWarning('Input shape should be in the form (num_envs, num_features), '
         #                     'might not work as expected with different shapes.'))
         if not isinstance(num_features, int):
-            raise ValueError('num_features should be an int, got {}'.format(num_features))
+            raise ValueError(
+                "num_features should be an int, got {}".format(num_features)
+            )
 
         self.num_features = num_features
         self.clip_range = clip_range
@@ -44,7 +46,8 @@ class MeanStdFilter:
             mean = self.mean if use_latest else mean_copy
             std = self.std if use_latest else std_copy
             return ((x - mean) / (std + EPSILON)).clip(
-                min=-self.clip_range, max=self.clip_range)
+                min=-self.clip_range, max=self.clip_range
+            )
 
         return apply
 
@@ -58,9 +61,12 @@ class MeanStdFilter:
         return apply
 
     def _check_shape(self, x):
-        if not (self.num_features, ) == x.shape[1:]:
-            raise ValueError('Data shape must be (num_samples, {}) but is {}'.format(
-                self.num_features, x.shape))
+        if not (self.num_features,) == x.shape[1:]:
+            raise ValueError(
+                "Data shape must be (num_samples, {}) but is {}".format(
+                    self.num_features, x.shape
+                )
+            )
 
     @property
     def mean(self):
@@ -88,18 +94,18 @@ class MeanStdFilter:
         self.xs = []
 
         x_mean = x.mean(axis=0)
-        x_std = ((x - x_mean)**2).sum(axis=0)
+        x_std = ((x - x_mean) ** 2).sum(axis=0)
         # First update
         if self.n == n_new:
             self.M[:] = x_mean
             self.S[:] = x_std
         else:
             new_mean = (n_old * self.M + n_new * x_mean) / self.n
-            self.S[:] = self.S + x_std + (self.M - x_mean)**2 * n_old * n_new / self.n
+            self.S[:] = self.S + x_std + (self.M - x_mean) ** 2 * n_old * n_new / self.n
             self.M[:] = new_mean
 
     def normalize(self, x, add_sample=True, use_latest_update=False):
-        '''
+        """
         Normalizes x by subtracting the mean and dividing by the standard deviation.
 
         Parameters
@@ -116,14 +122,14 @@ class MeanStdFilter:
         Returns
         -------
         LazyArray
-        '''
+        """
         self._check_shape(x)
         if add_sample:
             self.xs.extend(x)
         return LazyArray(x, transform=self._norm(use_latest=use_latest_update))
 
     def scale(self, x, add_sample=True, use_latest_update=False):
-        '''
+        """
         Scales x by dividing by the standard deviation.
 
         Parameters
@@ -140,7 +146,7 @@ class MeanStdFilter:
         Returns
         -------
         LazyArray
-        '''
+        """
         self._check_shape(x)
         if add_sample:
             self.xs.extend(x)

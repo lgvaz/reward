@@ -8,7 +8,8 @@ class RolloutBatcher(BaseBatcher):
         super().get_batch(select_action_fn=select_action_fn)
         horizon = self.batch_size // self.runner.num_envs
         batch = U.Batch(
-            initial_keys=['state_t_and_tp1', 'action', 'reward', 'done', 'info'])
+            initial_keys=["state_t_and_tp1", "action", "reward", "done", "info"]
+        )
 
         for i in range(horizon):
             action = select_action_fn(self._state_t, self.num_steps)
@@ -35,9 +36,9 @@ class RolloutBatcher(BaseBatcher):
         return batch
 
     def transform_state(self, state, training=True):
-        '''
+        """
         Apply functions to state, called before selecting an action.
-        '''
+        """
         # TODO
         state = U.to_np(state)
         state = U.to_tensor(state)

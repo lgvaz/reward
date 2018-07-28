@@ -5,6 +5,12 @@ from .image_wrapper import ImageWrapper
 from .common_wraps import CommonWraps
 
 __all__ = [
-    'BaseWrapper', 'StateRunNorm', 'RewardRunScaler', 'StackFrames', 'Frame2Float',
-    'ImageWrapper', 'CommonWraps', 'RewardConstScaler'
+    "BaseWrapper",
+    "StateRunNorm",
+    "RewardRunScaler",
+    "StackFrames",
+    "Frame2Float",
+    "ImageWrapper",
+    "CommonWraps",
+    "RewardConstScaler",
 ]

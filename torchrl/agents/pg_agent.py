@@ -5,7 +5,7 @@ from torchrl.agents import BaseAgent
 
 # TODO: docstring
 class PGAgent(BaseAgent):
-    '''
+    """
     Policy Gradient Agent, compatible with all PG models.
 
     This agent encapsulates a policy_model and optionally a value_model,
@@ -26,26 +26,28 @@ class PGAgent(BaseAgent):
         Class used for calculating the advantages.
     vtarget: torchrl.utils.estimators.value
         Class used for calculating the states target values.
-    '''
+    """
 
-    def __init__(self,
-                 batcher,
-                 *,
-                 policy_model,
-                 value_model=None,
-                 normalize_advantages=True,
-                 advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
-                 vtarget=U.estimators.value.FromAdvantage(),
-                 **kwargs):
+    def __init__(
+        self,
+        batcher,
+        *,
+        policy_model,
+        value_model=None,
+        normalize_advantages=True,
+        advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
+        vtarget=U.estimators.value.FromAdvantage(),
+        **kwargs
+    ):
         super().__init__(batcher=batcher, **kwargs)
 
         self.normalize_advantages = normalize_advantages
         self.advantage = advantage
         self.vtarget = vtarget
 
-        self._register_model('policy', policy_model)
+        self._register_model("policy", policy_model)
         if value_model is not None:
-            self._register_model('value', value_model)
+            self._register_model("value", value_model)
 
     def step(self):
         batch = self.generate_batch()

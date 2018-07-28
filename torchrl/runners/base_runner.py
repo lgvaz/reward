@@ -51,11 +51,11 @@ class BaseRunner(ABC):
         return len(self.rewards)
 
     def evaluate(self, env, select_action_fn, state_transform, logger):
-        print(''.join([22 * '-', ' Running Evaluation ', 22 * '-']))
+        print("".join([22 * "-", " Running Evaluation ", 22 * "-"]))
 
         state = env.reset()[None]
         state = state_transform(state, training=False)
-        traj = U.memories.SimpleMemory(initial_keys=['rewards'])
+        traj = U.memories.SimpleMemory(initial_keys=["rewards"])
         traj.length = 0
 
         done = False
@@ -69,8 +69,8 @@ class BaseRunner(ABC):
             traj.rewards.append(reward)
             traj.length += 1
 
-        logger.add_log('Env/Reward/Evaluation', np.sum(traj.rewards))
-        logger.add_log('Env/Length/Evaluation', traj.length)
+        logger.add_log("Env/Reward/Evaluation", np.sum(traj.rewards))
+        logger.add_log("Env/Length/Evaluation", traj.length)
 
     def write_logs(self, logger):
         new_eps = abs(self._last_logged_ep - self.num_episodes)
@@ -78,7 +78,9 @@ class BaseRunner(ABC):
             self.new_eps = new_eps
             self._last_logged_ep = self.num_episodes
 
-        logger.add_log('Env/Reward/Episode (New)', np.mean(self.rewards[-self.new_eps:]))
-        logger.add_log('Env/Reward/Episode (Last 50)', np.mean(self.rewards[-50:]))
-        logger.add_log('Env/Length/Episode (New)', np.mean(self.ep_lengths[-new_eps:]))
-        logger.add_log('Env/Length/Episode (Last 50)', np.mean(self.ep_lengths[-50:]))
+        logger.add_log(
+            "Env/Reward/Episode (New)", np.mean(self.rewards[-self.new_eps :])
+        )
+        logger.add_log("Env/Reward/Episode (Last 50)", np.mean(self.rewards[-50:]))
+        logger.add_log("Env/Length/Episode (New)", np.mean(self.ep_lengths[-new_eps:]))
+        logger.add_log("Env/Length/Episode (Last 50)", np.mean(self.ep_lengths[-50:]))

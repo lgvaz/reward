@@ -22,8 +22,10 @@ class RewardRunScaler(BaseTransform):
         rew_shape = batch.reward.shape
         if len(rew_shape) != 2:
             raise ValueError(
-                'Reward shape should be in the form (num_steps, num_envs) and is {}'.
-                format(rew_shape))
+                "Reward shape should be in the form (num_steps, num_envs) and is {}".format(
+                    rew_shape
+                )
+            )
 
         batch.reward = self.filt.scale(batch.reward.reshape(-1, 1), add_sample=training)
 
@@ -35,8 +37,8 @@ class RewardRunScaler(BaseTransform):
         return batch
 
     def write_logs(self, logger):
-        logger.add_tf_only_log('Env/Reward/mean', self.filt.mean.mean())
-        logger.add_tf_only_log('Env/Reward/std', self.filt.std.mean())
+        logger.add_tf_only_log("Env/Reward/mean", self.filt.mean.mean())
+        logger.add_tf_only_log("Env/Reward/std", self.filt.std.mean())
 
 
 class RewardClipper(BaseTransform):

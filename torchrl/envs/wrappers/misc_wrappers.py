@@ -1,15 +1,15 @@
-r'''
+r"""
 A collection of miscellaneous wrappers that can be used on a variety of envs, a bunch of these wrappers have been taken from `OpenAI Gym <https://github.com/openai/gym/tree/master/gym/wrappers>`_.
-'''
+"""
 import numpy as np
 from torchrl.envs.wrappers import BaseWrapper
 
 
 class DelayedStart(BaseWrapper):
-    '''
+    """
     Perform random actions only at the start. Useful for parallel envs ensuring
     every env will be exploring a different part of the state.
-    '''
+    """
 
     def __init__(self, env, max_delay=1000):
         self.max_delay = max_delay
@@ -88,7 +88,7 @@ class RandomReset(BaseWrapper):
 class FireReset(BaseWrapper):
     def __init__(self, env):
         """Take action on reset for environments that are fixed until firing."""
-        assert env.get_action_meanings()[1] == 'FIRE'
+        assert env.get_action_meanings()[1] == "FIRE"
         assert len(env.get_action_meanings()) >= 3
         super().__init__(env=env)
 
@@ -109,7 +109,8 @@ class ActionRepeat(BaseWrapper):
         """Return only every `skip`-th frame"""
         super().__init__(env=env)
         self._obs_buffer = np.zeros(
-            [2] + list(self.env.get_state_info().shape), dtype=np.uint8)
+            [2] + list(self.env.get_state_info().shape), dtype=np.uint8
+        )
         self._skip = skip
 
     def step(self, action):

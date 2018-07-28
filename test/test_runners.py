@@ -12,17 +12,19 @@ SEED = np.random.choice(4200)
 
 def create_envs(num_envs):
     envs = []
-    envs.append([GymEnv('CartPole-v1') for _ in range(num_envs)])
-    envs.append([GymEnv('Pendulum-v0') for _ in range(num_envs)])
-    envs.append([
-        Rescale(RGB2GRAY(AtariEnv('PongNoFrameskip-v4')), shape=(84, 84))
-        for _ in range(num_envs)
-    ])
+    envs.append([GymEnv("CartPole-v1") for _ in range(num_envs)])
+    envs.append([GymEnv("Pendulum-v0") for _ in range(num_envs)])
+    envs.append(
+        [
+            Rescale(RGB2GRAY(AtariEnv("PongNoFrameskip-v4")), shape=(84, 84))
+            for _ in range(num_envs)
+        ]
+    )
 
     return envs
 
 
-@pytest.mark.parametrize('envs', create_envs(num_envs=1))
+@pytest.mark.parametrize("envs", create_envs(num_envs=1))
 def test_single_runner(envs):
     env = envs[0]
     actions = [env.sample_random_action() for _ in range(NUM_STEPS)]
@@ -41,11 +43,15 @@ def test_single_runner(envs):
     runner.close()
 
 
-@pytest.mark.parametrize('envs', create_envs(num_envs=NUM_ENVS))
+@pytest.mark.parametrize("envs", create_envs(num_envs=NUM_ENVS))
 def test_paac_runner(envs):
     seeds = np.random.choice(4200, NUM_ENVS)
-    actions = np.array([[envs[0].sample_random_action() for _ in range(NUM_STEPS)]
-                        for _ in range(NUM_ENVS)])
+    actions = np.array(
+        [
+            [envs[0].sample_random_action() for _ in range(NUM_STEPS)]
+            for _ in range(NUM_ENVS)
+        ]
+    )
 
     # Expected
     [env.seed(int(seed)) for env, seed in zip(envs, seeds)]

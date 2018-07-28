@@ -2,9 +2,9 @@ import torchrl.utils as U
 
 
 class BaseBatcher:
-    '''
+    """
     The returned batch will have the shape (num_steps, num_envs, *shape)
-    '''
+    """
 
     def __init__(self, runner, *, batch_size):
         self.runner = runner
@@ -14,7 +14,7 @@ class BaseBatcher:
         self._state_shape = None
 
     def __str__(self):
-        return '<{}>'.format(type(self).__name__)
+        return "<{}>".format(type(self).__name__)
 
     @property
     def unwrapped(self):
@@ -33,18 +33,18 @@ class BaseBatcher:
             self._state_t = self.transform_state(self.runner.reset())
 
     def transform_state(self, state, training=True):
-        '''
+        """
         Apply functions to state, called before selecting an action.
-        '''
+        """
         # TODO
         # state = U.to_tensor(state)
         # state = U.to_np(state)
         return state
 
     def transform_batch(self, batch, training=True):
-        '''
+        """
         Apply functions to batch.
-        '''
+        """
         return batch
 
     def evaluate(self, env, select_action_fn, logger):
@@ -52,7 +52,8 @@ class BaseBatcher:
             env=env,
             select_action_fn=select_action_fn,
             state_transform=self.transform_state,
-            logger=logger)
+            logger=logger,
+        )
 
     def get_state_info(self):
         info = self.runner.get_state_info()

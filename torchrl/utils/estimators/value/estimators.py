@@ -1,5 +1,5 @@
 from torchrl.utils.estimators import BaseEstimator
-from torchrl.utils.estimators.estimation_funcs import (discounted_sum_rewards, td_target)
+from torchrl.utils.estimators.estimation_funcs import discounted_sum_rewards, td_target
 
 
 class CompleteReturn(BaseEstimator):
@@ -11,7 +11,8 @@ class CompleteReturn(BaseEstimator):
             rewards=batch.reward,
             dones=batch.done,
             last_state_value_t=batch.state_value_t[-1],
-            gamma=self.gamma)
+            gamma=self.gamma,
+        )
 
 
 class TDTarget(BaseEstimator):
@@ -23,7 +24,8 @@ class TDTarget(BaseEstimator):
             rewards=batch.reward,
             dones=batch.done,
             state_value_tp1=batch.state_value_tp1,
-            gamma=self.gamma)
+            gamma=self.gamma,
+        )
 
 
 class FromAdvantage(BaseEstimator):

@@ -9,7 +9,7 @@ from functools import wraps
 
 
 def get_obj(config):
-    '''
+    """
     Creates an object based on the given config.
 
     Parameters
@@ -21,16 +21,16 @@ def get_obj(config):
     -------
     obj
         The created object.
-    '''
-    func = config.pop('func')
+    """
+    func = config.pop("func")
     obj = func(**config)
-    config['func'] = func
+    config["func"] = func
 
     return obj
 
 
 def env_from_config(config):
-    '''
+    """
     Tries to create an environment from a configuration obj.
 
     Parameters
@@ -47,12 +47,13 @@ def env_from_config(config):
     ------
     AttributeError
         If no env is defined in the config obj.
-    '''
+    """
     try:
         env = get_obj(config.env.as_dict())
     except AttributeError:
-        raise ValueError('The env must be defined in the config '
-                         'or passed as an argument')
+        raise ValueError(
+            "The env must be defined in the config " "or passed as an argument"
+        )
     return env
 
 
@@ -72,17 +73,17 @@ def to_np(value):
     except TypeError:
         return np.array(value)
 
-    raise ValueError('Data type {} not supported'.format(value.__class__.__name__))
+    raise ValueError("Data type {} not supported".format(value.__class__.__name__))
 
 
 def to_tensor(x, cuda_default=True):
     if isinstance(x, np.ndarray):
         # pytorch doesn't support bool
-        if x.dtype == 'bool':
-            x = x.astype('int')
+        if x.dtype == "bool":
+            x = x.astype("int")
         # we want only single precision floats
-        if x.dtype == 'float64':
-            x = x.astype('float32')
+        if x.dtype == "float64":
+            x = x.astype("float32")
 
         x = torch.from_numpy(x)
 
@@ -93,7 +94,7 @@ def to_tensor(x, cuda_default=True):
 
 
 def explained_var(target, preds):
-    '''
+    """
     Calculates the explained variance between two datasets.
     Useful for estimating the quality of the value function
 
@@ -108,14 +109,14 @@ def explained_var(target, preds):
     -------
     float
         The explained variance.
-    '''
+    """
     return 1 - (target.squeeze() - preds.squeeze()).var() / target.view(-1).var()
 
 
 def normalize(array):
-    '''
+    """
     Normalize an array by subtracting the mean and diving by the std dev.
-    '''
+    """
     return (array - np.mean(array)) / (np.std(array) + EPSILON)
 
 
@@ -137,7 +138,7 @@ def join_first_dims(x, num_dims):
 
 
 class LazyArray:
-    '''
+    """
     Inspired by OpenAI `LazyFrames <https://goo.gl/nTmVW8>`_ this object stores numpy
     arrays as lists, so no unnecessary memory is used when storing arrays that point to
     the same memory, this is a memory optimization trick for the `ReplayBuffer`.
@@ -151,7 +152,7 @@ class LazyArray:
         A list of numpy arrays.
     transform: function
         A function that is applied lazily to the array.
-    '''
+    """
 
     def __init__(self, data, transform=None, **kwargs):
         self.data = data

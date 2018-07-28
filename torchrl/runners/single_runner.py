@@ -33,7 +33,7 @@ class SingleRunner(BaseRunner):
 
     def get_state_info(self):
         info = self.env.get_state_info()
-        info.shape = (1, ) + info.shape
+        info.shape = (1,) + info.shape
         return info
 
     def get_action_info(self):

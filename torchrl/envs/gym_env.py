@@ -4,7 +4,7 @@ import torchrl.utils as U
 
 
 class GymEnv(BaseEnv):
-    '''
+    """
     Creates and wraps a gym environment.
 
     Parameters
@@ -15,7 +15,7 @@ class GymEnv(BaseEnv):
     wrappers: list
         List of wrappers to be applied on the env.
         Each wrapper should be a function that receives and returns the env.
-    '''
+    """
 
     def __init__(self, env_name, **kwargs):
 
@@ -31,18 +31,18 @@ class GymEnv(BaseEnv):
         return GymEnv
 
     def reset(self):
-        '''
+        """
         Calls the reset method on the gym environment.
 
         Returns
         -------
         state: numpy.ndarray
             A numpy array with the state information.
-        '''
+        """
         return self.env.reset()
 
     def step(self, action):
-        '''
+        """
         Calls the step method on the gym environment.
 
         Parameters
@@ -61,8 +61,8 @@ class GymEnv(BaseEnv):
             The reward.
         done: bool
             Flag indicating the termination of the episode.
-        '''
-        if self.get_action_info().space == 'discrete':
+        """
+        if self.get_action_info().space == "discrete":
             action = int(action)
         next_state, reward, done, info = self.env.step(action)
         return next_state, reward, done, info
@@ -71,17 +71,17 @@ class GymEnv(BaseEnv):
         self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
 
     def get_state_info(self):
-        '''
+        """
         Dictionary containing the shape and type of the state space.
         If it is continuous, also contains the minimum and maximum value.
-        '''
+        """
         return GymEnv.get_space_info(self.env.observation_space)
 
     def get_action_info(self):
-        '''
+        """
         Dictionary containing the shape and type of the action space.
         If it is continuous, also contains the minimum and maximum value.
-        '''
+        """
         return GymEnv.get_space_info(self.env.action_space)
 
     def sample_random_action(self):
@@ -91,14 +91,14 @@ class GymEnv(BaseEnv):
         self.env.seed(value)
 
     def update_config(self, config):
-        '''
+        """
         Updates a Config object to include information about the environment.
 
         Parameters
         ----------
         config: Config
             Object used for storing configuration.
-        '''
+        """
         super().update_config(config)
         config.env.obj.update(dict(wrappers=self.wrappers))
 
@@ -107,7 +107,7 @@ class GymEnv(BaseEnv):
 
     @staticmethod
     def get_space_info(space):
-        '''
+        """
         Gets the shape of the possible types of states in gym.
 
         Parameters
@@ -119,17 +119,20 @@ class GymEnv(BaseEnv):
         -------
         dict
             Dictionary containing the space shape and type
-        '''
+        """
         if isinstance(space, gym.spaces.Box):
             return U.memories.SimpleMemory(
                 shape=space.shape,
                 low_bound=space.low,
                 high_bound=space.high,
-                space='continuous',
-                dtype=space.dtype)
+                space="continuous",
+                dtype=space.dtype,
+            )
         if isinstance(space, gym.spaces.Discrete):
             return U.memories.SimpleMemory(
-                shape=space.n, space='discrete', dtype=space.dtype)
+                shape=space.n, space="discrete", dtype=space.dtype
+            )
         if isinstance(space, gym.spaces.MultiDiscrete):
             return U.memories.SimpleMemory(
-                shape=space.shape, space='multi_discrete', dtype=space.dtype)
+                shape=space.shape, space="multi_discrete", dtype=space.dtype
+            )

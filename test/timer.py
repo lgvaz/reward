@@ -9,7 +9,7 @@ def timeit(func):
         result = func(*args, **kwargs)
         end = time.time()
 
-        print('\n{} took {:.3f} us'.format(name, (end - start) * 1e6))
+        print("\n{} took {:.3f} us".format(name, (end - start) * 1e6))
         return result
 
     return exec

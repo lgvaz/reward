@@ -8,7 +8,7 @@ from torchrl.utils import to_tensor, join_first_dims
 
 class Batch(SimpleMemory):
     def __len__(self):
-        return len(self['state_t'])
+        return len(self["state_t"])
 
     def apply_to_all(self, func):
         return Batch((k, func(v)) for k, v in self.items())
@@ -20,11 +20,12 @@ class Batch(SimpleMemory):
         keys = list(self.keys())
 
         return self.sample_keys(
-            keys=keys, num_mini_batches=num_mini_batches, shuffle=shuffle)
+            keys=keys, num_mini_batches=num_mini_batches, shuffle=shuffle
+        )
 
     def sample_keys(self, keys, num_mini_batches, shuffle):
-        self['idxs'] = torch.arange(len(self)).long()
-        keys = keys + ['idxs']
+        self["idxs"] = torch.arange(len(self)).long()
+        keys = keys + ["idxs"]
 
         if num_mini_batches > 1:
             values = [self[k] for k in keys]
@@ -41,8 +42,11 @@ class Batch(SimpleMemory):
     def concat_batch(self):
         # func = lambda x: x.reshape((-1, *x.shape[2:])) if (
         #     isinstance(x, (np.ndarray, torch.Tensor))) else x
-        func = lambda x: join_first_dims(x, num_dims=2) if (
-            isinstance(x, (np.ndarray, torch.Tensor))) else x
+        func = (
+            lambda x: join_first_dims(x, num_dims=2)
+            if (isinstance(x, (np.ndarray, torch.Tensor)))
+            else x
+        )
         return self.apply_to_all(func)
 
     def to_array_or_tensor(self):

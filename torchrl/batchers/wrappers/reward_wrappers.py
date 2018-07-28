@@ -24,10 +24,12 @@ class RewardRunScaler(BaseWrapper):
         assert (
             len(rew_shape) == 2
         ), "Reward shape should be in the form (num_steps, num_envs) and is {}".format(
-            rew_shape)
+            rew_shape
+        )
 
         batch.reward = U.to_np(
-            self.filt.scale(batch.reward.reshape(-1, 1), add_sample=training))
+            self.filt.scale(batch.reward.reshape(-1, 1), add_sample=training)
+        )
         batch.reward = batch.reward.reshape(rew_shape)
         if training:
             self.filt.update()

@@ -9,7 +9,7 @@ Representer.add_representer(ABCMeta, Representer.represent_name)
 
 
 class Config:
-    '''
+    """
     Configuration object used for initializing an Agent.
     It maintains the order from which the attributes have been set.
 
@@ -22,26 +22,26 @@ class Config:
     -------
     Config object
         An object containing all configuration details (with possibly nested Config).
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         # We want to maintain the order of the attributes,
         # this is especially necessary when defining NNs architectures
-        self.__dict__['_attrs'] = OrderedDict()
+        self.__dict__["_attrs"] = OrderedDict()
 
         for i, value in enumerate(args):
-            self._nested_loader('attr{}'.format(i), value)
+            self._nested_loader("attr{}".format(i), value)
         for key, value in kwargs.items():
             self._nested_loader(key, value)
 
     def __getattr__(self, value):
         try:
-            return self.__dict__['_attrs'][value]
+            return self.__dict__["_attrs"][value]
         except:
             raise AttributeError(value)
 
     def __setattr__(self, key, value):
-        self.__dict__['_attrs'][key] = value
+        self.__dict__["_attrs"][key] = value
 
     def __repr__(self):
         return yaml.dump(self.as_dict(), default_flow_style=False)
@@ -71,21 +71,21 @@ class Config:
         self.as_dict().update(config.as_dict())
 
     def as_dict(self):
-        '''
+        """
         Returns all object attributes as a nested OrderedDict.
 
         Returns
         -------
         dict
             Nested OrderedDict containing all object attributes.
-        '''
-        return self.__dict__['_attrs']
+        """
+        return self.__dict__["_attrs"]
 
     def as_list(self):
         return list(self.as_dict().values())
 
     def new_section(self, name, **configs):
-        '''
+        """
         Creates a new Config object and add as an attribute of this instance.
 
         Parameters
@@ -108,11 +108,11 @@ class Config:
         It's possible to access the variable like so::
 
             config.new_section_name.attr1
-        '''
+        """
         self._nested_loader(name, Config(**configs))
 
     def save(self, file_path):
-        '''
+        """
         Saves current configuration to a JSON file.
         The configuration is stored as a nested dictionary (maintaining the order).
 
@@ -120,13 +120,13 @@ class Config:
         ----------
         file_path: str
             Path to write the file
-        '''
-        with open(file_path + '.yaml', 'w') as f:
+        """
+        with open(file_path + ".yaml", "w") as f:
             yaml.dump(self, f, default_flow_style=False)
 
     @classmethod
     def from_default(cls, name):
-        '''
+        """
         Loads configuration from a default agent.
 
         Parameters
@@ -138,13 +138,13 @@ class Config:
         -------
         Config
             A configuration object loaded from a JSON file
-        '''
-        if name == 'PPO':
-            return cls.load('CHANGE')
+        """
+        if name == "PPO":
+            return cls.load("CHANGE")
 
     @staticmethod
     def load(file_path):
-        '''
+        """
         Loads configuration from a JSON file.
 
         Parameters
@@ -156,6 +156,6 @@ class Config:
         -------
         Config
             A configuration object loaded from a JSON file
-        '''
-        with open(file_path + '.yaml', 'r') as f:
+        """
+        with open(file_path + ".yaml", "r") as f:
             return yaml.load(f)
