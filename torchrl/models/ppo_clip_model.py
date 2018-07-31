@@ -44,6 +44,7 @@ class PPOClipModel(SurrogatePGModel):
         clipped_surrogate = clipped_prob_ratio * batch.advantage
 
         losses = torch.min(surrogate, clipped_surrogate)
+        assert len(losses.shape) == 1
         loss = -losses.mean()
 
         return loss

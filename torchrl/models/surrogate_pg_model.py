@@ -64,6 +64,7 @@ class SurrogatePGModel(BasePGModel):
         """
         prob_ratio = self.calculate_prob_ratio(batch.new_log_prob, batch.log_prob)
         surrogate = prob_ratio * batch.advantage
+        assert len(surrogate.shape) == 1
         loss = -surrogate.mean()
 
         return loss

@@ -43,6 +43,7 @@ class VanillaPGModel(BasePGModel):
             to compute the gradients.
         """
         objective = batch.log_prob * batch.advantage
+        assert len(objective.shape) == 1
         loss = -objective.mean()
 
         return loss

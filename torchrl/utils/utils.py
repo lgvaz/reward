@@ -76,6 +76,7 @@ def to_np(value):
     raise ValueError("Data type {} not supported".format(value.__class__.__name__))
 
 
+# TODO: What to do with other types? lists, etc..
 def to_tensor(x, cuda_default=True):
     if isinstance(x, np.ndarray):
         # pytorch doesn't support bool
