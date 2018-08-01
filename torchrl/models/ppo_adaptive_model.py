@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 import torchrl.utils as U
 from torchrl.models import SurrogatePGModel
 from torch.distributions.kl import kl_divergence
@@ -63,7 +64,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
 
     def kl_early_stopping(self, batch):
         if self.kl_div > 4 * self.kl_target:
-            print("Early stopping")
+            tqdm.write("Early stopping")
             return True
 
     def write_logs(self, batch):

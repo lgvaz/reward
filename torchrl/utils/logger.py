@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+from tqdm import tqdm
 from datetime import timedelta
 from tensorboardX import SummaryWriter
 from torchrl.utils import to_np
@@ -10,7 +11,7 @@ import numpy as np
 
 class Logger:
     """
-    Common logger used by all agents, aggregates values and print a nice table.
+    Common logger used by all agents, aggregates values and print_table a nice table.
 
     Parameters
     ----------
@@ -34,7 +35,7 @@ class Logger:
         self.i_step = 0
         self.time_header = None
 
-        print("Writing logs to: {}".format(log_dir))
+        tqdm.write("Writing logs to: {}".format(log_dir))
         self.writer = SummaryWriter(log_dir=log_dir)
 
     def set_log_freq(self, log_freq):
@@ -112,10 +113,6 @@ class Logger:
             }
 
             # Log to the console
-            # if self.eta is not None:
-            #     header += ' | ETA: {}'.format(self.eta)
-            # header += self.time_header or ''
-            header = " | ".join(filter(None, [header, self.time_header, self.eta]))
             print_table(avg_dict, header)
 
             # Write tensorboard summary
@@ -135,35 +132,8 @@ class Logger:
             self.tf_logs = DefaultMemory()
             self.histograms = dict()
 
-    def timeit(self, i_step, max_steps=-1):
-        """
-        Estimates steps per second by counting how many steps
-        passed between each call of this function.
 
-        Parameters
-        ----------
-        i_step: int
-            The current time step.
-        max_steps: int
-            The maximum number of steps of the training loop (Default is -1).
-        """
-        steps, self.i_step = i_step - self.i_step, i_step
-        new_time = time.time()
-        steps_sec = steps / (new_time - self.time)
-        self.time_header = "Steps/Second: {}".format(int(steps_sec))
-        self.time = new_time
-        self.steps_sum += steps
-
-        if max_steps != -1:
-            eta_seconds = (max_steps - self.steps_sum) / steps_sec
-            # Format days, hours, minutes, seconds and remove milliseconds
-            eta = str(timedelta(seconds=eta_seconds)).split(".")[0]
-            self.eta = "ETA: {}".format(eta)
-
-        self.add_tf_only_log("Steps_per_second", steps_sec)
-
-
-def print_table(tags_and_values_dict, header=None, width=62):
+def print_table(tags_and_values_dict, header=None, width=60):
     """
     Prints a pretty table =)
     Expects keys and values of dict to be a string
@@ -177,7 +147,18 @@ def print_table(tags_and_values_dict, header=None, width=62):
 
     table.append("")
     if header:
-        table.append(header)
+        head_items = ["{} {}".format(k, v) for k, v in header.items()]
+        head_len = sum(len(s) for s in head_items)
+        num_spaces = int(
+            np.ceil(
+                (max_width - head_len - len(head_items))
+                / ((len(head_items) - 1) * 2 + 2)
+            )
+        )
+        spaces = num_spaces * " "
+        head = ("{spc}|{spc}".format(spc=spaces)).join(head_items)
+        head = spaces + head + spaces
+        table.append(head)
 
     table.append((2 + max_width) * "-")
 
@@ -189,4 +170,4 @@ def print_table(tags_and_values_dict, header=None, width=62):
 
     table.append((2 + max_width) * "-")
 
-    print("\n".join(table))
+    tqdm.write("\n".join(table))

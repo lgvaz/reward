@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
+from tqdm import tqdm
 
 import torchrl.utils as U
 
@@ -55,12 +56,18 @@ class BaseAgent(ABC):
         bool
         True if done, False otherwise.
         """
-        if (
-            self.num_iters // self.max_iters >= 1
-            or self.num_episodes // self.max_episodes >= 1
-            or self.num_steps // self.max_steps >= 1
-        ):
-            return True
+        if self.max_steps is not None:
+            self.pbar.update(self.num_steps - self.pbar.n)
+            if self.num_steps >= self.max_steps:
+                return True
+        if self.max_episodes is not None:
+            self.pbar.update(self.num_episodes - self.pbar.n)
+            if self.num_episodes >= self.max_episodes:
+                return True
+        if self.max_iters is not None:
+            self.pbar.update(self.num_iters - self.pbar.n)
+            if self.num_iters >= self.max_iters:
+                return True
 
         return False
 
@@ -98,9 +105,9 @@ class BaseAgent(ABC):
     def train(
         self,
         *,
-        max_iters=-1,
-        max_episodes=-1,
-        max_steps=-1,
+        max_iters=None,
+        max_episodes=None,
+        max_steps=None,
         log_freq=1,
         eval_env=None,
         eval_freq=None
@@ -111,12 +118,22 @@ class BaseAgent(ABC):
         Parameters
         ----------
         max_updates: int
-            Maximum number of gradient updates (Default is -1, meaning it doesn't matter).
+            Maximum number of gradient updates (Default is None, meaning it doesn't matter).
         max_episodes: int
-            Maximum number of episodes (Default is -1, meaning it doesn't matter).
+            Maximum number of episodes (Default is None, meaning it doesn't matter).
         max_steps: int
-            Maximum number of steps (Default is -1, meaning it doesn't matter).
+            Maximum number of steps (Default is None, meaning it doesn't matter).
         """
+        stops = np.array([max_iters, max_episodes, max_steps])
+        num_stops = sum(stops != None)
+        if num_stops != 1:
+            raise ValueError(
+                "Only one stop criteria should be passed, got {}".format(num_stops)
+            )
+        self.pbar = tqdm(
+            total=stops[stops != None][0], dynamic_ncols=True, unit_scale=True
+        )
+
         self.max_iters = max_iters
         self.max_episodes = max_episodes
         self.max_steps = max_steps
@@ -134,6 +151,8 @@ class BaseAgent(ABC):
             self._check_evaluation(env=eval_env)
             if self._check_termination():
                 break
+
+        self.pbar.close()
 
     def select_action(self, state, step):
         """
@@ -159,12 +178,17 @@ class BaseAgent(ABC):
         self.batcher.write_logs(logger=self.logger)
         self.opt.write_logs(logger=self.logger)
 
-        self.logger.timeit(self.num_steps, max_steps=self.max_steps)
-        # Instead of Update should be Iter?
+        # self.logger.log(
+        #     "Iter {} | Episode {} | Step {}".format(
+        #         self.num_iters, self.num_episodes, self.num_steps
+        #     )
+        # )
         self.logger.log(
-            "Iter {} | Episode {} | Step {}".format(
-                self.num_iters, self.num_episodes, self.num_steps
-            )
+            header={
+                "Iter": self.num_iters,
+                "Episode": self.num_episodes,
+                "Step": self.num_steps,
+            }
         )
 
     def generate_batch(self):

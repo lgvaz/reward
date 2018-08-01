@@ -51,7 +51,7 @@ class BaseRunner(ABC):
         return len(self.rewards)
 
     def evaluate(self, env, select_action_fn, state_transform, logger):
-        print("".join([22 * "-", " Running Evaluation ", 22 * "-"]))
+        tqdm.write("".join([22 * "-", " Running Evaluation ", 22 * "-"]))
 
         state = env.reset()[None]
         state = state_transform(state, training=False)
