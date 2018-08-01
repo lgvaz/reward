@@ -1,13 +1,12 @@
 from torchrl.agents import PGAgent
 from torchrl.batchers import RolloutBatcher
-from torchrl.batchers.wrappers import CommonWraps, RewardConstScaler
 from torchrl.envs import AtariEnv
 from torchrl.envs.wrappers import AtariWrapper
 from torchrl.models import PPOClipModel, ValueClipModel
-from torchrl.runners import PAACRunner, SingleRunner
+from torchrl.runners import PAACRunner
 from torchrl.utils import piecewise_linear_schedule
-from torchrl.optimizers import SingleOpt, JointOpt
-from torchrl.envs.wrappers import GymRecorder
+from torchrl.optimizers import JointOpt
+from torchrl.batchers.transforms import atari_transforms
 
 MAX_STEPS = 50e6
 HORIZON = 128
@@ -20,8 +19,9 @@ envs = [AtariWrapper(AtariEnv("PongNoFrameskip-v4")) for _ in range(NUM_ENVS)]
 eval_env = AtariWrapper(AtariEnv("PongNoFrameskip-v4"))
 runner = PAACRunner(envs)
 # runner = SingleRunner(envs[0])
-batcher = CommonWraps.atari_wrap(RolloutBatcher(runner, batch_size=HORIZON * NUM_ENVS))
-batcher = RewardConstScaler(batcher)
+batcher = RolloutBatcher(
+    runner, batch_size=HORIZON * NUM_ENVS, transforms=atari_transforms()
+)
 
 lr_schedule = piecewise_linear_schedule(
     values=[4e-4, 4e-4, 1e-4, 5e-5],

@@ -6,9 +6,10 @@ class BaseBatcher:
     The returned batch will have the shape (num_steps, num_envs, *shape)
     """
 
-    def __init__(self, runner, *, batch_size):
+    def __init__(self, runner, batch_size, transforms=None):
         self.runner = runner
         self.batch_size = batch_size
+        self.transforms = transforms or []
         self.batch = None
         self._state_t = None
         self._state_shape = None
@@ -39,12 +40,16 @@ class BaseBatcher:
         # TODO
         # state = U.to_tensor(state)
         # state = U.to_np(state)
+        for t in self.transforms:
+            state = t.transform_state(state, training=training)
         return state
 
     def transform_batch(self, batch, training=True):
         """
         Apply functions to batch.
         """
+        for t in self.transforms:
+            batch = t.transform_batch(batch, training=training)
         return batch
 
     def evaluate(self, env, select_action_fn, logger):

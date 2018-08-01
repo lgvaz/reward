@@ -39,6 +39,7 @@ class RolloutBatcher(BaseBatcher):
         """
         Apply functions to state, called before selecting an action.
         """
+        state = super().transform_state(state, training=training)
         # TODO
         state = U.to_np(state)
         state = U.to_tensor(state)

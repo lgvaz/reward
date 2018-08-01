@@ -37,7 +37,7 @@ class PPOClipModel(SurrogatePGModel):
             batch: Batch
         """
         clipped_prob_ratio = self.memory.prob_ratio.clamp(
-            1 - self.ppo_clip_range, 1 + self.ppo_clip_range
+            min=1 - self.ppo_clip_range, max=1 + self.ppo_clip_range
         )
 
         surrogate = self.memory.prob_ratio * batch.advantage

@@ -23,10 +23,6 @@ value_nn_config = U.Config(
 env = GymRecorder(GymEnv("CartPole-v1"), directory="videos")
 runner = SingleRunner(env)
 
-# Create parallel envs
-# envs = [GymEnv('CartPole-v1') for _ in range(16)]
-# runner = PAACRunner(envs)
-
 # Create batcher
 batcher = RolloutBatcher(runner, batch_size=512)
 
@@ -44,7 +40,6 @@ vot = SingleOpt(
 )
 
 opt = ListOpt(optimizers=[pot, vot])
-# opt = JointOpt(model=[policy_model, value_model])
 
 # Create agent
 agent = PGAgent(
@@ -57,4 +52,4 @@ agent = PGAgent(
     log_dir="tests/vanilla/cp/1p-opt-v8-0",
 )
 
-agent.train(max_steps=1e6, log_freq=10)
+agent.train(max_steps=1e6, log_freq=10e4)
