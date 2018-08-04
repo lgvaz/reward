@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+from tqdm import tqdm
 
 import torchrl.utils as U
 
@@ -54,7 +55,7 @@ class BaseRunner(ABC):
         tqdm.write("".join([22 * "-", " Running Evaluation ", 22 * "-"]))
 
         state = env.reset()[None]
-        state = state_transform(state, training=False)
+        state = U.to_tensor(U.to_np(state_transform(state, training=False)))
         traj = U.memories.SimpleMemory(initial_keys=["rewards"])
         traj.length = 0
 
@@ -64,7 +65,7 @@ class BaseRunner(ABC):
             next_state, reward, done, info = env.step(action)
 
             state = next_state[None]
-            state = state_transform(state, training=False)
+            state = U.to_tensor(U.to_np(state_transform(state, training=False)))
 
             traj.rewards.append(reward)
             traj.length += 1
