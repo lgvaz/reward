@@ -160,16 +160,24 @@ class BaseModel(ModuleExtended, ABC):
         return "/".join([self.name, name])
 
     def add_log(self, name, value, **kwargs):
-        self.logger.add_log(name=self.wrap_name(name), value=value, **kwargs)
+        if self.logger is not None:
+            self.logger.add_log(name=self.wrap_name(name), value=value, **kwargs)
 
     def add_tf_only_log(self, name, value, **kwargs):
-        self.logger.add_tf_only_log(name=self.wrap_name(name), value=value, **kwargs)
+        if self.logger is not None:
+            self.logger.add_tf_only_log(
+                name=self.wrap_name(name), value=value, **kwargs
+            )
 
     def add_debug_log(self, name, value, **kwargs):
-        self.logger.add_debug(name=self.wrap_name(name), value=value, **kwargs)
+        if self.logger is not None:
+            self.logger.add_debug(name=self.wrap_name(name), value=value, **kwargs)
 
     def add_histogram_log(self, name, values, **kwargs):
-        self.logger.add_histogram(name=self.wrap_name(name), values=values, **kwargs)
+        if self.logger is not None:
+            self.logger.add_histogram(
+                name=self.wrap_name(name), values=values, **kwargs
+            )
 
     def write_logs(self, batch):
         """

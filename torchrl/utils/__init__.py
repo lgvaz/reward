@@ -3,6 +3,7 @@ from .utils import (
     get_obj,
     env_from_config,
     to_np,
+    maybe_np,
     to_tensor,
     explained_var,
     normalize,
@@ -45,4 +46,5 @@ __all__ = [
     "to_tensor",
     "join_first_dims",
     "LazyArray",
+    "maybe_np",
 ]

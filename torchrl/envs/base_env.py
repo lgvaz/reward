@@ -112,6 +112,10 @@ class BaseEnv(ABC):
             Dict containing additional information about the state.
         """
 
+    @abstractmethod
+    def sample_random_action(self):
+        pass
+
     @property
     def num_lives(self):
         raise NotImplementedError
@@ -119,9 +123,6 @@ class BaseEnv(ABC):
     @property
     def unwrapped(self):
         return self
-
-    def sample_random_action(self):
-        raise NotImplementedError
 
     def record(self, path):
         raise NotImplementedError

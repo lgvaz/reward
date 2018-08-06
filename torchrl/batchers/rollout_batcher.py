@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 import torchrl.utils as U
 from torchrl.batchers import BaseBatcher
@@ -6,44 +7,36 @@ from torchrl.batchers import BaseBatcher
 class RolloutBatcher(BaseBatcher):
     def get_batch(self, select_action_fn):
         super().get_batch(select_action_fn=select_action_fn)
-        horizon = self.batch_size // self.runner.num_envs
-        batch = U.Batch(
-            initial_keys=["state_t_and_tp1", "action", "reward", "done", "info"]
-        )
 
+        horizon = self.batch_size // self.runner.num_envs
+        batch = U.Batch(initial_keys=["state_t_and_tp1", "action", "reward", "done"])
+
+        self.state_t = U.to_tensor(U.to_np(self.state_t))
         for i in range(horizon):
-            action = select_action_fn(self._state_t, self.num_steps)
+            action = select_action_fn(self.state_t, self.num_steps)
 
             state_tp1, reward, done, info = self.runner.act(action)
-            state_tp1 = self.transform_state(state_tp1)
+            state_tp1 = U.to_tensor(U.to_np(self.transform_state(state_tp1)))
 
-            batch.state_t_and_tp1.append(self._state_t)
+            batch.state_t_and_tp1.append(self.state_t)
             batch.action.append(action)
             batch.reward.append(reward)
             batch.done.append(done)
-            batch.info.append(info)
+            # batch.info.append(info)
 
-            self._state_t = state_tp1
+            self.state_t = state_tp1
+        batch.state_t_and_tp1.append(self.state_t)
 
-        batch.state_t_and_tp1.append(self._state_t)
-        batch = batch.to_array_or_tensor()
-
+        batch.state_t_and_tp1 = torch.stack(batch.state_t_and_tp1)
         batch.state_t = batch.state_t_and_tp1[:-1]
         batch.state_tp1 = batch.state_t_and_tp1[1:]
+        batch.action = U.to_np(batch.action)
+        batch.reward = U.to_np(batch.reward)
+        batch.done = U.to_np(batch.done)
 
         batch = self.transform_batch(batch)
 
         return batch
-
-    def transform_state(self, state, training=True):
-        """
-        Apply functions to state, called before selecting an action.
-        """
-        state = super().transform_state(state, training=training)
-        # TODO
-        state = U.to_np(state)
-        state = U.to_tensor(state)
-        return state
 
 
 # TODO

@@ -75,7 +75,10 @@ class BaseAgent(ABC):
         if self.eval_freq is not None and self.num_steps >= self.next_eval:
             action_fn = self.eval_select_action_fn or self.models.policy.select_action
             action_fn_pre = lambda state: action_fn(
-                model=self.models.policy, state=state, step=self.num_steps
+                model=self.models.policy,
+                state=state,
+                step=self.num_steps,
+                training=False,
             )
             self.batcher.evaluate(
                 select_action_fn=action_fn_pre, logger=self.logger, env=env
@@ -83,7 +86,7 @@ class BaseAgent(ABC):
 
             self.next_eval += self.eval_freq
 
-    def _register_model(self, name, model):
+    def register_model(self, name, model):
         """
         Save a torchrl model to the internal memory.
 
@@ -124,6 +127,8 @@ class BaseAgent(ABC):
         max_steps: int
             Maximum number of steps (Default is None, meaning it doesn't matter).
         """
+        if eval_env is None and eval_freq is not None:
+            raise ValueError("eval_env must be specified to use eval_freq")
         stops = np.array([max_iters, max_episodes, max_steps])
         num_stops = sum(stops != None)
         if num_stops != 1:
@@ -154,7 +159,7 @@ class BaseAgent(ABC):
 
         self.pbar.close()
 
-    def select_action(self, state, step):
+    def select_action(self, state, step, training=True):
         """
         Receive a state and use the model to select an action.
 
@@ -169,7 +174,9 @@ class BaseAgent(ABC):
             The selected action.
         """
         action_fn = self.select_action_fn or self.models.policy.select_action
-        return action_fn(model=self.models.policy, state=state, step=step)
+        return action_fn(
+            model=self.models.policy, state=state, step=step, training=training
+        )
 
     def write_logs(self):
         """

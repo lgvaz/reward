@@ -138,7 +138,7 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     seed = seed or random.randint(0, 10000)
     real_maxlen = maxlen // num_envs
 
-    replay_buffer = ReplayBuffer(maxlen=maxlen)
+    replay_buffer = ReplayBuffer(maxlen=maxlen, num_envs=num_envs)
     memory = deque(maxlen=real_maxlen)
 
     for i in range(int(maxlen * 1.5 / num_envs)):
@@ -153,19 +153,19 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
                 state=state, action=action, reward=reward, done=done
             )
         )
+    assert len(replay_buffer) == real_maxlen
 
     random.seed(seed)
-    batch = replay_buffer.sample(batch_size=batch_size)
+    batch = replay_buffer.sample(batch_size=batch_size).concat_batch()
     random.seed(seed)
-    idxs = random.sample(range(len(memory) * num_envs), k=batch_size)
+    envs = random.choices(range(num_envs), k=batch_size)
+    idxs = random.sample(range(len(memory)), k=batch_size)
 
-    for i, idx in enumerate(idxs):
-        i_env, i_sample = idx % num_envs, idx // num_envs
-
-        np.testing.assert_equal(batch.state[i], memory[i_sample].state[i_env])
-        np.testing.assert_equal(batch.action[i], memory[i_sample].action[i_env])
-        np.testing.assert_equal(batch.reward[i], memory[i_sample].reward[i_env])
-        np.testing.assert_equal(batch.done[i], memory[i_sample].done[i_env])
+    for i, (i_env, i_idx) in enumerate(zip(envs, idxs)):
+        np.testing.assert_equal(batch.state[i], memory[i_idx].state[i_env])
+        np.testing.assert_equal(batch.action[i], memory[i_idx].action[i_env])
+        np.testing.assert_equal(batch.reward[i], memory[i_idx].reward[i_env])
+        np.testing.assert_equal(batch.done[i], memory[i_idx].done[i_env])
 
 
 # TODO: Doesn't work with new RingBuffer, should be substituted by StackFrames test

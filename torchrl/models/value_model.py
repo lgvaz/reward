@@ -1,12 +1,10 @@
 import torch
-import torch.nn.functional as F
-
 import torchrl.utils as U
-from torchrl.models import BaseModel
+from torchrl.models import BaseValueModel
 from torchrl.nn import FlattenLinear
 
 
-class ValueModel(BaseModel):
+class ValueModel(BaseValueModel):
     """
     A standard regression model, can be used to estimate the value of states or Q values.
 
@@ -15,9 +13,6 @@ class ValueModel(BaseModel):
     clip_range: float
         Similar to PPOClip, limits the change between the new and old value function.
     """
-
-    def __init__(self, model, batcher, **kwargs):
-        super().__init__(model=model, batcher=batcher, **kwargs)
 
     @property
     def batch_keys(self):
@@ -33,7 +28,6 @@ class ValueModel(BaseModel):
     def mse_loss(self, batch):
         pred = self.forward(batch.state_t).view(-1)
         loss = F.mse_loss(pred, batch.vtarget)
-
         return loss
 
     def add_old_pred(self, batch):

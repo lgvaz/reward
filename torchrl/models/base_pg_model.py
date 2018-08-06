@@ -75,7 +75,7 @@ class BasePGModel(BaseModel):
         return ActionLinear(in_features=input_shape, action_info=action_info)
 
     @staticmethod
-    def select_action(model, state, step):
+    def select_action(model, state, step, training=True):
         """
         Define how the actions are selected, in this case the actions
         are sampled from a distribution which values are given be a NN.

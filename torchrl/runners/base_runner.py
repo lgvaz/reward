@@ -36,6 +36,10 @@ class BaseRunner(ABC):
     def get_action_info(self):
         pass
 
+    @abstractmethod
+    def sample_random_action(self):
+        pass
+
     # @property
     # def rewards(self):
     #     return self._rewards

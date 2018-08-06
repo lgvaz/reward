@@ -26,14 +26,13 @@ def td_target(rewards, dones, state_value_tp1, gamma):
     return rewards + (1 - dones) * gamma * state_value_tp1
 
 
-def gae_estimation(rewards, dones, state_value_t_and_tp1, *, gamma, gae_lambda):
+def gae_estimation(
+    rewards, dones, state_value_t, state_value_tp1, *, gamma, gae_lambda
+):
     td_target_value = td_target(
-        rewards=rewards,
-        dones=dones,
-        state_value_tp1=state_value_t_and_tp1[1:],
-        gamma=gamma,
+        rewards=rewards, dones=dones, state_value_tp1=state_value_tp1, gamma=gamma
     )
-    td_residual = td_target_value - state_value_t_and_tp1[:-1]
+    td_residual = td_target_value - state_value_t
 
     advantages = discounted_sum_rewards(
         rewards=td_residual,

@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 import torchrl.utils as U
 
 
-class BaseBatcher:
+class BaseBatcher(ABC):
     """
     The returned batch will have the shape (num_steps, num_envs, *shape)
     """
@@ -11,11 +12,16 @@ class BaseBatcher:
         self.batch_size = batch_size
         self.transforms = transforms or []
         self.batch = None
-        self._state_t = None
+        self.state_t = None
         self._state_shape = None
 
     def __str__(self):
         return "<{}>".format(type(self).__name__)
+
+    @abstractmethod
+    def get_batch(self, select_action_fn):
+        if self.state_t is None:
+            self.state_t = self.transform_state(self.runner.reset())
 
     @property
     def unwrapped(self):
@@ -28,10 +34,6 @@ class BaseBatcher:
     @property
     def num_episodes(self):
         return self.runner.num_episodes
-
-    def get_batch(self, select_action_fn):
-        if self._state_t is None:
-            self._state_t = self.transform_state(self.runner.reset())
 
     def transform_state(self, state, training=True):
         """

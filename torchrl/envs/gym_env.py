@@ -67,8 +67,8 @@ class GymEnv(BaseEnv):
         next_state, reward, done, info = self.env.step(action)
         return next_state, reward, done, info
 
-    def record(self, path):
-        self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
+    # def record(self, path):
+    #     self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
 
     def get_state_info(self):
         """

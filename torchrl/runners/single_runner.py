@@ -31,6 +31,9 @@ class SingleRunner(BaseRunner):
 
         return state[None], np.array(reward)[None], np.array(done)[None], info
 
+    def sample_random_action(self):
+        return np.array(self.env.sample_random_action())[None]
+
     def get_state_info(self):
         info = self.env.get_state_info()
         info.shape = (1,) + info.shape

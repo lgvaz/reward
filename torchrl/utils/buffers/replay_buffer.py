@@ -134,13 +134,16 @@
 #         arr, shape=new_shape, strides=new_strides, writeable=False)
 import random
 from torchrl.utils.memories import SimpleMemory
-from torchrl.utils import Batch
+from torchrl.utils import Batch, to_np
 from collections import deque
 
 
+# TODO: Change to a ring buffer
 class ReplayBuffer:
-    def __init__(self, maxlen):
-        self.buffer = deque(maxlen=maxlen)
+    def __init__(self, maxlen, num_envs):
+        self.maxlen = maxlen // num_envs
+        self.buffer = deque(maxlen=self.maxlen)
+        self.num_envs = num_envs
 
     def __len__(self):
         return len(self.buffer)
@@ -150,9 +153,18 @@ class ReplayBuffer:
 
     def add_sample(self, **kwargs):
         # Dict of lists to list of dicts
-        sample = [SimpleMemory(zip(kwargs, v)) for v in zip(*kwargs.values())]
-        self.buffer.extend(sample)
+        # sample = [SimpleMemory(zip(kwargs, v)) for v in zip(*kwargs.values())]
+        self.buffer.append(kwargs)
 
     def sample(self, batch_size):
+        envs = random.choices(range(self.num_envs), k=batch_size)
         samples = random.sample(self.buffer, k=batch_size)
-        return Batch.from_list_of_dicts(samples)
+        samples = [
+            {k: to_np(v)[i] for k, v in sample.items()}
+            for i, sample in zip(envs, samples)
+        ]
+        batch = Batch.from_list_of_dicts(samples)
+        batch = batch.apply_to_all(to_np)
+        batch = batch.apply_to_all(lambda x: x[None])
+
+        return batch

@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torchrl.utils as U
 from torchrl.agents import BaseAgent
 
@@ -45,12 +46,14 @@ class PGAgent(BaseAgent):
         self.advantage = advantage
         self.vtarget = vtarget
 
-        self._register_model("policy", policy_model)
+        self.register_model("policy", policy_model)
         if value_model is not None:
-            self._register_model("value", value_model)
+            self.register_model("value", value_model)
 
     def step(self):
         batch = self.generate_batch()
+        batch.state_t = U.to_tensor(batch.state_t)
+        batch.state_tp1 = U.to_tensor(batch.state_tp1)
 
         self.add_state_value(batch)
         self.add_advantage(batch)
@@ -64,8 +67,10 @@ class PGAgent(BaseAgent):
         self.train_models(batch)
 
     def add_state_value(self, batch):
+        # TODO: Defaultdict, never going to be None
         if self.models.value is not None:
-            s = batch.state_t_and_tp1
+            # s = batch.state_t_and_tp1
+            s = torch.cat((batch.state_t, batch.state_tp1[-1:]))
             v = self.models.value(s.reshape(-1, *s.shape[2:]))
 
             v = U.to_np(v).reshape(s.shape[:2])

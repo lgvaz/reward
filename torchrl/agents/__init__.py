@@ -6,5 +6,6 @@
 """
 from .base_agent import BaseAgent
 from .pg_agent import PGAgent
+from .q_agent import QAgent
 
-__all__ = ["BaseAgent", "PGAgent"]
+__all__ = ["BaseAgent", "PGAgent", "QAgent"]

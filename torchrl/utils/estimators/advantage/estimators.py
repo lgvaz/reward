@@ -60,7 +60,8 @@ class GAE(BaseEstimator):
         return gae_estimation(
             rewards=batch.reward,
             dones=batch.done,
-            state_value_t_and_tp1=batch.state_value_t_and_tp1,
+            state_value_t=batch.state_value_t,
+            state_value_tp1=batch.state_value_tp1,
             gamma=self.gamma,
             gae_lambda=self.gae_lambda,
         )

@@ -20,7 +20,7 @@ value_nn_config = U.Config(
 )
 
 # Create env and runner
-env = GymRecorder(GymEnv("CartPole-v1"), directory="videos")
+env = GymEnv("CartPole-v1")
 runner = SingleRunner(env)
 
 # Create batcher
@@ -52,4 +52,4 @@ agent = PGAgent(
     log_dir="tests/vanilla/cp/1p-opt-v8-0",
 )
 
-agent.train(max_steps=1e6, log_freq=10e4)
+agent.train(max_steps=1e6, log_freq=1e4)

@@ -3,13 +3,14 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from torchrl.utils.memories import SimpleMemory
-from torchrl.utils import to_tensor, join_first_dims
+from torchrl.utils import to_tensor, join_first_dims, maybe_np, to_np, LazyArray
 
 
 class Batch(SimpleMemory):
     def __len__(self):
         return len(self["state_t"])
 
+    # TODO: apply inplace instead of returning new batch
     def apply_to_all(self, func):
         return Batch((k, func(v)) for k, v in self.items())
 
@@ -49,19 +50,22 @@ class Batch(SimpleMemory):
         )
         return self.apply_to_all(func)
 
-    def to_array_or_tensor(self):
-        new_batch = Batch()
-        for k, v in self.items():
-            if isinstance(v[0], np.ndarray):
-                new_batch[k] = np.stack(v)
+    # def to_array_or_tensor(self):
+    #     # TODO: Maybe here memory can be pinned
+    #     new_batch = Batch()
+    #     for k, v in self.items():
+    #         if isinstance(v[0], LazyArray):
+    #             v = to_np(v)
+    #         if isinstance(v[0], np.ndarray):
+    #             new_batch[k] = np.stack(v)
 
-            elif isinstance(v[0], torch.Tensor):
-                new_batch[k] = torch.stack(v)
+    #         elif isinstance(v[0], torch.Tensor):
+    #             new_batch[k] = torch.stack(v)
 
-            else:
-                new_batch[k] = v
+    #         else:
+    #             new_batch[k] = v
 
-        return new_batch
+    #     return new_batch
 
     @classmethod
     def from_trajs(cls, trajs):

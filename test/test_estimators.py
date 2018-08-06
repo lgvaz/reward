@@ -118,7 +118,7 @@ def test_td_target(rewards, dones, state_value_tp1, gamma):
 
 
 def test_gae_estimation(
-    rewards, dones, state_value_t, state_value_t_and_tp1, gamma, gae_lambda
+    rewards, dones, state_value_t, state_value_tp1, gamma, gae_lambda
 ):
     expected_td_target = np.array(
         [
@@ -154,7 +154,8 @@ def test_gae_estimation(
     result = gae_estimation(
         rewards=rewards,
         dones=dones,
-        state_value_t_and_tp1=state_value_t_and_tp1,
+        state_value_t=state_value_t,
+        state_value_tp1=state_value_tp1,
         gamma=gamma,
         gae_lambda=gae_lambda,
     )

@@ -187,6 +187,9 @@ class PAACRunner(BaseRunner):
             for i in range(self.num_workers)
         ]
 
+    def sample_random_action(self):
+        return np.array([env.sample_random_action() for env in self.env])
+
     def get_state_info(self):
         info = self.env[0].get_state_info()
         info.shape = (self.num_envs,) + info.shape

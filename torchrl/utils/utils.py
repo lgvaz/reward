@@ -76,6 +76,17 @@ def to_np(value):
     raise ValueError("Data type {} not supported".format(value.__class__.__name__))
 
 
+# TODO: Depecrated
+def maybe_np(value):
+    if isinstance(value, torch.Tensor):
+        return value
+    else:
+        try:
+            return to_np(value)
+        except ValueError:
+            return value
+
+
 # TODO: What to do with other types? lists, etc..
 def to_tensor(x, cuda_default=True):
     if isinstance(x, np.ndarray):
@@ -168,7 +179,7 @@ class LazyArray:
 
     def __iter__(self):
         for v in self.data:
-            yield LazyArray(v, **self.kwargs)
+            yield LazyArray(v, transform=self.transform, **self.kwargs)
 
     @property
     def shape(self):

@@ -4,9 +4,10 @@ from torchrl.batchers import RolloutBatcher
 from torchrl.envs import GymEnv
 from torchrl.models import PPOClipModel, ValueClipModel
 from torchrl.optimizers import JointOpt
-from torchrl.runners import PAACRunner
+from torchrl.runners import PAACRunner, SingleRunner
 from torchrl.utils import Config
 from torchrl.batchers.transforms import mujoco_transforms
+import torchrl.batchers.transforms as tfms
 
 MAX_STEPS = 10e6
 
@@ -32,8 +33,11 @@ value_nn_config = Config(
 # Create environment
 envs = [GymEnv("HalfCheetah-v2") for _ in range(16)]
 runner = PAACRunner(envs)
+# runner = SingleRunner(envs[0])
 
-batcher = RolloutBatcher(runner, batch_size=2048, transforms=mujoco_transforms())
+batcher = RolloutBatcher(
+    runner, batch_size=2048, transforms=[tfms.StateRunNorm(), tfms.RewardRunScaler()]
+)
 
 policy_model_config = Config(nn_config=policy_nn_config)
 policy_model = PPOClipModel.from_config(config=policy_model_config, batcher=batcher)
@@ -43,8 +47,8 @@ value_model = ValueClipModel.from_config(config=value_model_config, batcher=batc
 
 jopt = JointOpt(
     model=[policy_model, value_model],
-    num_epochs=10,
-    num_mini_batches=32,
+    num_epochs=4,
+    num_mini_batches=4,
     opt_params=dict(lr=3e-4, eps=1e-5),
     clip_grad_norm=0.5,
 )
@@ -55,7 +59,7 @@ agent = PGAgent(
     optimizer=jopt,
     policy_model=policy_model,
     value_model=value_model,
-    log_dir="tests/nv3/cheetah/baselines-rewscaler-v0-3",
+    log_dir="tests/nv4/cheetah/single-runtrew-v0-0",
     normalize_advantages=True,
 )
 
