@@ -92,7 +92,7 @@ def to_tensor(x, cuda_default=True):
     if isinstance(x, np.ndarray):
         # pytorch doesn't support bool
         if x.dtype == "bool":
-            x = x.astype("int")
+            x = x.astype("float32")
         # we want only single precision floats
         if x.dtype == "float64":
             x = x.astype("float32")

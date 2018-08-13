@@ -22,8 +22,16 @@ def discounted_sum_rewards(rewards, dones, last_state_value_t=None, gamma=0.99):
     return returns
 
 
-def td_target(rewards, dones, state_value_tp1, gamma):
+def td_target(*, rewards, dones, state_value_tp1, gamma):
     return rewards + (1 - dones) * gamma * state_value_tp1
+
+
+# TODO: Test this
+def q_learning_target(*, rewards, dones, q_tp1, gamma):
+    max_q_tp1, _ = q_tp1.max(dim=1)
+    return td_target(
+        rewards=rewards, dones=dones, state_value_tp1=max_q_tp1, gamma=gamma
+    )
 
 
 def gae_estimation(
