@@ -2,6 +2,9 @@ import numpy as np
 
 
 def discounted_sum_rewards(rewards, dones, last_state_value_t=None, gamma=0.99):
+    """
+    Expected shape: (num_samples, num_envs)
+    """
     rewards = rewards.copy()
 
     # if last_state_value_t is None and not all(dones[-1]):
