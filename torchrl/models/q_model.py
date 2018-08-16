@@ -64,6 +64,7 @@ class QModel(BaseValueModel):
         if np.random.random() <= model.exploration_rate and training:
             return model.batcher.runner.sample_random_action()
         else:
+            # TODO: Calculate pct of actions taken
             with torch.no_grad():
                 q_values = model(state)
             return U.to_np(q_values.argmax(dim=1))

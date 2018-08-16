@@ -23,7 +23,7 @@ def replay_batcher():
     batcher = tr.batchers.ReplayBatcher(
         runner,
         batch_size=64,
-        steps_per_batch=4,
+        learning_freq=4,
         replay_buffer_maxlen=1e4,
         init_replays=0.01,
     )
@@ -63,6 +63,9 @@ def test_q_model(nn_config, replay_batcher):
 
 
 def test_dqn_target_net_grad(nn_config, replay_batcher):
+    """
+    Test if the weights of the target network are not being changed when doing grad descent.
+    """
     q_model = tr.models.DQNModel.from_config(
         config=nn_config, batcher=replay_batcher, exploration_rate=0.1, target_up_freq=5
     )
@@ -95,6 +98,10 @@ def test_dqn_target_net_grad(nn_config, replay_batcher):
 
 
 def test_dqn_target_net_update():
+    """
+    Tests if the weights are being correctly copied between networks.
+    Tests both hard and soft updates
+    """
     layer = nn.Linear(4, 2)
     for i, par in enumerate(layer.parameters()):
         par.data.fill_(0)
@@ -103,13 +110,16 @@ def test_dqn_target_net_update():
         model=layer, batcher=None, exploration_rate=0, target_up_freq=None
     )
 
+    # Change the weights values
     for i, par in enumerate(layer.parameters()):
         par.data.fill_(i)
 
+    # Do a soft update
     model.update_target_net(weight=0.2)
     for i, par in enumerate(model.target_net.parameters()):
         assert (par == 0.2 * i).all()
 
+    # Do a hard update
     model.update_target_net(weight=1.)
     for i, par in enumerate(model.target_net.parameters()):
         assert (par == 1 * i).all()
