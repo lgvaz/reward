@@ -17,20 +17,18 @@ class Batch(SimpleMemory):
     def apply_to_keys(self, func, keys):
         return Batch((k, func(self[k])) for k in keys)
 
-    def sample(self, num_mini_batches, shuffle):
+    def sample(self, mini_batches, shuffle):
         keys = list(self.keys())
 
-        return self.sample_keys(
-            keys=keys, num_mini_batches=num_mini_batches, shuffle=shuffle
-        )
+        return self.sample_keys(keys=keys, mini_batches=mini_batches, shuffle=shuffle)
 
-    def sample_keys(self, keys, num_mini_batches, shuffle):
+    def sample_keys(self, keys, mini_batches, shuffle):
         self["idxs"] = torch.arange(len(self)).long()
         keys = keys + ["idxs"]
 
-        if num_mini_batches > 1:
+        if mini_batches > 1:
             values = [self[k] for k in keys]
-            batch_size = len(self) // num_mini_batches
+            batch_size = len(self) // mini_batches
 
             dataset = TensorDataset(*values)
             data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)

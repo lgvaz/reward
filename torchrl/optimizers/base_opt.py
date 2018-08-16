@@ -9,8 +9,8 @@ class BaseOpt:
         self,
         model,
         *,
-        num_epochs=1,
-        num_mini_batches=1,
+        epochs=1,
+        mini_batches=1,
         shuffle=True,
         opt_fn=None,
         opt_params=None,
@@ -19,12 +19,13 @@ class BaseOpt:
         loss_coef=None
     ):
         self.model = model
-        self.num_epochs = num_epochs
-        self.num_mini_batches = num_mini_batches
+        self.epochs = epochs
+        self.mini_batches = mini_batches
         self.shuffle = shuffle
         self.clip_grad_norm = clip_grad_norm
         self.num_steps = 0
         self.num_updates = 0
+        self.num_epochs = 0
         self.memory = U.memories.DefaultMemory()
 
         opt_fn = opt_fn or Adam
@@ -114,9 +115,9 @@ class BaseOpt:
         batch: torchrl.utils.Batch
             The batch should contain all the information necessary
             to compute the gradients.
-        num_epochs: int
+        epochs: int
             How many times to train over the entire dataset.
-        num_mini_batches: int
+        mini_batches: int
             How many mini-batches to subset the batch.
         shuffle: bool
             Whether to shuffle dataset.
@@ -129,13 +130,14 @@ class BaseOpt:
         if self.callbacks.on_train_start(batch):
             return
 
-        for i_epoch in range(self.num_epochs):
+        for i_epoch in range(self.epochs):
+            self.num_epochs += 1
             if self.callbacks.on_epoch_start(batch):
                 break
 
             for mini_batch in batch.sample_keys(
                 keys=self.batch_keys,
-                num_mini_batches=self.num_mini_batches,
+                mini_batches=self.mini_batches,
                 shuffle=self.shuffle,
             ):
                 if self.callbacks.on_mini_batch_start(mini_batch):
