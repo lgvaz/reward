@@ -17,8 +17,8 @@ from .callback import Callback
 from .config import Config
 from .logger import Logger
 from .net_builder import auto_input_shape, get_module_list, nn_from_config
-from .schedules import linear_schedule, piecewise_linear_schedule
 
+import torchrl.utils.schedules
 import torchrl.utils.estimators
 import torchrl.utils.filters
 import torchrl.utils.buffers
