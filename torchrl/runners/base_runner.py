@@ -86,6 +86,8 @@ class BaseRunner(ABC):
         logger.add_log(
             "Env/Reward/Episode (New)", np.mean(self.rewards[-self.new_eps :])
         )
+        logger.add_log(
+            "Env/Length/Episode (New)", np.mean(self.ep_lengths[-self.new_eps :])
+        )
         logger.add_log("Env/Reward/Episode (Last 50)", np.mean(self.rewards[-50:]))
-        logger.add_log("Env/Length/Episode (New)", np.mean(self.ep_lengths[-new_eps:]))
         logger.add_log("Env/Length/Episode (Last 50)", np.mean(self.ep_lengths[-50:]))
