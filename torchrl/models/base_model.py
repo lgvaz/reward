@@ -116,8 +116,13 @@ class BaseModel(ModuleExtended, ABC):
     def name(self):
         return self.__class__.__name__
 
+    @property
     def num_steps(self):
         return self.batcher.num_steps
+
+    @property
+    def num_episodes(self):
+        return self.batcher.num_episodes
 
     def register_loss(self, func):
         self.losses.append(func)
