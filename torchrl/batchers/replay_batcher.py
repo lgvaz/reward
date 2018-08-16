@@ -65,6 +65,8 @@ class ReplayBatcher(BaseBatcher):
                 # info=info,
             )
 
+            self.state_t = state_tp1
+
         batch = self.replay_buffer.sample(self.batch_size)
         # TODO: Maybe to_tensor states here
         return batch
