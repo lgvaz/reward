@@ -191,11 +191,12 @@ class BaseAgent(ABC):
         #     )
         # )
         self.logger.log(
+            step=self.num_steps,
             header={
                 "Iter": self.num_iters,
                 "Episode": self.num_episodes,
                 "Step": self.num_steps,
-            }
+            },
         )
 
     def generate_batch(self):

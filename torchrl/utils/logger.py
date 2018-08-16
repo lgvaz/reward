@@ -32,7 +32,6 @@ class Logger:
         self.time = time.time()
         self.steps_sum = 0
         self.eta = None
-        self.i_step = 0
         self.time_header = None
 
         tqdm.write("Writing logs to: {}".format(log_dir))
@@ -93,7 +92,7 @@ class Logger:
         """
         self.histograms[name] = np.array(values)
 
-    def log(self, header=None):
+    def log(self, step, header=None):
         """
         Use the aggregated values to print a table and write to the log file.
 
@@ -121,11 +120,11 @@ class Logger:
                     key: np.mean(value) for key, value in self.tf_logs.items()
                 }
                 for key, value in self.logs.items():
-                    self.writer.add_scalar(key, value, global_step=self.i_step)
+                    self.writer.add_scalar(key, value, global_step=step)
                 for key, value in self.tf_logs.items():
-                    self.writer.add_scalar(key, value, global_step=self.i_step)
+                    self.writer.add_scalar(key, value, global_step=step)
                 for key, value in self.histograms.items():
-                    self.writer.add_histogram(key, value, global_step=self.i_step)
+                    self.writer.add_histogram(key, value, global_step=step)
 
             # Reset dict
             self.logs = DefaultMemory()
