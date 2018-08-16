@@ -9,14 +9,15 @@ class ReplayBatcher(BaseBatcher):
         self,
         runner,
         batch_size,
-        steps_per_batch,
+        *,
+        learning_freq=1,
         transforms=None,
         replay_buffer=None,
         replay_buffer_maxlen=1e6,
         init_replays=0.05,
     ):
         super().__init__(runner=runner, batch_size=batch_size, transforms=transforms)
-        self.steps_per_batch = steps_per_batch
+        self.learning_freq = learning_freq
         self.replay_buffer = replay_buffer or U.buffers.ReplayBuffer(
             maxlen=int(replay_buffer_maxlen), num_envs=self.runner.num_envs
         )
@@ -48,7 +49,7 @@ class ReplayBatcher(BaseBatcher):
     def get_batch(self, select_action_fn):
         super().get_batch(select_action_fn=select_action_fn)
 
-        for i in range(self.steps_per_batch):
+        for i in range(self.learning_freq):
             # TODO: Maybe the array can live in pinned memory?
             state_t = U.to_tensor(U.to_np(self.state_t))
             action = select_action_fn(state_t, self.num_steps)
