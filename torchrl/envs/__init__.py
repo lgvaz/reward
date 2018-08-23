@@ -10,4 +10,6 @@ from .atari_env import AtariEnv
 from .roboschool_env import RoboschoolEnv
 from .osim_env import OsimRLEnv
 
+import torchrl.envs.wrappers
+
 __all__ = ["BaseEnv", "GymEnv", "RoboschoolEnv", "OsimRLEnv", "AtariEnv"]

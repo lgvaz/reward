@@ -43,7 +43,6 @@ class DQNModel(QModel):
             self.update_target_net(weight=self.target_up_weight)
 
     def update_target_net(self, weight):
-        tqdm.write("INFO: Target net updated")
         if weight == 1.:
             self.target_net.load_state_dict(self.model.state_dict())
         else:

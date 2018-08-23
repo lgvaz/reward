@@ -15,6 +15,8 @@ from .ppo_clip_model import PPOClipModel
 from .ppo_adaptive_model import PPOAdaptiveModel
 from .q_model import QModel
 from .dqn_model import DQNModel
+from .dgn_model import DGNModel
+from .nac_model import NACModel
 
 __all__ = [
     "BaseModel",
@@ -28,4 +30,6 @@ __all__ = [
     "ValueClipModel",
     "QModel",
     "DQNModel",
+    "DGNModel",
+    "NACModel",
 ]

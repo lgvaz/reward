@@ -50,6 +50,10 @@ class QModel(BaseValueModel):
         loss = self.loss_fn(input=selected_q, target=batch.q_target)
         return loss
 
+    def write_logs(self, batch):
+        super().write_logs(batch=batch)
+        self.add_tf_only_log(name="Exploration_rate", value=self.exploration_rate)
+
     @staticmethod
     def output_layer(input_shape, action_info):
         # TODO: Rethink about ActionLinear

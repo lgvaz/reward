@@ -90,7 +90,7 @@ class Logger:
         value: torch.Tensor
             Value to log.
         """
-        self.histograms[name] = np.array(values)
+        self.histograms[name] = to_np(values)
 
     def log(self, step, header=None):
         """
