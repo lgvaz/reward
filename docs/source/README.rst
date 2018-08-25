@@ -1,5 +1,6 @@
 TorchRL
 ========
+Focus on what matters
 
 |build|  |docs|  |chat|  |climate|
 
