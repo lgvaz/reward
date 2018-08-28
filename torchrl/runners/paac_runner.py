@@ -32,6 +32,10 @@ class PAACRunner(BaseRunner):
         self._create_workers()
 
     @property
+    def env_name(self):
+        return self.env[0].env_name
+
+    @property
     def num_envs(self):
         return len(self.env)
 

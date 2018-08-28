@@ -17,6 +17,11 @@ class BaseRunner(ABC):
 
     @property
     @abstractmethod
+    def env_name(self):
+        pass
+
+    @property
+    @abstractmethod
     def num_envs(self):
         pass
 

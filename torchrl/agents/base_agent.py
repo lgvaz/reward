@@ -1,3 +1,5 @@
+import os
+from datetime import datetime
 import numpy as np
 from abc import ABC, abstractmethod
 from tqdm import tqdm
@@ -20,17 +22,19 @@ class BaseAgent(ABC):
         Directory where logs will be written (Default is `runs`).
     """
 
-    def __init__(self, batcher, optimizer, *, gamma=0.99, log_dir="runs"):
+    def __init__(self, batcher, optimizer, action_fn, *, gamma=0.99, log_dir=None):
         self.batcher = batcher
         self.opt = optimizer
-        self.logger = U.Logger(log_dir)
+        self.action_fn = action_fn
         self.gamma = gamma
         self.num_iters = 1
 
         self.models = U.memories.DefaultMemory()
-        # Can be changed later by the user, None goes to the default (from policy)
-        self.select_action_fn = None
-        self.eval_select_action_fn = None
+
+        if log_dir is None:
+            time = datetime.now().strftime("%B_%d-%H:%M:%S")
+            log_dir = os.path.join("logs", self.batcher.env_name, time)
+        self.logger = U.Logger(log_dir)
 
     @abstractmethod
     def step(self):
@@ -73,18 +77,13 @@ class BaseAgent(ABC):
 
     def _check_evaluation(self, env):
         if self.eval_freq is not None and self.num_steps >= self.next_eval:
-            action_fn = self.eval_select_action_fn or self.models.policy.select_action
-            action_fn_pre = lambda state: action_fn(
-                model=self.models.policy,
-                state=state,
-                step=self.num_steps,
-                training=False,
-            )
-            self.batcher.evaluate(
-                select_action_fn=action_fn_pre, logger=self.logger, env=env
-            )
+            self.eval_mode()
 
+            act_fn = lambda state: self.action_fn(state=state, step=self.num_steps)
+            self.batcher.evaluate(select_action_fn=act_fn, logger=self.logger, env=env)
             self.next_eval += self.eval_freq
+
+            self.train_mode()
 
     def register_model(self, name, model):
         """
@@ -99,6 +98,14 @@ class BaseAgent(ABC):
         """
         setattr(self.models, name, model)
         model.attach_logger(self.logger)
+
+    def train_mode(self):
+        for model in self.memory.models:
+            model.train_mode()
+
+    def eval_mode(self):
+        for model in self.memory.models:
+            self.eval_mode()
 
     def train_models(self, batch):
         # for model in self.models.values():
@@ -159,7 +166,7 @@ class BaseAgent(ABC):
 
         self.pbar.close()
 
-    def select_action(self, state, step, training=True):
+    def select_action(self, state, step):
         """
         Receive a state and use the model to select an action.
 
@@ -173,10 +180,7 @@ class BaseAgent(ABC):
         action: int or numpy.ndarray
             The selected action.
         """
-        action_fn = self.select_action_fn or self.models.policy.select_action
-        return action_fn(
-            model=self.models.policy, state=state, step=step, training=training
-        )
+        return self.action_fn(state=state, step=step)
 
     def write_logs(self):
         """

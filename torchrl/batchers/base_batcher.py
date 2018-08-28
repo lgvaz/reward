@@ -24,6 +24,10 @@ class BaseBatcher(ABC):
             self.state_t = self.transform_state(self.runner.reset())
 
     @property
+    def env_name(self):
+        return self.runner.env_name
+
+    @property
     def unwrapped(self):
         return self
 

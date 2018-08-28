@@ -9,6 +9,10 @@ class SingleRunner(BaseRunner):
         self._ep_num_steps = 0
 
     @property
+    def env_name(self):
+        return self.env.env_name
+
+    @property
     def num_envs(self):
         return 1
 
