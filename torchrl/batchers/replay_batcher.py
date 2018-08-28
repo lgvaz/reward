@@ -4,6 +4,7 @@ from torchrl.batchers import BaseBatcher
 from tqdm import tqdm
 
 
+# TODO: replay_buffer_maxlen -> maxlen
 class ReplayBatcher(BaseBatcher):
     def __init__(
         self,

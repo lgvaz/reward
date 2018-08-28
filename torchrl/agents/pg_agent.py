@@ -5,6 +5,7 @@ from torchrl.agents import BaseAgent
 
 
 # TODO: docstring
+# TODO: This is actually ActorCritic
 class PGAgent(BaseAgent):
     """
     Policy Gradient Agent, compatible with all PG models.

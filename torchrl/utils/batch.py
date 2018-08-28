@@ -48,6 +48,9 @@ class Batch(SimpleMemory):
         )
         return self.apply_to_all(func)
 
+    def to_tensor(self):
+        return Batch({k: to_tensor(v) for k, v in self.items()})
+
     # def to_array_or_tensor(self):
     #     # TODO: Maybe here memory can be pinned
     #     new_batch = Batch()

@@ -116,6 +116,16 @@ class BaseEnv(ABC):
     def sample_random_action(self):
         pass
 
+    # TODO: Replace get_state_info by this
+    @property
+    def state_info(self):
+        return self.get_state_info()
+
+    # TODO: Replace get_action_info by this
+    @property
+    def action_info(self):
+        return self.get_action_info()
+
     @property
     def num_lives(self):
         raise NotImplementedError

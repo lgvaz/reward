@@ -56,11 +56,12 @@ class BaseModel(ModuleExtended, ABC):
         self.callbacks = U.Callback()
         self.register_callbacks()
         self.logger = None
+        self.training = True
 
         # Enable cuda if wanted
         self.cuda_enabled = cuda_default and torch.cuda.is_available()
         if self.cuda_enabled:
-            self.model.cuda()
+            self.cuda()
 
     @property
     @abstractmethod
@@ -124,12 +125,30 @@ class BaseModel(ModuleExtended, ABC):
     def num_episodes(self):
         return self.batcher.num_episodes
 
+    def cuda(self):
+        self.model.cuda()
+
+    def train_mode(self):
+        self.training = True
+        self.model.train()
+
+    def eval_mode(self):
+        self.training = False
+        self.model.eval()
+
     def register_loss(self, func):
         self.losses.append(func)
 
     def register_callbacks(self):
+        # self.callbacks.register_on_train_start(self.check_batch_keys)
         self.callbacks.register_cleanup(self.write_logs)
         self.callbacks.register_cleanup(self.clear_memory)
+
+    # TODO: Correct all classes to pass on this
+    def check_batch_keys(self, batch):
+        for key in self.batch_keys:
+            if key not in batch.keys():
+                raise AttributeError("batch should have attribute '{}'".format(key))
 
     def clear_memory(self, batch):
         self.memory.clear()

@@ -4,6 +4,7 @@
 |
 """
 from .base_model import BaseModel
+from .target_model import TargetModel
 from .base_pg_model import BasePGModel
 from .base_value_model import BaseValueModel
 from .value_model import ValueModel
@@ -17,6 +18,8 @@ from .q_model import QModel
 from .dqn_model import DQNModel
 from .dgn_model import DGNModel
 from .nac_model import NACModel
+from .ddpg_critic_model import DDPGCriticModel
+from .ddpg_actor_model import DDPGActorModel
 
 __all__ = [
     "BaseModel",
@@ -32,4 +35,7 @@ __all__ = [
     "DQNModel",
     "DGNModel",
     "NACModel",
+    "TargetModel",
+    "DDPGCriticModel",
+    "DDPGActorModel",
 ]
