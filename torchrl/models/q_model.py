@@ -42,7 +42,9 @@ class QModel(BaseValueModel):
 
     def get_selected_q(self, batch):
         q_values = self.forward(batch.state_t)
-        selected_q = q_values.gather(dim=1, index=batch.action.reshape(-1, 1)).squeeze()
+        selected_q = q_values.gather(
+            dim=1, index=batch.action.reshape(-1, 1).long()
+        ).squeeze()
         return selected_q
 
     def q_loss(self, batch):
