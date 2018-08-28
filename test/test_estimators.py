@@ -1,6 +1,6 @@
 import pytest
-
 import numpy as np
+import torchrl.utils as U
 
 from torchrl.utils.estimators.estimation_funcs import (
     discounted_sum_rewards,
@@ -60,7 +60,8 @@ def gae_lambda():
     return 0.7
 
 
-def test_discounted_sum_rewards(rewards, dones, state_value_t, gamma):
+@pytest.mark.parametrize("tensor", [False, True])
+def test_discounted_sum_rewards(rewards, dones, state_value_t, gamma, tensor):
     expected_discounted_return = np.array(
         [
             [
@@ -77,14 +78,20 @@ def test_discounted_sum_rewards(rewards, dones, state_value_t, gamma):
         ]
     ).T
 
+    if tensor:
+        rewards, dones, state_value_t = map(
+            U.to_tensor, (rewards, dones, state_value_t)
+        )
+
     result = discounted_sum_rewards(
         rewards=rewards, dones=dones, last_state_value_t=state_value_t[-1], gamma=gamma
     )
 
-    np.testing.assert_equal(result, expected_discounted_return)
+    np.testing.assert_allclose(U.to_np(result), expected_discounted_return)
 
 
-def test_td_target(rewards, dones, state_value_tp1, gamma):
+@pytest.mark.parametrize("tensor", [False, True])
+def test_td_target(rewards, dones, state_value_tp1, gamma, tensor):
     expected_td_target = np.array(
         [
             [
@@ -110,15 +117,19 @@ def test_td_target(rewards, dones, state_value_tp1, gamma):
         ]
     ).T
 
+    if tensor:
+        rewards, dones, state_value_tp1 = map(
+            U.to_tensor, (rewards, dones, state_value_tp1)
+        )
     result = td_target(
         rewards=rewards, dones=dones, state_value_tp1=state_value_tp1, gamma=gamma
     )
+    np.testing.assert_allclose(U.to_np(result), expected_td_target)
 
-    np.testing.assert_equal(result, expected_td_target)
 
-
+@pytest.mark.parametrize("tensor", [False, True])
 def test_gae_estimation(
-    rewards, dones, state_value_t, state_value_tp1, gamma, gae_lambda
+    rewards, dones, state_value_t, state_value_tp1, gamma, gae_lambda, tensor
 ):
     expected_td_target = np.array(
         [
@@ -151,6 +162,10 @@ def test_gae_estimation(
         gae_sum = td_residuals[i] + (1 - dones[i]) * (gamma * gae_lambda) * (gae_sum)
         expected_gae[i] = gae_sum
 
+    if tensor:
+        rewards, dones, state_value_t, state_value_tp1 = map(
+            U.to_tensor, (rewards, dones, state_value_t, state_value_tp1)
+        )
     result = gae_estimation(
         rewards=rewards,
         dones=dones,
@@ -160,4 +175,4 @@ def test_gae_estimation(
         gae_lambda=gae_lambda,
     )
 
-    np.testing.assert_equal(result, expected_gae)
+    np.testing.assert_allclose(U.to_np(result), expected_gae)

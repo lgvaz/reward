@@ -90,11 +90,15 @@ def maybe_np(value):
 # TODO: What to do with other types? lists, etc..
 def to_tensor(x, cuda_default=True):
     if isinstance(x, np.ndarray):
+        # TODO: Everything to float??
         # pytorch doesn't support bool
         if x.dtype == "bool":
             x = x.astype("float32")
         # we want only single precision floats
         if x.dtype == "float64":
+            x = x.astype("float32")
+        # TODO: this may break something
+        if x.dtype == "int":
             x = x.astype("float32")
 
         x = torch.from_numpy(x)
