@@ -21,8 +21,11 @@ class SimpleMemory(dict):
     def __setattr__(self, *args, **kwargs):
         return self.__setitem__(*args, **kwargs)
 
-    def __getattr__(self, *args, **kwargs):
-        return self.__getitem__(*args, **kwargs)
+    def __getattr__(self, key):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            raise AttributeError(key)
 
     @classmethod
     def from_list_of_dicts(cls, dicts):
@@ -40,5 +43,8 @@ class DefaultMemory(defaultdict):
     def __setattr__(self, *args, **kwargs):
         return self.__setitem__(*args, **kwargs)
 
-    def __getattr__(self, *args, **kwargs):
-        return super().__getitem__(*args, **kwargs)
+    def __getattr__(self, key):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            raise AttributeError(key)
