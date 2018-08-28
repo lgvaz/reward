@@ -5,10 +5,10 @@ from torchrl.models import ValueModel
 
 
 class ValueClipModel(ValueModel):
-    def __init__(self, model, batcher, clip_range=0.2, **kwargs):
+    def __init__(self, nn, batcher, clip_range=0.2, **kwargs):
         self.clip_range_fn = U.make_callable(clip_range)
 
-        super().__init__(model=model, batcher=batcher, **kwargs)
+        super().__init__(nn=nn, batcher=batcher, **kwargs)
 
     @property
     def batch_keys(self):

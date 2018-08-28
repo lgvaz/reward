@@ -117,7 +117,6 @@ class FlattenLinear(nn.Linear):
 
     def forward(self, x):
         x = x.view(x.shape[0], -1)
-
         return super().forward(x)
 
 
@@ -134,32 +133,32 @@ class ActionLinear(nn.Module):
         Dict containing information about the environment actions (e.g. shape).
     """
 
-    def __init__(self, in_features, action_info, **kwargs):
+    def __init__(self, in_features, action_shape, action_space, **kwargs):
         super().__init__()
-
-        self.action_info = action_info
-        out_features = int(np.prod(action_info["shape"]))
+        self.action_shape = action_shape
+        self.action_space = action_space
+        out_features = int(np.prod(action_shape))
 
         self.linear = FlattenLinear(
             in_features=in_features, out_features=out_features, **kwargs
         )
 
-        if action_info.space == "continuous":
+        if self.action_space == "continuous":
             self.log_std = nn.Parameter(torch.zeros(1, out_features))
             # Tiny layer for maximizing exploration
             self.linear.weight.data.normal_(std=0.01)
 
     def forward(self, x):
-        if self.action_info.space == "discrete":
+        if self.action_space == "discrete":
             logits = self.linear(x)
             return logits
 
-        elif self.action_info.space == "continuous":
+        elif self.action_space == "continuous":
             mean = self.linear(x)
             log_std = self.log_std.expand_as(mean)
             return torch.stack((mean, log_std), dim=-1)
 
         else:
             raise ValueError(
-                "Action space {} not implemented".format(self.action_info.space)
+                "Action space {} not implemented".format(self.action_space)
             )

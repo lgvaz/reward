@@ -10,7 +10,7 @@ class PGAgent(BaseAgent):
     """
     Policy Gradient Agent, compatible with all PG models.
 
-    This agent encapsulates a policy_model and optionally a value_model,
+    This agent encapsulates a actor and optionally a critic,
     it defines the steps needed for the training loop (see :meth:`step`),
     and calculates all the necessary values to train the model(s).
 
@@ -18,9 +18,9 @@ class PGAgent(BaseAgent):
     ----------
     env: torchrl.envs
         A torchrl environment.
-    policy_model: torchrl.models
+    actor: torchrl.models
         Should be a subclass of ``torchrl.models.BasePGModel``
-    value_model: torchrl.models
+    critic: torchrl.models
         Should be an instance of ``torchrl.models.ValueModel`` (Default is None)
     normalize_advantages: bool
         If True, normalize the advantages per batch.
@@ -34,22 +34,23 @@ class PGAgent(BaseAgent):
         self,
         batcher,
         *,
-        policy_model,
-        value_model=None,
+        action_fn,
+        actor,
+        critic=None,
         normalize_advantages=True,
         advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
         vtarget=U.estimators.value.FromAdvantage(),
         **kwargs
     ):
-        super().__init__(batcher=batcher, **kwargs)
+        super().__init__(batcher=batcher, action_fn=action_fn, **kwargs)
 
         self.normalize_advantages = normalize_advantages
         self.advantage = advantage
         self.vtarget = vtarget
 
-        self.register_model("policy", policy_model)
-        if value_model is not None:
-            self.register_model("value", value_model)
+        self.register_model("actor", actor)
+        if critic is not None:
+            self.register_model("critic", critic)
 
     def step(self):
         batch = self.generate_batch()
@@ -69,10 +70,10 @@ class PGAgent(BaseAgent):
 
     def add_state_value(self, batch):
         # TODO: Defaultdict, never going to be None
-        if self.models.value is not None:
+        if self.models.critic is not None:
             # s = batch.state_t_and_tp1
             s = torch.cat((batch.state_t, batch.state_tp1[-1:]))
-            v = self.models.value(s.reshape(-1, *s.shape[2:]))
+            v = self.models.critic(s.reshape(-1, *s.shape[2:]))
 
             v = U.to_np(v).reshape(s.shape[:2])
             batch.state_value_t_and_tp1 = v
@@ -87,15 +88,15 @@ class PGAgent(BaseAgent):
 
     # TODO: Reimplement this method
     # @classmethod
-    # def from_config(cls, config, env=None, policy_model_class=None, **kwargs):
+    # def from_config(cls, config, env=None, actor_class=None, **kwargs):
     #     if env is None:
     #         env = U.env_from_config(config)
 
-    #     # If the policy_model_class is given it should overwrite key from config
-    #     if policy_model_class is not None:
-    #         config.pop('policy_model_class')
+    #     # If the actor_class is given it should overwrite key from config
+    #     if actor_class is not None:
+    #         config.pop('actor_class')
     #     else:
-    #         policy_model_class = config.pop('policy_model_class')
+    #         actor_class = config.pop('actor_class')
 
     #     policy_nn_config = config.pop('policy_nn_config')
     #     value_nn_config = config.pop('value_nn_config', None)
@@ -115,7 +116,7 @@ class PGAgent(BaseAgent):
 
     #     return cls(
     #         env=env,
-    #         policy_model_class=policy_model_class,
+    #         actor_class=actor_class,
     #         policy_nn=policy_nn,
     #         value_nn=value_nn,
     #         **config.as_dict(),

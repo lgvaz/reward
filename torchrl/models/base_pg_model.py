@@ -11,8 +11,8 @@ class BasePGModel(BaseModel):
     Base class for all Policy Gradient Models.
     """
 
-    def __init__(self, model, batcher, *, entropy_coef=0, **kwargs):
-        super().__init__(model=model, batcher=batcher, **kwargs)
+    def __init__(self, nn, batcher, *, entropy_coef=0, **kwargs):
+        super().__init__(nn=nn, batcher=batcher, **kwargs)
         self.entropy_coef_fn = U.make_callable(entropy_coef)
 
     @abstractproperty
@@ -65,17 +65,7 @@ class BasePGModel(BaseModel):
                 )
             )
 
-    def write_logs(self, batch):
-        super().write_logs(batch)
-        self.add_log("Entropy", self.entropy)
-        self.add_log("Policy/log_prob", batch.log_prob)
-
-    @staticmethod
-    def output_layer(input_shape, action_info):
-        return ActionLinear(in_features=input_shape, action_info=action_info)
-
-    @staticmethod
-    def select_action(model, state, step, training=True):
+    def select_action(self, state, step):
         """
         Define how the actions are selected, in this case the actions
         are sampled from a distribution which values are given be a NN.
@@ -85,8 +75,21 @@ class BasePGModel(BaseModel):
         state: np.array
             The state of the environment (can be a batch of states).
         """
-        parameters = model.forward(state)
-        dist = model.create_dist(parameters)
+        parameters = self.forward(state)
+        dist = self.create_dist(parameters)
         action = dist.sample()
 
         return U.to_np(action)
+
+    def write_logs(self, batch):
+        super().write_logs(batch)
+        self.add_log("Entropy", self.entropy)
+        self.add_log("Policy/log_prob", batch.log_prob)
+
+    @staticmethod
+    def output_layer(input_shape, action_shape, action_space):
+        return ActionLinear(
+            in_features=input_shape,
+            action_shape=action_shape,
+            action_space=action_space,
+        )

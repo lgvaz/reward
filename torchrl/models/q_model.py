@@ -9,13 +9,13 @@ from torchrl.nn import FlattenLinear
 class QModel(BaseValueModel):
     def __init__(
         self,
-        model,
+        nn,
         batcher,
         exploration_rate,
         q_target=U.estimators.q.QLearningTarget(gamma=0.99),
         **kwargs
     ):
-        super().__init__(model=model, batcher=batcher, **kwargs)
+        super().__init__(nn=nn, batcher=batcher, **kwargs)
         self.exploration_rate_fn = U.make_callable(exploration_rate)
         self.q_target_fn = q_target
         self.loss_fn = F.mse_loss
@@ -52,25 +52,24 @@ class QModel(BaseValueModel):
         loss = self.loss_fn(input=selected_q, target=batch.q_target)
         return loss
 
+    def select_action(self, state, step):
+        if np.random.random() <= self.exploration_rate and self.training:
+            return self.batcher.runner.sample_random_action()
+        else:
+            # TODO: Calculate pct of actions taken
+            with torch.no_grad():
+                q_values = self.forward(state)
+            return U.to_np(q_values.argmax(dim=1))
+
     def write_logs(self, batch):
         super().write_logs(batch=batch)
         self.add_tf_only_log(name="Exploration_rate", value=self.exploration_rate)
 
     @staticmethod
-    def output_layer(input_shape, action_info):
+    def output_layer(input_shape, action_shape, action_space):
         # TODO: Rethink about ActionLinear
-        if action_info.space != "discrete":
+        if action_space != "discrete":
             raise ValueError(
-                "Only works with discrete actions, got {}".format(action_info.space)
+                "Only works with discrete actions, got {}".format(action_space)
             )
-        return FlattenLinear(in_features=input_shape, out_features=action_info.shape)
-
-    @staticmethod
-    def select_action(model, state, step, training=True):
-        if np.random.random() <= model.exploration_rate and training:
-            return model.batcher.runner.sample_random_action()
-        else:
-            # TODO: Calculate pct of actions taken
-            with torch.no_grad():
-                q_values = model(state)
-            return U.to_np(q_values.argmax(dim=1))
+        return FlattenLinear(in_features=input_shape, out_features=action_shape)

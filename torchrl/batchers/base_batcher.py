@@ -66,6 +66,7 @@ class BaseBatcher(ABC):
             logger=logger,
         )
 
+    # TODO: Now with transforms this is more straight-forward. RE-IMPLEMENT
     def get_state_info(self):
         info = self.runner.get_state_info()
 

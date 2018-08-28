@@ -8,10 +8,10 @@ from torchrl.distributions import Ornstein
 from torchrl.nn import FlattenLinear
 
 
-class DDPGActorModel(TargetModel):
+class DDPGActor(TargetModel):
     def __init__(
         self,
-        model,
+        nn,
         batcher,
         critic,
         *,
@@ -21,7 +21,7 @@ class DDPGActorModel(TargetModel):
         **kwargs
     ):
         super().__init__(
-            model=model,
+            nn=nn,
             batcher=batcher,
             target_up_freq=target_up_freq,
             target_up_weight=target_up_weight,
@@ -49,7 +49,7 @@ class DDPGActorModel(TargetModel):
         return loss
 
     def select_action(self, state, step):
-        action = self.model(state)
+        action = self.nn(state)
         action = U.to_np(action)
 
         # Explore
@@ -60,14 +60,14 @@ class DDPGActorModel(TargetModel):
         return action
 
     @staticmethod
-    def output_layer(input_shape, action_info):
+    def output_layer(input_shape, action_shape, action_space):
         # TODO: Rethink about ActionLinear
-        if action_info.space != "continuous":
+        if action_space != "continuous":
             raise ValueError(
-                "Only works with continuous actions, got {}".format(action_info.space)
+                "Only works with continuous actions, got {}".format(action_space)
             )
         tqdm.write("WARNING: Bounding action range between -1 and 1")
-        layer = FlattenLinear(in_features=input_shape, out_features=1)
+        layer = FlattenLinear(in_features=input_shape, out_features=action_shape[0])
         layer.weight.data.uniform_(-3e-3, 3e-3)
 
         return nn.Sequential(layer, nn.Tanh())

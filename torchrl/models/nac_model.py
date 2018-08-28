@@ -7,8 +7,8 @@ from torchrl.models import DQNModel
 
 
 class NACModel(DQNModel):
-    def __init__(self, model, batcher, *, entropy_weight, v_loss_coef=1., **kwargs):
-        super().__init__(model=model, batcher=batcher, **kwargs)
+    def __init__(self, nn, batcher, *, entropy_weight, v_loss_coef=1., **kwargs):
+        super().__init__(nn=nn, batcher=batcher, **kwargs)
         self.entropy_weight = entropy_weight
         self.v_loss_coef = v_loss_coef
         # TODO TODO
@@ -39,8 +39,8 @@ class NACModel(DQNModel):
             batch.v_target = self.v_from_q(q=batch.q_tp1)
 
     def nac_loss(self, batch):
-        # # # PG loss
-        # q_hat = batch.reward + self.gamma * batch.v_target
+        # PG loss
+        # q_hat = batch.reward + (1 - batch.done) * self.gamma * batch.v_target
 
         # # TODO Feed forwarding net 2 times for q values
         # selected_q = self.get_selected_q(batch=batch)
@@ -60,7 +60,7 @@ class NACModel(DQNModel):
         # return loss_pg + self.v_loss_coef * loss_v
 
         selected_q = self.get_selected_q(batch=batch)
-        target_q = self.target_net(batch.state_tp1)
+        target_q = self.target_nn(batch.state_tp1)
         target_v = self.entropy_weight * (target_q / self.entropy_weight).logsumexp(-1)
         with torch.no_grad():
             q_hat = batch.reward + (1 - batch.done) * self.gamma * target_v
@@ -70,6 +70,10 @@ class NACModel(DQNModel):
         loss = losses.mean()
 
         return loss
+
+    def select_action(self, state, step):
+        dist = self.create_dist(state)
+        return U.to_np(dist.sample())
 
     def write_logs(self, batch):
         super().write_logs(batch=batch)
@@ -83,9 +87,3 @@ class NACModel(DQNModel):
         self.add_histogram_log("probs", dist.probs)
         self.add_tf_only_log("V", v)
         self.add_log("Entropy", dist.entropy().mean())
-
-    @staticmethod
-    def select_action(model, state, step, training=True):
-        dist = model.create_dist(state)
-
-        return U.to_np(dist.sample())

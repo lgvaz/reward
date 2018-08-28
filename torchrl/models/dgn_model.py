@@ -10,8 +10,8 @@ from torchrl.models import DQNModel
 # TODO: Many differences from DQN to inherit, exploration_rate, etc
 # TODO: Maybe multiple inheratance from GModel and DQN?
 class DGNModel(DQNModel):
-    def __init__(self, model, batcher, *, prior_weight, prior_policy=None, **kwargs):
-        super().__init__(model, batcher, **kwargs)
+    def __init__(self, nn, batcher, *, prior_weight, prior_policy=None, **kwargs):
+        super().__init__(nn=nn, batcher=batcher, **kwargs)
         self.prior_weight_fn = U.make_callable(prior_weight)
         self.prior_policy = prior_policy or self.default_prior
         # TODO TODO TODO, use estimator for G-learning? Change design?
@@ -27,7 +27,7 @@ class DGNModel(DQNModel):
     # TODO TODO: Carefull here for parallel envs, batch would be concatenated
     def add_q_target(self, batch):
         with torch.no_grad():
-            g_tp1 = self.target_net(batch.state_tp1)
+            g_tp1 = self.target_nn(batch.state_tp1)
             prior_dist = self.prior_policy(state=batch.state_tp1)
             prior_probs = prior_dist.probs
             assert g_tp1.shape == prior_probs.shape
@@ -66,6 +66,10 @@ class DGNModel(DQNModel):
 
         return tr.distributions.Categorical(probs=probs)
 
+    def select_action(self, state, step):
+        dist = self.create_dist(state)
+        return U.to_np(dist.sample())
+
     def default_prior(self, state):
         """
         Create a uniform policy.
@@ -74,9 +78,3 @@ class DGNModel(DQNModel):
         probs = (1 / num_actions) * U.to_tensor(np.ones((state.shape[0], num_actions)))
 
         return tr.distributions.Categorical(probs=probs)
-
-    @staticmethod
-    def select_action(model, state, step, training=True):
-        dist = model.create_dist(state)
-
-        return U.to_np(dist.sample())

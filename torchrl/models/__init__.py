@@ -18,8 +18,8 @@ from .q_model import QModel
 from .dqn_model import DQNModel
 from .dgn_model import DGNModel
 from .nac_model import NACModel
-from .ddpg_critic_model import DDPGCriticModel
-from .ddpg_actor_model import DDPGActorModel
+from .ddpg_critic_model import DDPGCritic
+from .ddpg_actor_model import DDPGActor
 
 __all__ = [
     "BaseModel",
@@ -37,5 +37,5 @@ __all__ = [
     "NACModel",
     "TargetModel",
     "DDPGCriticModel",
-    "DDPGActorModel",
+    "DDPGActor",
 ]

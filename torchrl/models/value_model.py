@@ -48,5 +48,5 @@ class ValueModel(BaseValueModel):
         self.add_log("Pred_mean", self.memory.new_pred.mean())
 
     @staticmethod
-    def output_layer(input_shape, action_info):
+    def output_layer(input_shape, action_shape, action_space):
         return FlattenLinear(in_features=input_shape, out_features=1)

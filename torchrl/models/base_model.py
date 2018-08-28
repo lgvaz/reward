@@ -15,13 +15,12 @@ from multiprocessing import Process
 # TODO; Paramters changes, change doc
 class BaseModel(ModuleExtended, ABC):
     """
-    Basic TorchRL model. Takes two :obj:`Config` objects that identify
-    the body(ies) and head(s) of the model.
+    Basic TorchRL model.
 
     Parameters
     ----------
-    model: nn.Module
-        A pytorch model.
+    nn: nn.Module
+        A pytorch NN.
     batcher: torchrl.batcher
         A torchrl batcher.
     num_epochs: int
@@ -39,15 +38,16 @@ class BaseModel(ModuleExtended, ABC):
         (Default is float('inf')).
     loss_coef: float
         Used when sharing networks, should balance the contribution
-        of the grads of each model.
+        of the grads of each NN.
     cuda_default: bool
         If True and cuda is supported, use it (Default is True).
     """
 
-    def __init__(self, model, batcher, *, cuda_default=True):
+    def __init__(self, nn, batcher, *, cuda_default=True):
         super().__init__()
 
-        self.model = model
+        # self.model = model
+        self.nn = nn
         self.batcher = batcher
 
         self.memory = U.memories.DefaultMemory()
@@ -88,9 +88,9 @@ class BaseModel(ModuleExtended, ABC):
 
     @staticmethod
     @abstractmethod
-    def output_layer(input_shape, action_info):
+    def output_layer(input_shape, action_shape, action_space):
         """
-        The final layer of the model, will be appended to the model head.
+        The final layer of the NN, will be appended to the NN head.
 
         Parameters
         ----------
@@ -101,17 +101,17 @@ class BaseModel(ModuleExtended, ABC):
 
         Examples
         --------
-        The output of most PG models have the same dimension as the action,
-        but the output of the Value models is rank 1. This is where this is defined.
+        The output of most PG NNs have the same dimension as the action,
+        but the output of the Value NNs is rank 1. This is where this is defined.
         """
 
     @property
     def body(self):
-        return self.model.layers[0]
+        return self.nn.body
 
     @property
     def head(self):
-        return self.model.layers[1]
+        return self.nn.head
 
     @property
     def name(self):
@@ -126,15 +126,15 @@ class BaseModel(ModuleExtended, ABC):
         return self.batcher.num_episodes
 
     def cuda(self):
-        self.model.cuda()
+        self.nn.cuda()
 
     def train_mode(self):
         self.training = True
-        self.model.train()
+        self.nn.train()
 
     def eval_mode(self):
         self.training = False
-        self.model.eval()
+        self.nn.eval()
 
     def register_loss(self, func):
         self.losses.append(func)
@@ -168,7 +168,7 @@ class BaseModel(ModuleExtended, ABC):
         x: numpy.ndarray
             The environment state.
         """
-        return self.model(x)
+        return self.nn(x)
 
     def attach_logger(self, logger):
         """
@@ -224,60 +224,61 @@ class BaseModel(ModuleExtended, ABC):
 
         self.add_log("Loss/Total", total_loss, precision=4)
 
-    @classmethod
-    def from_config(cls, config, batcher=None, body=None, head=None, **kwargs):
-        """
-        Creates a model from a configuration file.
+    # TODO: All deprecated
+    # @classmethod
+    # def from_config(cls, config, batcher=None, body=None, head=None, **kwargs):
+    #     """
+    #     Creates a model from a configuration file.
 
-        Parameters
-        ----------
-        config: Config
-            Should contatin at least a network definition (``nn_config`` section).
-        env: torchrl.envs
-            A torchrl environment (Default is None and must be present in the config).
-        kwargs: key-word arguments
-            Extra arguments that will be passed to the class constructor.
+    #     Parameters
+    #     ----------
+    #     config: Config
+    #         Should contatin at least a network definition (``nn_config`` section).
+    #     env: torchrl.envs
+    #         A torchrl environment (Default is None and must be present in the config).
+    #     kwargs: key-word arguments
+    #         Extra arguments that will be passed to the class constructor.
 
-        Returns
-        -------
-        torchrl.models
-            A TorchRL model.
-        """
-        # env = env or U.env_from_config(config)
-        # config.pop('env', None)
+    #     Returns
+    #     -------
+    #     torchrl.models
+    #         A TorchRL model.
+    #     """
+    #     # env = env or U.env_from_config(config)
+    #     # config.pop('env', None)
 
-        if not "body" in config.nn_config:
-            config.nn_config.body = []
-        if not "head" in config.nn_config:
-            config.nn_config.head = []
+    #     if not "body" in config.nn_config:
+    #         config.nn_config.body = []
+    #     if not "head" in config.nn_config:
+    #         config.nn_config.head = []
 
-        nn_config = config.pop("nn_config")
-        model = U.nn_from_config(
-            config=nn_config,
-            state_info=batcher.get_state_info(),
-            action_info=batcher.get_action_info(),
-            body=body,
-            head=head,
-        )
+    #     nn_config = config.pop("nn_config")
+    #     model = U.nn_from_config(
+    #         config=nn_config,
+    #         state_info=batcher.get_state_info(),
+    #         action_info=batcher.get_action_info(),
+    #         body=body,
+    #         head=head,
+    #     )
 
-        output_layer = cls.output_layer(
-            input_shape=model.get_output_shape(batcher.get_state_info().shape),
-            action_info=batcher.get_action_info(),
-        )
+    #     output_layer = cls.output_layer(
+    #         input_shape=model.get_output_shape(batcher.get_state_info().shape),
+    #         action_info=batcher.get_action_info(),
+    #     )
 
-        model.layers.head.append(output_layer)
+    #     model.layers.head.append(output_layer)
 
-        return cls(model=model, batcher=batcher, **config.as_dict(), **kwargs)
+    #     return cls(model=model, batcher=batcher, **config.as_dict(), **kwargs)
 
-    @classmethod
-    def from_file(cls, file_path, *args, **kwargs):
-        config = U.Config.load(file_path)
+    # @classmethod
+    # def from_file(cls, file_path, *args, **kwargs):
+    #     config = U.Config.load(file_path)
 
-        return cls.from_config(config, *args, **kwargs)
+    #     return cls.from_config(config, *args, **kwargs)
 
-    @classmethod
-    def from_arch(cls, arch, *args, **kwargs):
-        module_path = os.path.abspath(os.path.dirname(__file__))
-        path = os.path.join(module_path, "archs", arch)
+    # @classmethod
+    # def from_arch(cls, arch, *args, **kwargs):
+    #     module_path = os.path.abspath(os.path.dirname(__file__))
+    #     path = os.path.join(module_path, "archs", arch)
 
-        return cls.from_file(file_path=path, *args, **kwargs)
+    #     return cls.from_file(file_path=path, *args, **kwargs)

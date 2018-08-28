@@ -9,7 +9,7 @@ from torchrl.models import QModel, TargetModel
 class DQNModel(QModel, TargetModel):
     def __init__(
         self,
-        model,
+        nn,
         batcher,
         *,
         exploration_rate,
@@ -18,7 +18,7 @@ class DQNModel(QModel, TargetModel):
         **kwargs
     ):
         super().__init__(
-            model=model,
+            nn=nn,
             batcher=batcher,
             exploration_rate=exploration_rate,
             target_up_freq=target_up_freq,
