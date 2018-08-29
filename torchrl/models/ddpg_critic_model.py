@@ -11,14 +11,6 @@ class DDPGCritic(TargetModel):
     def batch_keys(self):
         return ["state_t", "q_target"]
 
-    @property
-    def body(self):
-        raise NotImplementedError
-
-    @property
-    def head(self):
-        raise NotImplementedError
-
     def register_losses(self):
         self.register_loss(self.critic_loss)
 
@@ -31,13 +23,20 @@ class DDPGCritic(TargetModel):
     #         )
 
     def critic_loss(self, batch):
-        pred = self((batch.state_t, batch.action)).squeeze()
+        pred = self.forward((batch.state_t, batch.action)).squeeze()
         loss = F.mse_loss(input=pred, target=batch.q_target)
         return loss
 
-    @classmethod
-    def from_config(cls, *args, **kwargs):
-        raise NotImplementedError
+    def write_logs(self, batch):
+        self.eval()
+
+        pred = self.forward((batch.state_t, batch.action))
+        target_nn = self.forward_target((batch.state_t, batch.action))
+        self.add_histogram_log("pred", pred)
+        self.add_histogram_log("target", batch.q_target)
+        self.add_histogram_log("target_nn", target_nn)
+
+        self.train()
 
     @staticmethod
     def output_layer(input_shape, action_shape, action_space):

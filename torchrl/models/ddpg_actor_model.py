@@ -45,11 +45,10 @@ class DDPGActor(TargetModel):
         action = self.forward(batch.state_t)
         losses = self.critic((batch.state_t, action))
         loss = -losses.mean()
-
         return loss
 
     def select_action(self, state, step):
-        action = self.nn(state)
+        action = self.forward(state)
         action = U.to_np(action)
 
         # Explore
@@ -58,6 +57,11 @@ class DDPGActor(TargetModel):
             action += self.action_noise.sample()
 
         return action
+
+    def write_logs(self, batch):
+        super().write_logs(batch=batch)
+        action = self.forward(batch.state_t)
+        self.add_histogram_log("actions", action)
 
     @staticmethod
     def output_layer(input_shape, action_shape, action_space):
