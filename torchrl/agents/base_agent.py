@@ -156,11 +156,11 @@ class BaseAgent(ABC):
 
         while True:
             self.step()
-            self.write_logs()
-
             self.num_iters += 1
-
             self._check_evaluation(env=eval_env)
+
+            if self.num_iters % log_freq == 0:
+                self.write_logs()
             if self._check_termination():
                 break
 
@@ -189,11 +189,6 @@ class BaseAgent(ABC):
         self.batcher.write_logs(logger=self.logger)
         self.opt.write_logs(logger=self.logger)
 
-        # self.logger.log(
-        #     "Iter {} | Episode {} | Step {}".format(
-        #         self.num_iters, self.num_episodes, self.num_steps
-        #     )
-        # )
         self.logger.log(
             step=self.num_steps,
             header={
@@ -205,46 +200,5 @@ class BaseAgent(ABC):
 
     def generate_batch(self):
         batch = self.batcher.get_batch(select_action_fn=self.select_action)
+        batch = batch.to_tensor()
         return batch
-
-    # TODO: Reimplement method
-    # @classmethod
-    # def from_config(cls, config, env=None):
-    #     '''
-    #     Create an agent from a configuration object.
-
-    #     Returns
-    #     -------
-    #     torchrl.agents
-    #         A TorchRL agent.
-    #     '''
-    #     if env is None:
-    #         try:
-    #             env = U.get_obj(config.env.obj)
-    #         except AttributeError:
-    #             raise ValueError('The env must be defined in the config '
-    #                              'or passed as an argument')
-
-    #     model = cls._model.from_config(config.model, env.get_state_info(), env.get_action_info())
-
-    #     return cls(env, model, **config.agent.as_dict())
-
-    # # TODO: Reimplement method
-    # @classmethod
-    # def from_file(cls, file_path, env=None):
-    #     '''
-    #     Create an agent from a configuration file.
-
-    #     Parameters
-    #     ----------
-    #     file_path: str
-    #         Path to the configuration file.
-
-    #     Returns
-    #     -------
-    #     torchrl.agents
-    #         A TorchRL agent.
-    #     '''
-    #     config = U.Config.load(file_path)
-
-    #     return cls.from_config(config, env=env)
