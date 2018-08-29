@@ -136,6 +136,14 @@ class BaseModel(ModuleExtended, ABC):
         self.training = False
         self.nn.eval()
 
+    def freeze(self):
+        for param in self.nn.parameters():
+            param.requires_grad = False
+
+    def unfreeze(self):
+        for param in self.nn.parameters():
+            param.requires_grad = True
+
     def register_loss(self, func):
         self.losses.append(func)
 
@@ -203,6 +211,7 @@ class BaseModel(ModuleExtended, ABC):
                 name=self.wrap_name(name), values=values, **kwargs
             )
 
+    # TODO: Need to write logs here? Already write on opt
     def write_logs(self, batch):
         """
         Write logs to the terminal and to a tf log file.
@@ -223,62 +232,3 @@ class BaseModel(ModuleExtended, ABC):
             self.add_tf_only_log("/".join(["Loss", k]), partial_loss, precision=4)
 
         self.add_log("Loss/Total", total_loss, precision=4)
-
-    # TODO: All deprecated
-    # @classmethod
-    # def from_config(cls, config, batcher=None, body=None, head=None, **kwargs):
-    #     """
-    #     Creates a model from a configuration file.
-
-    #     Parameters
-    #     ----------
-    #     config: Config
-    #         Should contatin at least a network definition (``nn_config`` section).
-    #     env: torchrl.envs
-    #         A torchrl environment (Default is None and must be present in the config).
-    #     kwargs: key-word arguments
-    #         Extra arguments that will be passed to the class constructor.
-
-    #     Returns
-    #     -------
-    #     torchrl.models
-    #         A TorchRL model.
-    #     """
-    #     # env = env or U.env_from_config(config)
-    #     # config.pop('env', None)
-
-    #     if not "body" in config.nn_config:
-    #         config.nn_config.body = []
-    #     if not "head" in config.nn_config:
-    #         config.nn_config.head = []
-
-    #     nn_config = config.pop("nn_config")
-    #     model = U.nn_from_config(
-    #         config=nn_config,
-    #         state_info=batcher.get_state_info(),
-    #         action_info=batcher.get_action_info(),
-    #         body=body,
-    #         head=head,
-    #     )
-
-    #     output_layer = cls.output_layer(
-    #         input_shape=model.get_output_shape(batcher.get_state_info().shape),
-    #         action_info=batcher.get_action_info(),
-    #     )
-
-    #     model.layers.head.append(output_layer)
-
-    #     return cls(model=model, batcher=batcher, **config.as_dict(), **kwargs)
-
-    # @classmethod
-    # def from_file(cls, file_path, *args, **kwargs):
-    #     config = U.Config.load(file_path)
-
-    #     return cls.from_config(config, *args, **kwargs)
-
-    # @classmethod
-    # def from_arch(cls, arch, *args, **kwargs):
-    #     module_path = os.path.abspath(os.path.dirname(__file__))
-    #     path = os.path.join(module_path, "archs", arch)
-
-    #     return cls.from_file(file_path=path, *args, **kwargs)

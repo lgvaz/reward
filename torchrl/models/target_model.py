@@ -12,9 +12,18 @@ class TargetModel(BaseModel):
 
         self.target_nn = deepcopy(nn)
         self.target_nn.eval()
+        self.freeze_target()
 
     def forward_target(self, x):
         return self.target_nn(x)
+
+    def freeze_target(self):
+        for param in self.target_nn.parameters():
+            param.requires_grad = False
+
+    def unfreeze_target(self):
+        for param in self.target_nn.parameters():
+            param.requires_grad = True
 
     def register_callbacks(self):
         # TODO TODO TODO TODO TODO
@@ -38,3 +47,8 @@ class TargetModel(BaseModel):
             for fp, tp in zip(self.nn.parameters(), self.target_nn.parameters()):
                 v = weight * fp + (1 - weight) * tp
                 tp.data.copy_(v)
+
+    def write_logs(self, batch):
+        super().write_logs(batch=batch)
+        values = self.forward_target(batch.state_t)
+        self.add_histogram_log("target_nn_values", values)
