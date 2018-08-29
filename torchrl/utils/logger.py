@@ -102,34 +102,33 @@ class Logger:
             Optional header to include at the top of the table (Default is None).
         """
         self.num_logs += 1
-        if self.num_logs % self.log_freq == 0:
-            # Take the mean of the values
-            self.logs = {key: np.mean(value) for key, value in self.logs.items()}
-            # Convert values to string, with defined precision
-            avg_dict = {
-                key: "{:.{prec}f}".format(value, prec=self.precision[key])
-                for key, value in self.logs.items()
-            }
+        # TODO: log_freq deprecated
+        # if self.num_logs % self.log_freq == 0:
+        # Take the mean of the values
+        self.logs = {key: np.mean(value) for key, value in self.logs.items()}
+        # Convert values to string, with defined precision
+        avg_dict = {
+            key: "{:.{prec}f}".format(value, prec=self.precision[key])
+            for key, value in self.logs.items()
+        }
 
-            # Log to the console
-            print_table(avg_dict, header)
+        # Log to the console
+        print_table(avg_dict, header)
 
-            # Write tensorboard summary
-            if self.writer is not None:
-                self.tf_logs = {
-                    key: np.mean(value) for key, value in self.tf_logs.items()
-                }
-                for key, value in self.logs.items():
-                    self.writer.add_scalar(key, value, global_step=step)
-                for key, value in self.tf_logs.items():
-                    self.writer.add_scalar(key, value, global_step=step)
-                for key, value in self.histograms.items():
-                    self.writer.add_histogram(key, value, global_step=step)
+        # Write tensorboard summary
+        if self.writer is not None:
+            self.tf_logs = {key: np.mean(value) for key, value in self.tf_logs.items()}
+            for key, value in self.logs.items():
+                self.writer.add_scalar(key, value, global_step=step)
+            for key, value in self.tf_logs.items():
+                self.writer.add_scalar(key, value, global_step=step)
+            for key, value in self.histograms.items():
+                self.writer.add_histogram(key, value, global_step=step)
 
-            # Reset dict
-            self.logs = DefaultMemory()
-            self.tf_logs = DefaultMemory()
-            self.histograms = dict()
+        # Reset dict
+        self.logs = DefaultMemory()
+        self.tf_logs = DefaultMemory()
+        self.histograms = dict()
 
 
 def print_table(tags_and_values_dict, header=None, width=60):
