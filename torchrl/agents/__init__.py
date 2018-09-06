@@ -8,5 +8,6 @@ from .base_agent import BaseAgent
 from .pg_agent import PGAgent
 from .q_agent import QAgent
 from .ddpg_agent import DDPGAgent
+from .sac_agent import SAC
 
-__all__ = ["BaseAgent", "PGAgent", "QAgent", "DDPGAgent"]
+__all__ = ["BaseAgent", "PGAgent", "QAgent", "DDPGAgent", "SAC"]

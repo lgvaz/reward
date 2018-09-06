@@ -8,6 +8,7 @@ from .misc_wrappers import (
     FireReset,
     ActionRepeat,
     DelayedStart,
+    ActionBound,
 )
 from .atari_wrapper import AtariWrapper
 from .record_wrappers import GymRecorder
@@ -25,4 +26,5 @@ __all__ = [
     "HWC2CHW",
     "DelayedStart",
     "GymRecorder",
+    "ActionBound",
 ]

@@ -131,3 +131,34 @@ class ActionRepeat(BaseWrapper):
         max_frame = self._obs_buffer.max(axis=0)
 
         return max_frame, total_reward, done, info
+
+
+class ActionBound(BaseWrapper):
+    def __init__(self, env, low=-1, high=1):
+        super().__init__(env=env)
+        self.low = low
+        self.high = high
+        self.mapper = self._map_range(
+            old_low=self.action_info.low_bound,
+            old_high=self.action_info.high_bound,
+            new_low=self.low,
+            new_high=self.high,
+        )
+
+    def _map_range(self, old_low, old_high, new_low, new_high):
+        old_span = old_high - old_low
+        new_span = new_high - new_low
+
+        def get(value):
+            norm_value = (value - old_low) / old_span
+            return new_low + (norm_value * new_span)
+
+        return get
+
+    def step(self, action):
+        action = self.mapper(action)
+        return self.env.step(action)
+
+    def sample_random_action(self):
+        action = self.env.sample_random_action()
+        return self.mapper(action)

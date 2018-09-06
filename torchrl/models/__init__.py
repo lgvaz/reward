@@ -21,6 +21,8 @@ from .nac_model import NACModel
 from .ddpg_critic_model import DDPGCritic
 from .ddpg_actor_model import DDPGActor
 
+import torchrl.models.sac
+
 __all__ = [
     "BaseModel",
     "ValueModel",

@@ -133,7 +133,8 @@ def normalize(array):
     """
     Normalize an array by subtracting the mean and diving by the std dev.
     """
-    return (array - np.mean(array)) / (np.std(array) + EPSILON)
+    # return (array - np.mean(array)) / (np.std(array) + EPSILON)
+    return (array - array.mean()) / (array.std() + EPSILON)
 
 
 def one_hot(array, num_classes):

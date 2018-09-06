@@ -149,7 +149,8 @@ class BaseModel(ModuleExtended, ABC):
 
     def register_callbacks(self):
         # self.callbacks.register_on_train_start(self.check_batch_keys)
-        self.callbacks.register_cleanup(self.write_logs)
+        # TODO TODO: COMMENTED WRITE LOGS, re-design it so it isn't called every train end
+        # self.callbacks.register_cleanup(self.write_logs)
         self.callbacks.register_cleanup(self.clear_memory)
 
     # TODO: Correct all classes to pass on this
@@ -221,14 +222,15 @@ class BaseModel(ModuleExtended, ABC):
         batch: Batch
             Some logs might need the batch for calculation.
         """
-        total_loss = 0
-        for k in self.memory.losses[0]:
-            partial_loss = 0
-            for loss in self.memory.losses:
-                partial_loss += loss[k]
+        pass
+        # total_loss = 0
+        # for k in self.memory.losses[0]:
+        #     partial_loss = 0
+        #     for loss in self.memory.losses:
+        #         partial_loss += loss[k]
 
-            partial_loss = partial_loss / len(self.memory.losses)
-            total_loss += partial_loss
-            self.add_tf_only_log("/".join(["Loss", k]), partial_loss, precision=4)
+        #     partial_loss = partial_loss / len(self.memory.losses)
+        #     total_loss += partial_loss
+        #     self.add_tf_only_log("/".join(["Loss", k]), partial_loss, precision=4)
 
-        self.add_log("Loss/Total", total_loss, precision=4)
+        # self.add_log("Loss/Total", total_loss, precision=4)

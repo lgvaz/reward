@@ -22,6 +22,7 @@ class BaseAgent(ABC):
         Directory where logs will be written (Default is `runs`).
     """
 
+    # TODO: gamma is not needed here
     def __init__(self, batcher, optimizer, action_fn, *, gamma=0.99, log_dir=None):
         self.batcher = batcher
         self.opt = optimizer
@@ -151,6 +152,7 @@ class BaseAgent(ABC):
         self.max_steps = max_steps
         self.eval_freq = eval_freq
         self.next_eval = 0
+        self.log_freq = log_freq
 
         self.logger.set_log_freq(log_freq=log_freq)
 

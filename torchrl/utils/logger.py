@@ -123,7 +123,7 @@ class Logger:
             for key, value in self.tf_logs.items():
                 self.writer.add_scalar(key, value, global_step=step)
             for key, value in self.histograms.items():
-                self.writer.add_histogram(key, value, global_step=step)
+                self.writer.add_histogram(key, value, global_step=step, bins="doane")
 
         # Reset dict
         self.logs = DefaultMemory()

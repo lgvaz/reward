@@ -6,4 +6,5 @@ def atari_transforms(stack_frames=4):
 
 
 def mujoco_transforms():
+    # TODO: Change to RewardConstScaler?
     return [StateRunNorm(), RewardRunScaler()]

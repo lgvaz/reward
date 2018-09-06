@@ -28,7 +28,7 @@ class TargetModel(BaseModel):
     def register_callbacks(self):
         # TODO TODO TODO TODO TODO
         # self.callbacks.register_on_train_start(self.add_target_value)
-        self.callbacks.register_on_train_start(self.update_target_nn_callback)
+        self.callbacks.register_on_train_end(self.update_target_nn_callback)
         super().register_callbacks()
 
     def add_target_value(self, batch):
