@@ -29,28 +29,27 @@ class Policy(BaseModel):
         return ["dist", "new_action", "q_t_new_act", "new_pre_activation"]
 
     def register_losses(self):
-        # self.register_loss(self.policy_loss)
-        self.register_loss(self.policy_kl_loss)
+        self.register_loss(self.policy_loss)
+        # self.register_loss(self.policy_kl_loss)
         self.register_loss(self.mean_l2_loss)
         self.register_loss(self.std_l2_loss)
         self.register_loss(self.pre_activation_l2_loss)
 
-    # def policy_loss(self, batch):
-    #     log_prob = batch.new_dist.log_prob(batch.new_action).sum(-1)
-    #     log_policy_target = batch.q_t_new_act - batch.v_t
-    #     losses = log_prob * (log_prob - log_policy_target).detach()
-    #     loss = losses.mean()
-    #     pdb.set_trace()
-    #     return loss
-
-    def policy_kl_loss(self, batch):
+    def policy_loss(self, batch):
         log_prob = batch.new_dist.log_prob(batch.new_action).sum(-1)
-        log_target = batch.q_t_new_act
-
-        losses = log_prob - log_target.squeeze()
+        log_policy_target = batch.q_t_new_act - batch.v_t
+        losses = log_prob * (log_prob - log_policy_target).detach()
         loss = losses.mean()
-        # pdb.set_trace()
         return loss
+
+    # def policy_kl_loss(self, batch):
+    #     log_prob = batch.new_dist.log_prob(batch.new_action).sum(-1)
+    #     log_target = batch.q_t_new_act
+
+    #     losses = log_prob - log_target.squeeze()
+    #     loss = losses.mean()
+    #     # pdb.set_trace()
+    #     return loss
 
     def mean_l2_loss(self, batch):
         losses = self.mean_loss_weight * (batch.new_dist.loc ** 2) * 0.5
@@ -87,6 +86,7 @@ class Policy(BaseModel):
 
     def write_logs(self, batch):
         super().write_logs(batch=batch)
+        self.eval_mode()
         dist = self.create_dist(state=batch.state_t)
         replay_log_prob = dist.log_prob(batch.action).sum(-1)
         new_log_prob = dist.log_prob(batch.new_action).sum(-1)
@@ -97,6 +97,7 @@ class Policy(BaseModel):
         self.add_histogram_log("action/now", batch.new_action)
         self.add_histogram_log("action/new_log_prob", new_log_prob)
         self.add_histogram_log("action/replay_log_prob", replay_log_prob)
+        self.train_mode()
 
     @staticmethod
     def output_layer(input_shape, action_shape, action_space):
