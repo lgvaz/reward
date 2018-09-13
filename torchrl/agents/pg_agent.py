@@ -33,6 +33,7 @@ class PGAgent(BaseAgent):
     def __init__(
         self,
         batcher,
+        optimizer,
         *,
         action_fn,
         actor,
@@ -40,9 +41,16 @@ class PGAgent(BaseAgent):
         normalize_advantages=True,
         advantage=U.estimators.advantage.GAE(gamma=0.99, gae_lambda=0.95),
         vtarget=U.estimators.value.FromAdvantage(),
+        log_dir=None,
         **kwargs
     ):
-        super().__init__(batcher=batcher, action_fn=action_fn, **kwargs)
+        super().__init__(
+            batcher=batcher,
+            optimizer=optimizer,
+            action_fn=action_fn,
+            log_dir=log_dir,
+            **kwargs
+        )
 
         self.normalize_advantages = normalize_advantages
         self.advantage = advantage
@@ -72,10 +80,13 @@ class PGAgent(BaseAgent):
         # TODO: Defaultdict, never going to be None
         if self.models.critic is not None:
             # s = batch.state_t_and_tp1
-            s = torch.cat((batch.state_t, batch.state_tp1[-1:]))
-            v = self.models.critic(s.reshape(-1, *s.shape[2:]))
+            # TODO: If ppo stops working, changes were made here
+            with torch.no_grad():
+                s = torch.cat((batch.state_t, batch.state_tp1[-1:]))
+                v = self.models.critic(s.reshape(-1, *s.shape[2:]))
+                # v = U.to_np(v).reshape(s.shape[:2])
+                v = v.reshape(s.shape[:2])
 
-            v = U.to_np(v).reshape(s.shape[:2])
             batch.state_value_t_and_tp1 = v
             batch.state_value_t = v[:-1]
             batch.state_value_tp1 = v[1:]

@@ -28,8 +28,8 @@ class ValueClipModel(ValueModel):
             -self.clip_range, self.clip_range
         )
 
-        losses = (pred - batch.vtarget) ** 2
-        losses_clipped = (pred_clipped - batch.vtarget) ** 2
+        losses = (pred - batch.vtarget).pow(2)
+        losses_clipped = (pred_clipped - batch.vtarget).pow(2)
         loss = 0.5 * torch.max(losses, losses_clipped).mean()
 
         return loss

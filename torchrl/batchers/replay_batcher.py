@@ -77,5 +77,8 @@ class ReplayBatcher(BaseBatcher):
 
         batch = self.replay_buffer.sample(self.batch_size)
         batch = self.transform_batch(batch)
+        # TODO: Check if this next lines are correct
+        batch.reward = batch.reward[..., None]
+        batch.done = batch.done[..., None]
         # TODO: Maybe to_tensor states here
         return batch

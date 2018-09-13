@@ -73,5 +73,6 @@ class DDPGActor(TargetModel):
         tqdm.write("WARNING: Bounding action range between -1 and 1")
         layer = FlattenLinear(in_features=input_shape, out_features=action_shape[0])
         layer.weight.data.uniform_(-3e-3, 3e-3)
+        layer.bias.data.data.uniform_(-3e-3, 3e-3)
 
         return nn.Sequential(layer, nn.Tanh())

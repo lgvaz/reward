@@ -9,8 +9,6 @@ import torch.nn as nn
 import torchrl.utils as U
 from torchrl.nn import ModuleExtended
 
-from multiprocessing import Process
-
 
 # TODO; Paramters changes, change doc
 class BaseModel(ModuleExtended, ABC):
@@ -150,7 +148,7 @@ class BaseModel(ModuleExtended, ABC):
     def register_callbacks(self):
         # self.callbacks.register_on_train_start(self.check_batch_keys)
         # TODO TODO: COMMENTED WRITE LOGS, re-design it so it isn't called every train end
-        # self.callbacks.register_cleanup(self.write_logs)
+        self.callbacks.register_cleanup(self.write_logs)
         self.callbacks.register_cleanup(self.clear_memory)
 
     # TODO: Correct all classes to pass on this
@@ -222,7 +220,6 @@ class BaseModel(ModuleExtended, ABC):
         batch: Batch
             Some logs might need the batch for calculation.
         """
-        pass
         # total_loss = 0
         # for k in self.memory.losses[0]:
         #     partial_loss = 0

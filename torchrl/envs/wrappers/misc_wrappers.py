@@ -139,10 +139,10 @@ class ActionBound(BaseWrapper):
         self.low = low
         self.high = high
         self.mapper = self._map_range(
-            old_low=self.action_info.low_bound,
-            old_high=self.action_info.high_bound,
-            new_low=self.low,
-            new_high=self.high,
+            old_low=self.low,
+            old_high=self.high,
+            new_low=self.action_info.low_bound,
+            new_high=self.action_info.high_bound,
         )
 
     def _map_range(self, old_low, old_high, new_low, new_high):

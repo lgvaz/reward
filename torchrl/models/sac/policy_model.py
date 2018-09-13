@@ -52,17 +52,17 @@ class Policy(BaseModel):
     #     return loss
 
     def mean_l2_loss(self, batch):
-        losses = self.mean_loss_weight * (batch.new_dist.loc ** 2) * 0.5
+        losses = self.mean_loss_weight * (batch.new_dist.loc.pow(2)) * 0.5
         loss = losses.mean()
         return loss
 
     def std_l2_loss(self, batch):
-        losses = self.std_loss_weight * (batch.new_dist.scale.log() ** 2) * 0.5
+        losses = self.std_loss_weight * (batch.new_dist.scale.log().pow(2)) * 0.5
         loss = losses.mean()
         return loss
 
     def pre_activation_l2_loss(self, batch):
-        losses = self.pre_activation_weight * (batch.new_pre_activation ** 2) * 0.5
+        losses = self.pre_activation_weight * (batch.new_pre_activation.pow(2)) * 0.5
         # TODO: Why sum??
         loss = losses.mean()
         return loss
@@ -88,7 +88,7 @@ class Policy(BaseModel):
         super().write_logs(batch=batch)
         self.eval_mode()
         dist = self.create_dist(state=batch.state_t)
-        replay_log_prob = dist.log_prob(batch.action).sum(-1)
+        # replay_log_prob = dist.log_prob(batch.action).sum(-1)
         new_log_prob = dist.log_prob(batch.new_action).sum(-1)
 
         self.add_histogram_log("dist/mean", dist.loc)
@@ -96,7 +96,7 @@ class Policy(BaseModel):
         self.add_histogram_log("action/replay", batch.action)
         self.add_histogram_log("action/now", batch.new_action)
         self.add_histogram_log("action/new_log_prob", new_log_prob)
-        self.add_histogram_log("action/replay_log_prob", replay_log_prob)
+        # self.add_histogram_log("action/replay_log_prob", replay_log_prob)
         self.train_mode()
 
     @staticmethod
@@ -108,23 +108,27 @@ class Policy(BaseModel):
 
 
 class OutputLayer(nn.Module):
-    def __init__(self, input_shape, action_shape, w_init=3e-3):
+    def __init__(self, input_shape, action_shape, w_init=3e-3, log_std_clip=(-20, 2)):
         super().__init__()
         self.w_init = w_init
+        self.log_std_clip = log_std_clip
 
         out = action_shape[0]
         self.mean = FlattenLinear(in_features=input_shape, out_features=out)
         self.log_std = FlattenLinear(in_features=input_shape, out_features=out)
         # self.log_std = nn.Parameter(torch.zeros(1, out))
         self.init_layer(self.mean)
-        # self.init_layer(self.log_std)
+        self.init_layer(self.log_std)
 
     def forward(self, x):
         # TODO: In normal PG is stacked on -1
         # mean = self.mean(x)
         # log_std = self.log_std.expand_as(mean)
         # return torch.stack((mean, log_std), dim=0)
-        return torch.stack((self.mean(x), self.log_std(x)), dim=0)
+        mean = self.mean(x)
+        log_std = self.log_std(x).clamp(*self.log_std_clip)
+
+        return torch.stack((mean, log_std), dim=0)
 
     def init_layer(self, layer):
         layer.weight.data.uniform_(-self.w_init, self.w_init)

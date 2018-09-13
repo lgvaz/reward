@@ -41,8 +41,8 @@ class SAC(BaseAgent):
 
         # Policy
         dist = self.models.policy.create_dist(state=batch.state_t)
-        action, pre_activation = dist.rsample_with_pre()
-        # action, pre_activation = dist.sample_with_pre()
+        # action, pre_activation = dist.rsample_with_pre()
+        action, pre_activation = dist.sample_with_pre()
         log_prob = dist.log_prob(action).sum(-1)
         # Q
         q_t_replay_act = self.models.q((batch.state_t, batch.action))
@@ -63,7 +63,7 @@ class SAC(BaseAgent):
 
         # Policy
         batch.q_t_new_act = q_t_new_act
-        # batch.v_t = v_t
+        batch.v_t = v_t
         # Alternatively just pass dist and new_action
         batch.new_action = action
         batch.new_pre_activation = pre_activation
@@ -74,15 +74,20 @@ class SAC(BaseAgent):
         # pdb.set_trace()
 
         # self.train_models(batch)
-        p_loss = (log_prob.squeeze() - q_t_new_act.squeeze()).mean()
-        # log_prob_target = q_t_new_act.squeeze() - v_t.squeeze()
-        # p_loss = (
-        #     log_prob.squeeze()
-        #     * (log_prob.squeeze() - log_prob_target.squeeze()).detach()
-        # ).mean()
-        v_loss = ((v_t.squeeze() - batch.vtarget.squeeze().detach()) ** 2).mean()
+        # p_loss = (log_prob.squeeze() - q_t_new_act.squeeze()).mean()
+        log_prob_target = q_t_new_act.squeeze() - v_t.squeeze()
+        p_loss = (
+            log_prob.squeeze()
+            * (log_prob.squeeze() - log_prob_target.squeeze()).detach()
+        ).mean()
+
+        mean_loss = 1e-3 * dist.loc.pow(2).mean()
+        std_loss = 1e-3 * dist.scale.log().pow(2).mean()
+        p_loss += mean_loss + std_loss
+
+        v_loss = ((v_t.squeeze() - batch.vtarget.squeeze().detach()).pow(2)).mean()
         q_loss = (
-            (q_t_replay_act.squeeze() - batch.qtarget.squeeze().detach()) ** 2
+            (q_t_replay_act.squeeze() - batch.qtarget.squeeze().detach()).pow(2)
         ).mean()
 
         self.p_opt.zero_grad()
@@ -106,12 +111,15 @@ class SAC(BaseAgent):
         )
         self.q_opt.step()
 
-        self.models.v.update_target_nn(1e-2)
+        self.models.v.update_target_nn(0.005)
 
         if self.num_iters % self.log_freq == 0:
             for model in self.models.values():
                 model.write_logs(batch=batch)
 
+            self.models.policy.add_log("loss", p_loss)
+            self.models.v.add_log("loss", v_loss)
+            self.models.q.add_log("loss", q_loss)
             self.models.policy.add_log("grad_norm", p_grad)
             self.models.v.add_log("grad_norm", v_grad)
             self.models.q.add_log("grad_norm", q_grad)

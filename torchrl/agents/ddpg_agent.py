@@ -13,10 +13,15 @@ class DDPGAgent(BaseAgent):
         optimizer,
         action_fn,
         q_target=U.estimators.value.TDTarget(gamma=0.99),
+        log_dir=None,
         **kwargs
     ):
         super().__init__(
-            batcher=batcher, optimizer=optimizer, action_fn=action_fn, **kwargs
+            batcher=batcher,
+            optimizer=optimizer,
+            action_fn=action_fn,
+            log_dir=log_dir,
+            **kwargs
         )
         self.register_model("actor", actor)
         self.register_model("critic", critic)

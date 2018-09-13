@@ -46,4 +46,6 @@ class DDPGCritic(TargetModel):
             )
         layer = FlattenLinear(in_features=input_shape, out_features=1)
         layer.weight.data.uniform_(-3e-3, 3e-3)
+        layer.bias.data.data.uniform_(-3e-3, 3e-3)
+
         return layer

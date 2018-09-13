@@ -37,6 +37,7 @@ class BasePGModel(BaseModel):
         loss = -self.entropy * self.entropy_coef
         return loss
 
+    # TODO: create_dist argument should now be "state" instead of parameters
     def create_dist(self, parameters):
         """
         Specify how the policy distributions should be created.
@@ -65,6 +66,7 @@ class BasePGModel(BaseModel):
                 )
             )
 
+    # TODO: Don't sample if evaluating, instead take the max action (mean of dist)
     def select_action(self, state, step):
         """
         Define how the actions are selected, in this case the actions

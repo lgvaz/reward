@@ -6,7 +6,7 @@ from torchrl.distributions import Normal
 
 class TanhNormal(Normal):
     def __init__(self, *args, **kwargs):
-        assert not torch.isnan(kwargs["loc"]).any()
+        # assert not torch.isnan(kwargs["loc"]).any()
         super().__init__(*args, **kwargs)
 
     def _atanh(self, value):
@@ -15,7 +15,7 @@ class TanhNormal(Normal):
     def log_prob(self, value):
         pre_tanh_value = self._atanh(value=value)
         pre_log_prob = super().log_prob(value=pre_tanh_value)
-        log_prob = pre_log_prob - (1 - value ** 2 + U.EPSILON).log()
+        log_prob = pre_log_prob - (1 - value.pow(2) + U.EPSILON).log()
         return log_prob
 
     def sample_with_pre(self, sample_shape=torch.Size()):

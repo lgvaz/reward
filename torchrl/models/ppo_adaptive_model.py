@@ -44,7 +44,7 @@ class PPOAdaptiveModel(SurrogatePGModel):
         return loss
 
     def hinge_loss(self, batch):
-        loss = 50 * max(0, batch.kl_div - 2. * self.kl_target) ** 2
+        loss = 50 * max(0, batch.kl_div - 2. * self.kl_target).pow(2)
 
         return loss
 

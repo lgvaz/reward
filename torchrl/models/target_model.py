@@ -45,7 +45,7 @@ class TargetModel(BaseModel):
             self.target_nn.load_state_dict(self.nn.state_dict())
         else:
             for fp, tp in zip(self.nn.parameters(), self.target_nn.parameters()):
-                v = weight * fp + (1 - weight) * tp
+                v = weight * fp.data + (1 - weight) * tp.data
                 tp.data.copy_(v)
 
     def write_logs(self, batch):

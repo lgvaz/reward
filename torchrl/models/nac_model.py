@@ -55,7 +55,7 @@ class NACModel(DQNModel):
         # # V loss
         # dist = self.create_dist(state=batch.state_t)
         # v_hat = q_hat + self.entropy_weight * dist.entropy()
-        # loss_v = ((v - v_hat) ** 2).mean()
+        # loss_v = ((v - v_hat).pow(2)).mean()
 
         # return loss_pg + self.v_loss_coef * loss_v
 
@@ -64,10 +64,12 @@ class NACModel(DQNModel):
         target_v = self.entropy_weight * (target_q / self.entropy_weight).logsumexp(-1)
         with torch.no_grad():
             q_hat = batch.reward + (1 - batch.done) * self.gamma * target_v
-            adv = selected_q - q_hat
+            # adv = selected_q - q_hat
 
-        losses = selected_q * adv
-        loss = losses.mean()
+        # losses = selected_q * adv
+        # loss = losses.mean()
+        # TODO: Don't know if this is right
+        loss = F.mse_loss(selected_q, q_hat)
 
         return loss
 

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from tqdm import tqdm
 import torchrl.utils as U
 
 
@@ -38,6 +39,14 @@ class BaseBatcher(ABC):
     @property
     def num_episodes(self):
         return self.runner.num_episodes
+
+    def get_batches(self, max_steps, select_action_fn):
+        pbar = tqdm(total=max_steps, dynamic_ncols=True, unit_scale=True)
+        while self.num_steps < max_steps:
+            yield self.get_batch(select_action_fn=select_action_fn)
+            pbar.update(self.num_steps - pbar.n)
+
+        pbar.close()
 
     def transform_state(self, state, training=True):
         """
