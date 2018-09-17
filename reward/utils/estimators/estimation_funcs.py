@@ -39,8 +39,8 @@ def discounted_sum_rewards(rewards, dones, last_state_value_t=None, gamma=0.99):
     return returns
 
 
-def td_target(*, rewards, dones, state_value_tp1, gamma):
-    return rewards + (1 - dones) * gamma * state_value_tp1
+def td_target(*, rewards, dones, v_tp1, gamma):
+    return rewards + (1 - dones) * gamma * v_tp1
 
 
 # TODO: Test this

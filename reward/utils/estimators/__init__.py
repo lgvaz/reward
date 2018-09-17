@@ -1,4 +1,6 @@
-from .base_estimator import BaseEstimator
-import reward.utils.estimators.advantage
-import reward.utils.estimators.value
-import reward.utils.estimators.q
+from .estimation_funcs import (
+    discounted_sum_rewards,
+    td_target,
+    q_learning_target,
+    gae_estimation,
+)
