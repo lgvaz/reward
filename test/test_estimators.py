@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-import torchrl.utils as U
+import reward.utils as U
 
-from torchrl.utils.estimators.estimation_funcs import (
+from reward.utils.estimators.estimation_funcs import (
     discounted_sum_rewards,
     gae_estimation,
     td_target,

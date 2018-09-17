@@ -7,6 +7,6 @@ setup(
     url="https://github.com/lgvaz/reward",
     author="lgvaz",
     author_email="lucasgouvaz@gmail.com",
-    packages=[package for package in find_packages() if package.startswith("torchrl")],
+    packages=[package for package in find_packages() if package.startswith("reward")],
     zip_safe=False,
 )

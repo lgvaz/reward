@@ -4,8 +4,8 @@
 Models
 ======
 
-.. automodule:: torchrl.models
-.. currentmodule:: torchrl.models
+.. automodule:: reward.models
+.. currentmodule:: reward.models
 
 BaseModel
 ---------

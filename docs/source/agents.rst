@@ -4,8 +4,8 @@
 Agents
 ======
 
-.. automodule:: torchrl.agents
-.. currentmodule:: torchrl.agents
+.. automodule:: reward.agents
+.. currentmodule:: reward.agents
 
 
 BaseAgent

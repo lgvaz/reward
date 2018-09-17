@@ -1,4 +1,4 @@
-from torchrl.utils import Config
+from reward.utils import Config
 
 
 def task_gen(tasks, config):

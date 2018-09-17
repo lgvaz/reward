@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import torchrl.utils as U
+import reward.utils as U
 
 
 def test_lazy_array_memory_opt():

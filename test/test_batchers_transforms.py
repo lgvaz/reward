@@ -1,8 +1,8 @@
 import pytest
 import random
 import numpy as np
-import torchrl.utils as U
-import torchrl.batchers.transforms as tfms
+import reward.utils as U
+import reward.batchers.transforms as tfms
 from .utils import create_test_array
 
 

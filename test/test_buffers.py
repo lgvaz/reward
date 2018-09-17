@@ -1,9 +1,9 @@
 import pytest
 import random
 import numpy as np
-import torchrl.utils as U
+import reward.utils as U
 from collections import deque
-from torchrl.utils.buffers import RingBuffer, ReplayBuffer
+from reward.utils.buffers import RingBuffer, ReplayBuffer
 from .utils import create_test_array
 
 

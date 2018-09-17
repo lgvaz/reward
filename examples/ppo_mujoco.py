@@ -1,14 +1,14 @@
-import torchrl as tr
+import reward as tr
 import torch.nn as nn
-from torchrl.agents import PGAgent
-from torchrl.batchers import RolloutBatcher
-from torchrl.envs import GymEnv
-from torchrl.models import PPOClipModel, ValueClipModel
-from torchrl.optimizers import JointOpt
-from torchrl.runners import PAACRunner, SingleRunner
-from torchrl.utils import Config
-from torchrl.batchers.transforms import mujoco_transforms
-import torchrl.batchers.transforms as tfms
+from reward.agents import PGAgent
+from reward.batchers import RolloutBatcher
+from reward.envs import GymEnv
+from reward.models import PPOClipModel, ValueClipModel
+from reward.optimizers import JointOpt
+from reward.runners import PAACRunner, SingleRunner
+from reward.utils import Config
+from reward.batchers.transforms import mujoco_transforms
+import reward.batchers.transforms as tfms
 
 MAX_STEPS = 40e6
 # Create environment

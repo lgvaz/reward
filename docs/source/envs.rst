@@ -1,11 +1,11 @@
 .. role:: hidden
     :class: hidden-section
 
-torchrl.envs
+reward.envs
 ============
 
-.. automodule:: torchrl.envs
-.. currentmodule:: torchrl.envs
+.. automodule:: reward.envs
+.. currentmodule:: reward.envs
 
 BaseEnv
 -------

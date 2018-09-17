@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib import style
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-import torchrl.utils as U
+import reward.utils as U
 
 style.use("ggplot")
 

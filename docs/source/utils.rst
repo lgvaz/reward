@@ -1,15 +1,15 @@
 .. role:: hidden
     :class: hidden-section
 
-torchrl.utils
+reward.utils
 =============
-.. automodule:: torchrl.utils
-.. currentmodule:: torchrl.utils
+.. automodule:: reward.utils
+.. currentmodule:: reward.utils
 
 Config
 ------
 
-.. automodule:: torchrl.utils.config
+.. automodule:: reward.utils.config
 
 .. autoclass:: Config
   :show-inheritance:
@@ -18,7 +18,7 @@ Config
 Memories
 --------
 
-.. automodule:: torchrl.utils.memories
+.. automodule:: reward.utils.memories
 
 :hidden:`SimpleMemory`
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -35,8 +35,8 @@ Memories
 Logger
 ------
 
-.. automodule:: torchrl.utils.logger
-.. currentmodule:: torchrl.utils.logger
+.. automodule:: reward.utils.logger
+.. currentmodule:: reward.utils.logger
 
 .. autoclass:: Logger
   :members:
@@ -44,7 +44,7 @@ Logger
 
 Net Builder
 -----------
-.. currentmodule:: torchrl.utils.net_builder
+.. currentmodule:: reward.utils.net_builder
 
 :hidden:`auto_input_shape`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,7 +61,7 @@ Net Builder
 
 Utils
 -----
-.. currentmodule:: torchrl.utils.utils
+.. currentmodule:: reward.utils.utils
 
 :hidden:`get_obj`
 ~~~~~~~~~~~~~~~~~

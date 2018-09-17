@@ -1,6 +1,6 @@
 import torch.nn as nn
-import torchrl as tr
-import torchrl.utils as U
+import reward as tr
+import reward.utils as U
 
 
 env = tr.envs.GymEnv("HalfCheetah-v2")

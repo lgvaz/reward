@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# TorchRL documentation build configuration file, created by
+# Reward documentation build configuration file, created by
 # sphinx-quickstart on Sun Dec 31 17:19:30 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -22,7 +22,7 @@ import sys
 
 APP_DIR = os.path.normpath(os.path.join(os.getcwd(), "../.."))
 sys.path.insert(0, APP_DIR)
-# sys.path.insert(0, os.path.abspath('../../torchrl'))
+# sys.path.insert(0, os.path.abspath('../../reward'))
 # sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ------------------------------------------------
@@ -55,7 +55,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "TorchRL"
+project = "Reward"
 copyright = "2017, Lucas Vazquez"
 author = "Lucas Vazquez"
 
@@ -119,7 +119,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "TorchRLdoc"
+htmlhelp_basename = "Rewarddoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -142,14 +142,14 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "TorchRL.tex", "TorchRL Documentation", "Lucas Vazquez", "manual")
+    (master_doc, "Reward.tex", "Reward Documentation", "Lucas Vazquez", "manual")
 ]
 
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "torchrl", "TorchRL Documentation", [author], 1)]
+man_pages = [(master_doc, "reward", "Reward Documentation", [author], 1)]
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -159,10 +159,10 @@ man_pages = [(master_doc, "torchrl", "TorchRL Documentation", [author], 1)]
 texinfo_documents = [
     (
         master_doc,
-        "TorchRL",
-        "TorchRL Documentation",
+        "Reward",
+        "Reward Documentation",
         author,
-        "TorchRL",
+        "Reward",
         "One line description of project.",
         "Miscellaneous",
     )

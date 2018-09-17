@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 
-from torchrl.envs import GymEnv, AtariEnv
-from torchrl.envs.wrappers import RGB2GRAY, Rescale
-from torchrl.runners import SingleRunner, PAACRunner
+from reward.envs import GymEnv, AtariEnv
+from reward.envs.wrappers import RGB2GRAY, Rescale
+from reward.runners import SingleRunner, PAACRunner
 
 NUM_STEPS = 1000
 NUM_ENVS = 4

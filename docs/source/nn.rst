@@ -4,8 +4,8 @@
 Containers
 ==========
 
-.. automodule:: torchrl.nn
-.. currentmodule:: torchrl.nn
+.. automodule:: reward.nn
+.. currentmodule:: reward.nn
 
 ModuleExtended
 --------------

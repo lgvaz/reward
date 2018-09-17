@@ -1,12 +1,12 @@
-from torchrl.agents import PGAgent
-from torchrl.batchers import RolloutBatcher
-from torchrl.envs import AtariEnv
-from torchrl.envs.wrappers import AtariWrapper
-from torchrl.models import PPOClipModel, ValueClipModel
-from torchrl.runners import PAACRunner
-from torchrl.utils import piecewise_linear_schedule
-from torchrl.optimizers import JointOpt
-from torchrl.batchers.transforms import atari_transforms
+from reward.agents import PGAgent
+from reward.batchers import RolloutBatcher
+from reward.envs import AtariEnv
+from reward.envs.wrappers import AtariWrapper
+from reward.models import PPOClipModel, ValueClipModel
+from reward.runners import PAACRunner
+from reward.utils import piecewise_linear_schedule
+from reward.optimizers import JointOpt
+from reward.batchers.transforms import atari_transforms
 
 MAX_STEPS = 50e6
 HORIZON = 128

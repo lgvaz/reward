@@ -1,9 +1,9 @@
 import pytest
 import torch
 import numpy as np
-import torchrl as tr
+import reward as tr
 import torch.nn as nn
-import torchrl.utils as U
+import reward.utils as U
 from copy import deepcopy
 
 

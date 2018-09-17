@@ -1,17 +1,17 @@
-:github_url: https://github.com/lgvaz/torchrl
+:github_url: https://github.com/lgvaz/reward
 
-TorchRL Documentation
+Reward Documentation
 =====================
 
 .. toctree::
    :maxdepth: 1
    :caption: Package Reference
 
-   torchrl.agents <agents>
-   torchrl.models <models>
+   reward.agents <agents>
+   reward.models <models>
    envs
-   torchrl.nn <nn>
-   torchrl.utils <utils>
+   reward.nn <nn>
+   reward.utils <utils>
 
 
 Indices and tables
