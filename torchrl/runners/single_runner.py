@@ -21,6 +21,8 @@ class SingleRunner(BaseRunner):
         return state[None]
 
     def act(self, action):
+        # TODO: Squeezing action may break some cases (when action is not an array)
+        # Pendulum-v0 was not working correctly if action were not squeezed
         state, reward, done, info = self.env.step(action)
 
         self._ep_reward_sum += reward
