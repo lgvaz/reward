@@ -1,6 +1,6 @@
 import time
 from collections import defaultdict
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 from datetime import timedelta
 from tensorboardX import SummaryWriter
 from reward.utils import to_np

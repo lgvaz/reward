@@ -1,7 +1,7 @@
 import numpy as np
 import reward.utils as U
 from reward.batchers import BaseBatcher
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 
 # TODO: replay_buffer_maxlen -> maxlen
