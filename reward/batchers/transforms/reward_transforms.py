@@ -8,7 +8,7 @@ class RewardConstScaler(BaseTransform):
         self.factor = factor
 
     def transform_batch(self, batch, training=True):
-        batch.reward *= self.factor
+        batch.reward = batch.reward * self.factor
 
         return batch
 
