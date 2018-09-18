@@ -17,6 +17,7 @@ from .callback import Callback
 from .config import Config
 from .logger import Logger
 from .net_builder import auto_input_shape, get_module_list, nn_from_config
+from .torch_utils import copy_weights
 
 import reward.utils.schedules
 import reward.utils.estimators
@@ -47,4 +48,5 @@ __all__ = [
     "join_first_dims",
     "LazyArray",
     "maybe_np",
+    "copy_weights",
 ]
