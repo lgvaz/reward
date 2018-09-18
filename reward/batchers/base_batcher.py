@@ -20,7 +20,7 @@ class BaseBatcher(ABC):
         return "<{}>".format(type(self).__name__)
 
     @abstractmethod
-    def get_batch(self, select_action_fn):
+    def get_batch(self, get_action_fn):
         if self.state_t is None:
             self.state_t = self.transform_state(self.runner.reset())
 
@@ -40,10 +40,18 @@ class BaseBatcher(ABC):
     def num_episodes(self):
         return self.runner.num_episodes
 
-    def get_batches(self, max_steps, select_action_fn):
+    @property
+    def state_info(self):
+        return self.get_state_info()
+
+    @property
+    def action_info(self):
+        return self.get_action_info()
+
+    def get_batches(self, max_steps, get_action_fn):
         pbar = tqdm(total=max_steps, dynamic_ncols=True, unit_scale=True)
         while self.num_steps < max_steps:
-            yield self.get_batch(select_action_fn=select_action_fn)
+            yield self.get_batch(get_action_fn=get_action_fn)
             pbar.update(self.num_steps - pbar.n)
 
         pbar.close()
@@ -67,13 +75,14 @@ class BaseBatcher(ABC):
             batch = t.transform_batch(batch, training=training)
         return batch
 
-    def evaluate(self, env, select_action_fn, logger):
-        self.runner.evaluate(
-            env=env,
-            select_action_fn=select_action_fn,
-            state_transform=self.transform_state,
-            logger=logger,
-        )
+    # TODO
+    # def evaluate(self, env, get_action_fn, logger):
+    #     self.runner.evaluate(
+    #         env=env,
+    #         select_action_fn=get_action_fn,
+    #         state_transform=self.transform_state,
+    #         logger=logger,
+    #     )
 
     # TODO: Now with transforms this is more straight-forward. RE-IMPLEMENT
     def get_state_info(self):

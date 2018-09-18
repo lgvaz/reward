@@ -51,15 +51,15 @@ class ReplayBatcher(BaseBatcher):
 
             state_t = state_tp1
 
-    def get_batch(self, select_action_fn):
-        super().get_batch(select_action_fn=select_action_fn)
+    def get_batch(self, get_action_fn):
+        super().get_batch(get_action_fn=get_action_fn)
 
         self._grad_iter = (self._grad_iter + 1) % self.grad_steps_per_batch
         if self._grad_iter == 0:
             for i in range(self.learning_freq):
                 # TODO: Maybe the array can live in pinned memory?
                 state_t = U.to_tensor(U.to_np(self.state_t))
-                action = select_action_fn(state_t, self.num_steps)
+                action = get_action_fn(state_t, self.num_steps)
 
                 state_tp1, reward, done, info = self.runner.act(action)
                 state_tp1 = self.transform_state(state_tp1)
