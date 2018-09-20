@@ -1,3 +1,4 @@
+import numpy as np
 from reward.envs.base_env import BaseEnv
 import reward.utils as U
 
@@ -72,7 +73,8 @@ class GymEnv(BaseEnv):
         """
         if self.get_action_info().space == "discrete":
             action = int(action)
-        next_state, reward, done, info = self.env.step(action)
+	# TODO: Check if squeeze works in all cases here
+        next_state, reward, done, info = self.env.step(np.squeeze(action))
         return next_state, reward, done, info
 
     # def record(self, path):
