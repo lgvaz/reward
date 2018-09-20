@@ -1,21 +1,16 @@
-import pdb
 import torch
 import reward.utils as U
 from reward.distributions import Normal
 
 
 class TanhNormal(Normal):
-    def __init__(self, *args, **kwargs):
-        # assert not torch.isnan(kwargs["loc"]).any()
-        super().__init__(*args, **kwargs)
-
-    def _atanh(self, value):
-        return 0.5 * ((1 + value) / (1 - value)).log()
-
     def log_prob(self, value):
-        pre_tanh_value = self._atanh(value=value)
-        pre_log_prob = super().log_prob(value=pre_tanh_value)
-        log_prob = pre_log_prob - (1 - value.pow(2) + U.EPSILON).log()
+        raise ValueError("For numerical stability you shoud use `log_prob_pre`")
+
+    def log_prob_pre(self, pre_tanh):
+        log_prob_pre = super().log_prob(pre_tanh)
+        after_tanh = torch.tanh(pre_tanh)
+        log_prob = log_prob_pre - (1 - after_tanh.pow(2) + U.EPSILON).log()
         return log_prob
 
     def sample_with_pre(self, sample_shape=torch.Size()):
