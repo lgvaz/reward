@@ -17,7 +17,7 @@ from .callback import Callback
 from .config import Config
 from .logger import Logger
 from .net_builder import auto_input_shape, get_module_list, nn_from_config
-from .torch_utils import copy_weights
+from .torch_utils import copy_weights, mean_grad
 
 import reward.utils.schedules
 import reward.utils.estimators
@@ -49,4 +49,5 @@ __all__ = [
     "LazyArray",
     "maybe_np",
     "copy_weights",
+    "mean_grad",
 ]
