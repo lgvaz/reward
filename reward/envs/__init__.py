@@ -8,8 +8,6 @@ from .base_env import BaseEnv
 from .gym_env import GymEnv
 from .atari_env import AtariEnv
 from .roboschool_env import RoboschoolEnv
-from .osim_env import OsimRLEnv
-
 import reward.envs.wrappers
 
-__all__ = ["BaseEnv", "GymEnv", "RoboschoolEnv", "OsimRLEnv", "AtariEnv"]
+__all__ = ["BaseEnv", "GymEnv", "RoboschoolEnv", "AtariEnv"]
