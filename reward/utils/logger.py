@@ -98,9 +98,11 @@ class Logger:
 
         Parameters
         ----------
-        header: str
-            Optional header to include at the top of the table (Default is None).
+        header: dict
+            Optional header to include at the top of the table
+            (Default is None, which show only the current step).
         """
+        header = header or dict(Step=step)
         self.num_logs += 1
         # TODO: log_freq deprecated
         # if self.num_logs % self.log_freq == 0:
