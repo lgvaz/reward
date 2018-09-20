@@ -180,11 +180,10 @@ def run(
         v_loss = F.mse_loss(v_batch, next_value.detach())
 
         # Policy loss
-        # Using q1_new_t instead of minimum might be wrong, but it's what haarnoja uses in the code
         if repar:
-            p_loss = (log_prob - q1_new_t).mean()
+            p_loss = (log_prob - q_new_t).mean()
         else:
-            next_log_prob = q1_new_t - v_batch
+            next_log_prob = q_new_t - v_batch
             p_loss = (log_prob * (log_prob - next_log_prob).detach()).mean()
         # Policy regularization losses
         mean_loss = 1e-3 * dist.loc.pow(2).mean()
