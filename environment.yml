@@ -15,7 +15,6 @@ dependencies:
       - pytest
       - pyyaml
       - sphinx
-      - 'gym[all]'
-      - pandas
       - tensorflow
       - tensorboardX
+      - tqdm

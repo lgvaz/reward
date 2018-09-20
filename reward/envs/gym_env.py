@@ -1,6 +1,13 @@
-import gym
 from reward.envs.base_env import BaseEnv
 import reward.utils as U
+
+# Soft dependency
+try:
+    import gym
+except ImportError:
+    _has_gym = False
+else:
+    _has_gym = True
 
 
 class GymEnv(BaseEnv):
@@ -18,7 +25,8 @@ class GymEnv(BaseEnv):
     """
 
     def __init__(self, env_name, **kwargs):
-
+        if not _has_gym:
+            raise ImportError("Could not import gym")
         super().__init__(env_name, **kwargs)
 
     def _create_env(self):

@@ -4,7 +4,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib import style
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 

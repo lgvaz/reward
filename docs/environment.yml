@@ -13,7 +13,6 @@ dependencies:
       - opencv-python-headless
       - pyyaml
       - sphinx
-      - gym
-      - pandas
       - tensorflow
       - tensorboardX
+      - tqdm

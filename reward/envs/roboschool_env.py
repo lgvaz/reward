@@ -1,9 +1,12 @@
 from reward.envs import GymEnv
 
+# Soft dependency
 try:
     import roboschool
 except ImportError:
-    pass  # soft dep
+    _has_roboschool = False
+else:
+    _has_roboschool = True
 
 
 class RoboschoolEnv(GymEnv):
@@ -12,4 +15,6 @@ class RoboschoolEnv(GymEnv):
     """
 
     def __init__(self, *args, **kwargs):
+        if not _has_roboschool:
+            raise ImportError("Could not import roboschool")
         super().__init__(*args, **kwargs)
