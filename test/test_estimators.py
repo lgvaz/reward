@@ -84,7 +84,7 @@ def test_discounted_sum_rewards(rewards, dones, state_value_t, gamma, tensor):
         )
 
     result = discounted_sum_rewards(
-        rewards=rewards, dones=dones, last_state_value_t=state_value_t[-1], gamma=gamma
+        rewards=rewards, dones=dones, v_t_last=state_value_t[-1], gamma=gamma
     )
 
     np.testing.assert_allclose(U.to_np(result), expected_discounted_return)
@@ -121,9 +121,7 @@ def test_td_target(rewards, dones, state_value_tp1, gamma, tensor):
         rewards, dones, state_value_tp1 = map(
             U.to_tensor, (rewards, dones, state_value_tp1)
         )
-    result = td_target(
-        rewards=rewards, dones=dones, state_value_tp1=state_value_tp1, gamma=gamma
-    )
+    result = td_target(rewards=rewards, dones=dones, v_tp1=state_value_tp1, gamma=gamma)
     np.testing.assert_allclose(U.to_np(result), expected_td_target)
 
 
@@ -169,8 +167,8 @@ def test_gae_estimation(
     result = gae_estimation(
         rewards=rewards,
         dones=dones,
-        state_value_t=state_value_t,
-        state_value_tp1=state_value_tp1,
+        v_t=state_value_t,
+        v_tp1=state_value_tp1,
         gamma=gamma,
         gae_lambda=gae_lambda,
     )
