@@ -106,6 +106,7 @@ def run(
     grad_steps_per_batch=1,
     clip_grad=float("inf"),
     gamma=0.99,
+    log_freq=4000,
     cuda_default=True,
 ):
     logger = U.Logger(log_dir)
@@ -222,7 +223,7 @@ def run(
         U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=target_up_weight)
 
         ###### Write logs ######
-        if batcher.num_steps % 4000 == 0 and batcher.runner.rewards:
+        if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rewards:
             batcher.write_logs(logger)
 
             logger.add_log("policy/loss", p_loss)
