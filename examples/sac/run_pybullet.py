@@ -117,7 +117,7 @@ def run(
     env = rw.envs.wrappers.ActionBound(env)
     runner = rw.runners.SingleRunner(env)
 
-    tfms = [rw.batchers.transforms.RewardConstScaler(reward_scale)]
+    tfms = []
     if normalize_states:
         tfms.append(rw.batchers.transforms.StateRunNorm())
     batcher = rw.batchers.ReplayBatcher(
@@ -163,6 +163,7 @@ def run(
         else:
             action, pre_tanh_action = dist.sample_with_pre()
         log_prob = dist.log_prob_pre(pre_tanh_action).sum(-1, keepdim=True)
+        log_prob /= float(reward_scale)
 
         # Q loss
         v_target_tp1 = v_nn_target(batch.state_tp1)
