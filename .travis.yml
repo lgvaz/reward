@@ -19,7 +19,7 @@ install:
   - conda info -a
 
   - conda env create -f environment.yml
-  - source activate torchrl
+  - source activate reward
   - pip install -e .
 
 addons:
