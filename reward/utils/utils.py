@@ -89,6 +89,9 @@ def maybe_np(value):
 
 # TODO: What to do with other types? lists, etc..
 def to_tensor(x, cuda_default=True):
+    if isinstance(x, LazyArray):
+        x = to_np(x)
+
     if isinstance(x, np.ndarray):
         # TODO: Everything to float??
         # pytorch doesn't support bool
@@ -105,6 +108,9 @@ def to_tensor(x, cuda_default=True):
 
     if isinstance(x, torch.Tensor) and cuda_default and torch.cuda.is_available():
         x = x.cuda()
+
+    else:
+        raise ValueError("{} not suported".format(type(x)))
 
     return x
 
