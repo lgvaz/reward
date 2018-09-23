@@ -144,6 +144,12 @@ class ActionBound(BaseWrapper):
             new_low=self.action_info.low_bound,
             new_high=self.action_info.high_bound,
         )
+        self.mapper_inverse = self._map_range(
+            old_low=self.action_info.low_bound,
+            old_high=self.action_info.high_bound,
+            new_low=self.low,
+            new_high=self.high,
+        )
 
     def _map_range(self, old_low, old_high, new_low, new_high):
         old_span = old_high - old_low
@@ -161,4 +167,4 @@ class ActionBound(BaseWrapper):
 
     def sample_random_action(self):
         action = self.env.sample_random_action()
-        return self.mapper(action)
+        return self.mapper_inverse(action)
