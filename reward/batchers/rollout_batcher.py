@@ -6,12 +6,13 @@ from reward.batchers import BaseBatcher
 
 class RolloutBatcher(BaseBatcher):
     def get_batch(self, get_action_fn):
-        super().get_batch(get_action_fn=get_action_fn)
+        if self.state_t is None:
+            self.state_t = self.transform_state(self.runner.reset())
+            self.state_t = U.to_tensor(U.to_np(self.state_t))
 
         horizon = self.batch_size // self.runner.num_envs
         batch = U.Batch(initial_keys=["state_t_and_tp1", "action", "reward", "done"])
 
-        self.state_t = U.to_tensor(U.to_np(self.state_t))
         for i in range(horizon):
             action = get_action_fn(self.state_t, self.num_steps)
 

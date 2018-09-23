@@ -21,8 +21,7 @@ class BaseBatcher(ABC):
 
     @abstractmethod
     def get_batch(self, get_action_fn):
-        if self.state_t is None:
-            self.state_t = self.transform_state(self.runner.reset())
+        pass
 
     @property
     def env_name(self):

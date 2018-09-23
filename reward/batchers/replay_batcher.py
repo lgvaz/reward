@@ -56,7 +56,8 @@ class ReplayBatcher(BaseBatcher):
             state_t = state_tp1
 
     def get_batch(self, get_action_fn):
-        super().get_batch(get_action_fn=get_action_fn)
+        if self.state_t is None:
+            self.state_t = self.transform_state(self.runner.reset())
 
         self._grad_iter = (self._grad_iter + 1) % self.grad_steps_per_batch
         if self._grad_iter == 0:
