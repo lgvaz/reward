@@ -15,18 +15,18 @@ class ReplayBatcher(BaseBatcher):
         learning_freq=1,
         grad_steps_per_batch=1,
         transforms=None,
-        replay_buffer=None,
         replay_buffer_maxlen=1e6,
         init_replays=0.05,
     ):
         super().__init__(runner=runner, batch_size=batch_size, transforms=transforms)
         self.learning_freq = learning_freq
         self.grad_steps_per_batch = grad_steps_per_batch
+        self.replay_buffer = self._create_replay_buffer(int(replay_buffer_maxlen))
         self._grad_iter = 0
-        self.replay_buffer = replay_buffer or U.buffers.ReplayBuffer(
-            maxlen=int(replay_buffer_maxlen), num_envs=self.runner.num_envs
-        )
         self.init_replays = init_replays
+
+    def _create_replay_buffer(self, maxlen):
+        return U.buffers.ReplayBuffer(maxlen=maxlen, num_envs=self.runner.num_envs)
 
     def populate(self, n=None, pct=None, get_action_fn=None):
         assert (n and not pct) or (pct and not n)

@@ -99,6 +99,8 @@ def run(
     normalize_states=False,
     repar=True,
     target_up_weight=0.005,
+    pr_weight_initial=0.7,
+    pr_weight_final=0.0,
     batch_size=256,
     replay_buffer_maxlen=1e6,
     learning_freq=1,
@@ -117,21 +119,20 @@ def run(
     env = rw.envs.wrappers.ActionBound(env)
     runner = rw.runners.SingleRunner(env)
 
-    tfms = []
-    if normalize_states:
-        tfms.append(rw.batchers.transforms.StateRunNorm())
-    batcher = rw.batchers.ReplayBatcher(
+    tfms = [rw.batchers.transforms.StateRunNorm() if normalize_states] else []
+    pr_weight = U.schedules.linear_schedule(pr_weight_initial, pr_weight_final, max_steps)
+    batcher = rw.batchers.PrReplayBatcher(
         runner=runner,
         batch_size=batch_size,
         replay_buffer_maxlen=replay_buffer_maxlen,
         learning_freq=learning_freq,
         grad_steps_per_batch=grad_steps_per_batch,
         transforms=tfms,
+        pr_weight=pr_weight,
     )
     state_features = batcher.get_state_info().shape[0]
     num_actions = batcher.get_action_info().shape[0]
-
-    # Create NNs
+# Create NNs
     p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_actions).to(device)
     policy = TanhNormalPolicy(nn=p_nn)
 
@@ -167,11 +168,11 @@ def run(
 
         # Q loss
         v_target_tp1 = v_nn_target(batch.state_tp1)
-        q_value_tp1 = U.estimators.td_target(
+        q_t_next = U.estimators.td_target(
             rewards=batch.reward, dones=batch.done, v_tp1=v_target_tp1, gamma=gamma
         )
-        q1_loss = F.mse_loss(q1_batch, q_value_tp1.detach())
-        q2_loss = F.mse_loss(q2_batch, q_value_tp1.detach())
+        q1_loss = F.mse_loss(q1_batch, q_t_next.detach())
+        q2_loss = F.mse_loss(q2_batch, q_t_next.detach())
 
         # V loss
         q1_new_t = q1_nn((batch.state_t, action))
@@ -220,6 +221,11 @@ def run(
 
         ###### Update target value network ######
         U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=target_up_weight)
+
+        ###### Update replay batcher priorities #######
+        idx = U.to_np(batch.idx).astype('int')
+        td_error = U.to_np((q_new_t - q_t_next).abs())
+        batcher.update_pr(idx=idx, pr=td_error)
 
         ###### Write logs ######
         if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rewards:

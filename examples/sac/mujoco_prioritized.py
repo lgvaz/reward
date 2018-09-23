@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import reward as rw
 import reward.utils as U
-from pybulletgym import envs
 
 
 class PolicyNN(nn.Module):
@@ -114,7 +113,7 @@ def run(
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # Create env and batcher
-    env = rw.envs.GymEnv(str(env_name))
+    env = rw.envs.GymEnv(env_name)
     env = rw.envs.wrappers.ActionBound(env)
     runner = rw.runners.SingleRunner(env)
 
