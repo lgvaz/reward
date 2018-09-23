@@ -99,8 +99,6 @@ def run(
     normalize_states=False,
     repar=True,
     target_up_weight=0.005,
-    pr_weight_initial=0.7,
-    pr_weight_final=0.0,
     batch_size=256,
     replay_buffer_maxlen=1e6,
     learning_freq=1,
@@ -119,20 +117,21 @@ def run(
     env = rw.envs.wrappers.ActionBound(env)
     runner = rw.runners.SingleRunner(env)
 
-    tfms = [rw.batchers.transforms.StateRunNorm() if normalize_states] else []
-    pr_weight = U.schedules.linear_schedule(pr_weight_initial, pr_weight_final, max_steps)
-    batcher = rw.batchers.PrReplayBatcher(
+    tfms = []
+    if normalize_states:
+        tfms.append(rw.batchers.transforms.StateRunNorm())
+    batcher = rw.batchers.ReplayBatcher(
         runner=runner,
         batch_size=batch_size,
         replay_buffer_maxlen=replay_buffer_maxlen,
         learning_freq=learning_freq,
         grad_steps_per_batch=grad_steps_per_batch,
         transforms=tfms,
-        pr_weight=pr_weight,
     )
     state_features = batcher.get_state_info().shape[0]
     num_actions = batcher.get_action_info().shape[0]
-# Create NNs
+
+    # Create NNs
     p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_actions).to(device)
     policy = TanhNormalPolicy(nn=p_nn)
 
@@ -221,11 +220,6 @@ def run(
 
         ###### Update target value network ######
         U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=target_up_weight)
-
-        ###### Update replay batcher priorities #######
-        idx = U.to_np(batch.idx).astype('int')
-        td_error = U.to_np((q_new_t - q_t_next).abs())
-        batcher.update_pr(idx=idx, pr=td_error)
 
         ###### Write logs ######
         if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rewards:
