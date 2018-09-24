@@ -126,7 +126,9 @@ class MeanStdFilter:
         self._check_shape(x)
         if add_sample:
             self.xs.extend(x)
-        return LazyArray(x, transform=self._norm(use_latest=use_latest_update))
+        value = (x - self.mean) / (self.std + EPSILON)
+        value = value.clip(min=-self.clip_range, max=self.clip_range)
+        return value
 
     def scale(self, x, add_sample=True, use_latest_update=False):
         """
@@ -150,4 +152,6 @@ class MeanStdFilter:
         self._check_shape(x)
         if add_sample:
             self.xs.extend(x)
-        return LazyArray(x, transform=self._scale(use_latest=use_latest_update))
+        value = x / (self.std + EPSILON)
+        value = value.clip(min=-self.clip_range, max=self.clip_range)
+        return value

@@ -36,12 +36,13 @@ class PrReplayBuffer(ReplayBuffer):
         super().add_sample(**kwargs)
         # New transition start with max probability
         prob = np.max(self.probs)
-        self.probs[self.position] = prob
+        self.probs[self.current_idx] = prob
 
     def sample(self, batch_size):
         # The sum of all probs should be 1
-        probs = self.probs / np.sum(self.probs)
-        idxs = np.random.choice(len(self), batch_size, replace=False, p=probs)
+        probs = self.probs[: self.available_idxs]
+        probs = probs / np.sum(probs)
+        idxs = np.random.choice(self.available_idxs, batch_size, replace=False, p=probs)
         return self._get_batch(idxs=idxs)
 
     def update_pr(self, idx, pr, step):

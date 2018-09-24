@@ -10,6 +10,15 @@ class StackStates(BaseTransform):
         self.ring_buffer = None
         self.eval_ring_buffer = None
 
+        if dim != 1:
+            err_msg = (
+                "Because of the way of the way the replay_buffer is currently"
+                "implemented, we're only allowed to stack in the first dimension"
+                "(which should be the case for image stacking). Support for other"
+                "options will be added in the future"
+            )
+            raise ValueError(err_msg)
+
     def transform(self, state):
         state = U.to_np(state)
         assert (
@@ -43,6 +52,7 @@ class StackStates(BaseTransform):
 
 
 class StateRunNorm(BaseTransform):
+    # TODO use_latest_filter_update
     def __init__(self, clip_range=5, use_latest_filter_update=False):
         super().__init__()
         self.filt = None
@@ -53,11 +63,8 @@ class StateRunNorm(BaseTransform):
         if self.filt is None:
             shape = state.shape
             if len(shape) != 2:
-                raise ValueError(
-                    "state shape must be in the form (num_envs, num_features), got {}".format(
-                        shape
-                    )
-                )
+                msg = "state shape must (num_envs, num_features, got {})".format(shape)
+                raise ValueError(msg)
             self.filt = U.filters.MeanStdFilter(
                 num_features=state.shape[-1], clip_range=self.clip_range
             )
@@ -79,4 +86,4 @@ class StateRunNorm(BaseTransform):
 
 class Frame2Float(BaseTransform):
     def transform_state(self, state, training=True):
-        return U.LazyArray(data=state, transform=lambda x: x.astype("float") / 255.)
+        return state.astype("float32") / 255.
