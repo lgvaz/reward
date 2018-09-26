@@ -60,8 +60,6 @@ class ReplayBatcher(BaseBatcher):
 
             self.replay_buffer.add_sample(
                 state=state_t,
-                # state_t=state_t,
-                # state_tp1=state_tp1,
                 action=action,
                 reward=reward,
                 done=done,
@@ -84,12 +82,9 @@ class ReplayBatcher(BaseBatcher):
                 action = get_action_fn(U.to_tensor(state_t_tfm), self.num_steps)
 
                 state_tp1, reward, done, info = self.runner.act(action)
-                # state_tp1 = self.transform_state(state_tp1)
 
                 self.replay_buffer.add_sample(
                     state=self.state_t,
-                    # state_t=self.state_t,
-                    # state_tp1=state_tp1,
                     action=action,
                     reward=reward,
                     done=done,
