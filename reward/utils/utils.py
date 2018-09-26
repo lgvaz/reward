@@ -64,8 +64,6 @@ def to_np(value):
         return value
     if isinstance(value, torch.Tensor):
         return value.detach().cpu().numpy()
-    if isinstance(value, LazyArray):
-        return np.array(value)
 
     # If iterable
     try:
@@ -89,7 +87,7 @@ def maybe_np(value):
 
 # TODO: What to do with other types? lists, etc..
 def to_tensor(x, cuda_default=True):
-    if isinstance(x, LazyArray):
+    if not isinstance(x, torch.Tensor):
         x = to_np(x)
 
     if isinstance(x, np.ndarray):
@@ -158,40 +156,3 @@ def make_callable(x):
 
 def join_first_dims(x, num_dims):
     return x.reshape((-1, *x.shape[num_dims:]))
-
-
-class LazyArray:
-    """
-    Inspired by OpenAI `LazyFrames <https://goo.gl/nTmVW8>`_ this object stores numpy
-    arrays as lists, so no unnecessary memory is used when storing arrays that point to
-    the same memory, this is a memory optimization trick for the `ReplayBuffer`.
-
-    Beyond this optimization, an optional transform function can be passed, this function
-    is executed lazily only when `LazyFrames` gets converted to a numpy array.
-
-    Parameters
-    ----------
-    data: list
-        A list of numpy arrays.
-    transform: function
-        A function that is applied lazily to the array.
-    """
-
-    def __init__(self, data, transform=None, **kwargs):
-        self.data = data
-        self.transform = transform
-        self.kwargs = kwargs
-
-    def __array__(self):
-        arr = to_np(self.data, **self.kwargs)
-        if self.transform is not None:
-            arr = self.transform(arr)
-        return arr
-
-    def __iter__(self):
-        for v in self.data:
-            yield LazyArray(v, transform=self.transform, **self.kwargs)
-
-    @property
-    def shape(self):
-        return self.__array__().shape

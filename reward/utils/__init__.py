@@ -10,7 +10,6 @@ from .utils import (
     one_hot,
     make_callable,
     join_first_dims,
-    LazyArray,
 )
 from .batch import Batch
 from .callback import Callback
@@ -42,7 +41,6 @@ __all__ = [
     "Callback",
     "to_tensor",
     "join_first_dims",
-    "LazyArray",
     "maybe_np",
     "copy_weights",
     "mean_grad",

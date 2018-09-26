@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from reward.utils.memories import SimpleMemory
-from reward.utils import to_tensor, join_first_dims, maybe_np, to_np, LazyArray
+from reward.utils import to_tensor, join_first_dims, maybe_np, to_np
 
 
 class Batch(SimpleMemory):
@@ -50,23 +50,6 @@ class Batch(SimpleMemory):
 
     def to_tensor(self):
         return Batch({k: to_tensor(v) for k, v in self.items()})
-
-    # def to_array_or_tensor(self):
-    #     # TODO: Maybe here memory can be pinned
-    #     new_batch = Batch()
-    #     for k, v in self.items():
-    #         if isinstance(v[0], LazyArray):
-    #             v = to_np(v)
-    #         if isinstance(v[0], np.ndarray):
-    #             new_batch[k] = np.stack(v)
-
-    #         elif isinstance(v[0], torch.Tensor):
-    #             new_batch[k] = torch.stack(v)
-
-    #         else:
-    #             new_batch[k] = v
-
-    #     return new_batch
 
     @classmethod
     def from_trajs(cls, trajs):

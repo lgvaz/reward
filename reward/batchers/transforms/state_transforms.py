@@ -48,16 +48,14 @@ class StackStates(BaseTransform):
             self.eval_ring_buffer.append(state)
             state = self.eval_ring_buffer.get_data()
 
-        return U.LazyArray(state, transform=self.transform)
+        return self.transform(state)
 
 
 class StateRunNorm(BaseTransform):
-    # TODO use_latest_filter_update
-    def __init__(self, clip_range=5, use_latest_filter_update=False):
+    def __init__(self, clip_range=5):
         super().__init__()
         self.filt = None
         self.clip_range = clip_range
-        self.use_latest_filter_update = use_latest_filter_update
 
     def transform_state(self, state, training=True):
         if self.filt is None:
@@ -69,9 +67,7 @@ class StateRunNorm(BaseTransform):
                 num_features=state.shape[-1], clip_range=self.clip_range
             )
 
-        state = self.filt.normalize(
-            state, add_sample=training, use_latest_update=self.use_latest_filter_update
-        )
+        state = self.filt.normalize(state, add_sample=training)
         return state
 
     def transform_batch(self, batch, training=True):

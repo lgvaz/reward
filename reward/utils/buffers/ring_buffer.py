@@ -1,6 +1,5 @@
 import numpy as np
 from collections import deque
-from reward.utils import LazyArray
 
 
 class RingBuffer:
@@ -22,4 +21,4 @@ class RingBuffer:
         self.buffer.append(data)
 
     def get_data(self):
-        return LazyArray(list(self.buffer))
+        return np.array(self.buffer)

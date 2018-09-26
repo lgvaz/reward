@@ -1,15 +1,12 @@
 import warnings
 import numpy as np
-from reward.utils import EPSILON, to_np, LazyArray
+from reward.utils import EPSILON, to_np
 
 
 class MeanStdFilter:
     """
     Calculates the exact mean and std deviation, originally by `ray_rllib
     <https://goo.gl/fMv49b>`_.
-
-    Returning a LazyArray means that the normalization/scaling is always done using
-    the latest values for the mean and std_dev.
 
     Parameters
     ----------
@@ -104,7 +101,7 @@ class MeanStdFilter:
             self.S[:] = self.S + x_std + (self.M - x_mean) ** 2 * n_old * n_new / self.n
             self.M[:] = new_mean
 
-    def normalize(self, x, add_sample=True, use_latest_update=False):
+    def normalize(self, x, add_sample=True):
         """
         Normalizes x by subtracting the mean and dividing by the standard deviation.
 
@@ -113,15 +110,10 @@ class MeanStdFilter:
         add_sample: bool
             If True x will be added as a new sample and will be considered when
             the filter is updated via :meth:`self.update`. (Default is True)
-        use_latest_update: bool
-            If False the current value of the mean and std is used for normalization,
-            if True the values used will be the ones available when calling np.array
-            on the returned LazyArray (which will be the most updated values for
-            the filter). (Default is False)
 
         Returns
         -------
-        LazyArray
+        np.ndarray
         """
         self._check_shape(x)
         if add_sample:
@@ -130,7 +122,7 @@ class MeanStdFilter:
         value = value.clip(min=-self.clip_range, max=self.clip_range)
         return value
 
-    def scale(self, x, add_sample=True, use_latest_update=False):
+    def scale(self, x, add_sample=True):
         """
         Scales x by dividing by the standard deviation.
 
@@ -139,15 +131,10 @@ class MeanStdFilter:
         add_sample: bool
             If True x will be added as a new sample and will be considered when
             the filter is updated via :meth:`self.update`. (Default is True)
-        use_latest_update: bool
-            If False the current value of std is used for scaling, if True the
-            values used will be the ones available when calling np.array on the
-            returned LazyArray (which will be the most updated values for the
-            filter). (Default is False)
 
         Returns
         -------
-        LazyArray
+        np.ndarray
         """
         self._check_shape(x)
         if add_sample:
