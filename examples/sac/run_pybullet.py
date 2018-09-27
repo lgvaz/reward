@@ -149,7 +149,7 @@ def run(
     q2_opt = torch.optim.Adam(q2_nn.parameters(), lr=lr)
 
     # Main training loop
-    batcher.populate(n=1000, get_action_fn=policy.get_action)
+    batcher.populate(n=1000, act_fn=policy.get_action)
     for batch in batcher.get_batches(max_steps, policy.get_action):
         batch = batch.to_tensor().concat_batch()
 

@@ -120,6 +120,7 @@ def run(
     tfms = []
     if normalize_states:
         tfms.append(rw.batchers.transforms.StateRunNorm())
+    # tfms.append(rw.batchers.transforms.StackStates(3))
     batcher = rw.batchers.ReplayBatcher(
         runner=runner,
         batch_size=batch_size,
@@ -148,9 +149,10 @@ def run(
     q2_opt = torch.optim.Adam(q2_nn.parameters(), lr=lr)
 
     # Main training loop
-    batcher.populate(n=1000, get_action_fn=policy.get_action)
+    batcher.populate(n=1000, act_fn=policy.get_action)
     for batch in batcher.get_batches(max_steps, policy.get_action):
-        batch = batch.to_tensor().concat_batch()
+        batch = batch.to_tensor()
+        batch = batch.concat_batch()
 
         ##### Calculate losses ######
         q1_batch = q1_nn((batch.state_t, batch.action))
@@ -196,26 +198,26 @@ def run(
         ###### Optimize ######
         q1_opt.zero_grad()
         q1_loss.backward()
-        torch.nn.utils.clip_grad_norm_(q1_nn.parameters(), clip_grad)
-        q1_grad = U.mean_grad(q1_nn)
+        # torch.nn.utils.clip_grad_norm_(q1_nn.parameters(), clip_grad)
+        # q1_grad = U.mean_grad(q1_nn)
         q1_opt.step()
 
         q2_opt.zero_grad()
         q2_loss.backward()
-        torch.nn.utils.clip_grad_norm_(q2_nn.parameters(), clip_grad)
-        q2_grad = U.mean_grad(q2_nn)
+        # torch.nn.utils.clip_grad_norm_(q2_nn.parameters(), clip_grad)
+        # q2_grad = U.mean_grad(q2_nn)
         q2_opt.step()
 
         v_opt.zero_grad()
         v_loss.backward()
-        torch.nn.utils.clip_grad_norm_(v_nn.parameters(), clip_grad)
-        v_grad = U.mean_grad(v_nn)
+        # torch.nn.utils.clip_grad_norm_(v_nn.parameters(), clip_grad)
+        # v_grad = U.mean_grad(v_nn)
         v_opt.step()
 
         p_opt.zero_grad()
         p_loss.backward()
-        torch.nn.utils.clip_grad_norm_(p_nn.parameters(), clip_grad)
-        p_grad = U.mean_grad(p_nn)
+        # torch.nn.utils.clip_grad_norm_(p_nn.parameters(), clip_grad)
+        # p_grad = U.mean_grad(p_nn)
         p_opt.step()
 
         ###### Update target value network ######
@@ -230,10 +232,10 @@ def run(
             logger.add_log("q1/loss", q1_loss)
             logger.add_log("q2/loss", q2_loss)
 
-            logger.add_log("policy/grad", p_grad)
-            logger.add_log("v/grad", v_grad)
-            logger.add_log("q1/grad", q1_grad)
-            logger.add_log("q2/grad", q2_grad)
+            # logger.add_log("policy/grad", p_grad)
+            # logger.add_log("v/grad", v_grad)
+            # logger.add_log("q1/grad", q1_grad)
+            # logger.add_log("q2/grad", q2_grad)
 
             logger.add_histogram("policy/log_prob", log_prob)
             logger.add_histogram("policy/mean", dist.loc)
@@ -247,3 +249,10 @@ def run(
 
 if __name__ == "__main__":
     fire.Fire(run)
+
+# run(
+#     env_name="Humanoid-v2",
+#     reward_scale=20.,
+#     log_dir="/tmp/logs/tests",
+#     normalize_states=False,
+# )

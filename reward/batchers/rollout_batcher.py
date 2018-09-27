@@ -5,7 +5,7 @@ from reward.batchers import BaseBatcher
 
 
 class RolloutBatcher(BaseBatcher):
-    def get_batch(self, get_action_fn):
+    def get_batch(self, act_fn):
         if self.state_t is None:
             self.state_t = self.transform_state(self.runner.reset())
             self.state_t = U.to_tensor(self.state_t)
@@ -14,7 +14,7 @@ class RolloutBatcher(BaseBatcher):
         batch = U.Batch(initial_keys=["state_t_and_tp1", "action", "reward", "done"])
 
         for i in range(horizon):
-            action = get_action_fn(self.state_t, self.num_steps)
+            action = act_fn(self.state_t, self.num_steps)
 
             state_tp1, reward, done, info = self.runner.act(action)
             state_tp1 = U.to_tensor(self.transform_state(state_tp1))

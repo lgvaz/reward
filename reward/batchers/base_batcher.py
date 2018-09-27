@@ -20,7 +20,7 @@ class BaseBatcher(ABC):
         return "<{}>".format(type(self).__name__)
 
     @abstractmethod
-    def get_batch(self, get_action_fn):
+    def get_batch(self, act_fn):
         pass
 
     @property
@@ -47,10 +47,10 @@ class BaseBatcher(ABC):
     def action_info(self):
         return self.get_action_info()
 
-    def get_batches(self, max_steps, get_action_fn):
+    def get_batches(self, max_steps, act_fn):
         pbar = tqdm(total=max_steps, dynamic_ncols=True, unit_scale=True)
         while self.num_steps < max_steps:
-            yield self.get_batch(get_action_fn=get_action_fn)
+            yield self.get_batch(act_fn=act_fn)
             pbar.update(self.num_steps - pbar.n)
 
         pbar.close()
@@ -75,10 +75,10 @@ class BaseBatcher(ABC):
         return batch
 
     # TODO
-    # def evaluate(self, env, get_action_fn, logger):
+    # def evaluate(self, env, act_fn, logger):
     #     self.runner.evaluate(
     #         env=env,
-    #         select_action_fn=get_action_fn,
+    #         select_action_fn=act_fn,
     #         state_transform=self.transform_state,
     #         logger=logger,
     #     )

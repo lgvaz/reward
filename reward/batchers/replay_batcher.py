@@ -42,7 +42,7 @@ class ReplayBatcher(BaseBatcher):
                 self.state_stacker = tfm
                 transforms.remove(tfm)
 
-    def populate(self, n=None, pct=None, get_action_fn=None):
+    def populate(self, n=None, pct=None, act_fn=None):
         assert (n and not pct) or (pct and not n)
         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
@@ -51,8 +51,8 @@ class ReplayBatcher(BaseBatcher):
 
         tqdm.write("Populating Replay Buffer...")
         for _ in tqdm(range(num_replays)):
-            if get_action_fn is not None:
-                action = get_action_fn(state=U.to_tensor(state_t), step=0)
+            if act_fn is not None:
+                action = act_fn(state=U.to_tensor(state_t), step=0)
             else:
                 action = self.runner.sample_random_action()
             state_tp1, reward, done, info = self.runner.act(action)
@@ -68,7 +68,7 @@ class ReplayBatcher(BaseBatcher):
 
             state_t = state_tp1
 
-    def get_batch(self, get_action_fn):
+    def get_batch(self, act_fn):
         if self.state_t is None:
             self.state_t = self.runner.reset()
 
@@ -79,7 +79,7 @@ class ReplayBatcher(BaseBatcher):
                 # TODO: Hacky way of stacking
                 if self.state_stacker is not None:
                     state_t_tfm = self.state_stacker.transform_state(state_t_tfm)
-                action = get_action_fn(U.to_tensor(state_t_tfm), self.num_steps)
+                action = act_fn(U.to_tensor(state_t_tfm), self.num_steps)
 
                 state_tp1, reward, done, info = self.runner.act(action)
 
