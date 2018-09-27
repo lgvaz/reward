@@ -113,15 +113,15 @@ def run(
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # Create env and batcher
-    env = rw.envs.GymEnv(env_name)
-    env = rw.envs.wrappers.ActionBound(env)
-    runner = rw.runners.SingleRunner(env)
+    env = rw.env.GymEnv(env_name)
+    env = rw.env.wrappers.ActionBound(env)
+    runner = rw.runner.SingleRunner(env)
 
     tfms = []
     if normalize_states:
-        tfms.append(rw.batchers.transforms.StateRunNorm())
-    # tfms.append(rw.batchers.transforms.StackStates(3))
-    batcher = rw.batchers.ReplayBatcher(
+        tfms.append(rw.batcher.transforms.StateRunNorm())
+    # tfms.append(rw.batcher.transforms.StackStates(3))
+    batcher = rw.batcher.ReplayBatcher(
         runner=runner,
         batch_size=batch_size,
         replay_buffer_maxlen=replay_buffer_maxlen,

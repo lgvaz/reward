@@ -115,15 +115,15 @@ def run(
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # Create env and batcher
-    env = rw.envs.GymEnv(env_name)
-    env = rw.envs.wrappers.ActionBound(env)
-    runner = rw.runners.SingleRunner(env)
+    env = rw.env.GymEnv(env_name)
+    env = rw.env.wrappers.ActionBound(env)
+    runner = rw.runner.SingleRunner(env)
 
-    tfms = [rw.batchers.transforms.StateRunNorm()] if normalize_states else []
+    tfms = [rw.batcher.transforms.StateRunNorm()] if normalize_states else []
     pr_weight = U.schedules.linear_schedule(
         pr_weight_initial, pr_weight_final, max_steps
     )
-    batcher = rw.batchers.PrReplayBatcher(
+    batcher = rw.batcher.PrReplayBatcher(
         runner=runner,
         batch_size=batch_size,
         replay_buffer_maxlen=replay_buffer_maxlen,

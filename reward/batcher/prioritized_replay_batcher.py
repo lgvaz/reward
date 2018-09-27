@@ -1,5 +1,5 @@
 import reward.utils as U
-from reward.batchers import ReplayBatcher
+from reward.batcher import ReplayBatcher
 
 
 class PrReplayBatcher(ReplayBatcher):

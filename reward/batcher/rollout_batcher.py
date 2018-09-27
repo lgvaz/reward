@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import reward.utils as U
-from reward.batchers import BaseBatcher
+from reward.batcher import BaseBatcher
 
 
 class RolloutBatcher(BaseBatcher):

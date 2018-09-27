@@ -1,9 +1,9 @@
 import pdb
 import numpy as np
 import reward.utils as U
-from reward.batchers import BaseBatcher
+from reward.batcher import BaseBatcher
 from tqdm.autonotebook import tqdm
-from reward.batchers.transforms import StackStates
+from reward.batcher.transforms import StackStates
 
 
 # TODO: replay_buffer_maxlen -> maxlen

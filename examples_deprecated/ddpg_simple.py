@@ -3,8 +3,8 @@ import reward as tr
 import reward.utils as U
 
 
-env = tr.envs.GymEnv("HalfCheetah-v2")
-# envs = [tr.envs.GymEnv("InvertedPendulum-v2") for _ in range(8)]
+env = tr.env.GymEnv("HalfCheetah-v2")
+# env = [tr.env.GymEnv("InvertedPendulum-v2") for _ in range(8)]
 
 # Define networks
 actor_nn = tr.arch.MLP.from_env(
@@ -20,14 +20,14 @@ critic_nn = tr.arch.DDPGCritic.from_env(
     activation=nn.ReLU,
 )
 
-runner = tr.runners.SingleRunner(env)
+runner = tr.runner.SingleRunner(env)
 
-batcher = tr.batchers.ReplayBatcher(
+batcher = tr.batcher.ReplayBatcher(
     runner=runner,
     batch_size=64,
     replay_buffer_maxlen=50e3,
     learning_freq=1,
-    transforms=tr.batchers.transforms.mujoco_transforms(),
+    transforms=tr.batcher.transforms.mujoco_transforms(),
 )
 
 critic = tr.models.DDPGCritic(

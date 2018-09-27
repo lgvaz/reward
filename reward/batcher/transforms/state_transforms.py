@@ -63,7 +63,7 @@ class StateRunNorm(BaseTransform):
             if len(shape) != 2:
                 msg = "state shape must (num_envs, num_features, got {})".format(shape)
                 raise ValueError(msg)
-            self.filt = U.filters.MeanStdFilter(
+            self.filt = U.filter.MeanStdFilter(
                 num_features=state.shape[-1], clip_range=self.clip_range
             )
 

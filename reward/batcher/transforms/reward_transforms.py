@@ -16,7 +16,7 @@ class RewardConstScaler(BaseTransform):
 class RewardRunScaler(BaseTransform):
     def __init__(self):
         super().__init__()
-        self.filt = U.filters.MeanStdFilter(num_features=1)
+        self.filt = U.filter.MeanStdFilter(num_features=1)
 
     def transform_batch(self, batch, training=True):
         rew_shape = batch.reward.shape

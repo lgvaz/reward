@@ -9,7 +9,7 @@ from multiprocessing.sharedctypes import RawArray
 import numpy as np
 
 import reward.utils as U
-from reward.runners import BaseRunner
+from reward.runner import BaseRunner
 
 
 class PAACRunner(BaseRunner):
@@ -24,8 +24,8 @@ class PAACRunner(BaseRunner):
     def __init__(self, env, num_workers=None):
         super().__init__(env=env)
         self.num_workers = num_workers or multiprocessing.cpu_count()
-        self._envs_rewards_sum = np.zeros(self.num_envs)
-        self._envs_ep_lengths = np.zeros(self.num_envs)
+        self._env_rewards_sum = np.zeros(self.num_envs)
+        self._env_ep_lengths = np.zeros(self.num_envs)
         self.manager = Manager()
 
         self._create_shared_transitions()
@@ -58,13 +58,13 @@ class PAACRunner(BaseRunner):
 
         Parameters
         ----------
-        envs: list
-            List of envs, each worker will have approximately the same number of envs.
+        env: list
+            List of env, each worker will have approximately the same number of env.
         """
         WorkerNTuple = namedtuple("Worker", ["process", "connection", "barrier"])
         self.workers = []
 
-        for envs_i, s_s, s_r, s_d, s_a, s_i in zip(
+        for env_i, s_s, s_r, s_d, s_a, s_i in zip(
             self.split(self.env),
             self.split(self.shared_tran.state),
             self.split(self.shared_tran.reward),
@@ -80,10 +80,7 @@ class PAACRunner(BaseRunner):
             queue = Queue()
 
             process = EnvWorker(
-                envs=envs_i,
-                conn=queue,
-                barrier=child_conn,
-                shared_transition=shared_tran,
+                env=env_i, conn=queue, barrier=child_conn, shared_transition=shared_tran
             )
             process.daemon = True
             process.start()
@@ -108,7 +105,7 @@ class PAACRunner(BaseRunner):
     def _get_shared(self, array):
         """
         A numpy array that can be shared between processes.
-        From: `alfredcv <https://sourcegraph.com/github.com/Alfredvc/paac/-/blob/runners.py#L20:9-20:20$references>`_.
+        From: `alfredcv <https://sourcegraph.com/github.com/Alfredvc/paac/-/blob/runner.py#L20:9-20:20$references>`_.
 
         Parameters
         ----------
@@ -140,14 +137,14 @@ class PAACRunner(BaseRunner):
         infos = list(map(dict, self.shared_tran.info))
 
         # Accumulate rewards
-        self._envs_rewards_sum += rewards
-        self._envs_ep_lengths += 1
+        self._env_rewards_sum += rewards
+        self._env_ep_lengths += 1
         for i, done in enumerate(dones):
             if done:
-                self.rewards.append(self._envs_rewards_sum[i])
-                self.ep_lengths.append(self._envs_ep_lengths[i])
-                self._envs_rewards_sum[i] = 0
-                self._envs_ep_lengths[i] = 0
+                self.rewards.append(self._env_rewards_sum[i])
+                self.ep_lengths.append(self._env_ep_lengths[i])
+                self._env_rewards_sum[i] = 0
+                self._env_ep_lengths[i] = 0
 
         return next_states, rewards, dones, infos
 
@@ -210,9 +207,9 @@ class PAACRunner(BaseRunner):
 
 
 class EnvWorker(Process):
-    def __init__(self, envs, conn, barrier, shared_transition):
+    def __init__(self, env, conn, barrier, shared_transition):
         super().__init__()
-        self.envs = envs
+        self.env = env
         self.conn = conn
         self.barrier = barrier
         self.shared_tran = shared_transition
@@ -226,11 +223,11 @@ class EnvWorker(Process):
             data = self.conn.get()
 
             if data is None:
-                for i, env in enumerate(self.envs):
+                for i, env in enumerate(self.env):
                     self.shared_tran.state[i] = env.reset()
 
             else:
-                for i, (a, env) in enumerate(zip(self.shared_tran.action, self.envs)):
+                for i, (a, env) in enumerate(zip(self.shared_tran.action, self.env)):
                     next_state, reward, done, info = env.step(a)
 
                     if done:

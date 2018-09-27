@@ -40,7 +40,7 @@ def env_from_config(config):
 
     Returns
     -------
-    env: reward.envs
+    env: reward.env
         A reward environment.
 
     Raises

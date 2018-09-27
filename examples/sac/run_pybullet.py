@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import reward as rw
 import reward.utils as U
-from pybulletgym import envs
+from pybulletgym import env
 
 
 class PolicyNN(nn.Module):
@@ -114,14 +114,14 @@ def run(
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # Create env and batcher
-    env = rw.envs.GymEnv(str(env_name))
-    env = rw.envs.wrappers.ActionBound(env)
-    runner = rw.runners.SingleRunner(env)
+    env = rw.env.GymEnv(str(env_name))
+    env = rw.env.wrappers.ActionBound(env)
+    runner = rw.runner.SingleRunner(env)
 
     tfms = []
     if normalize_states:
-        tfms.append(rw.batchers.transforms.StateRunNorm())
-    batcher = rw.batchers.ReplayBatcher(
+        tfms.append(rw.batcher.transforms.StateRunNorm())
+    batcher = rw.batcher.ReplayBatcher(
         runner=runner,
         batch_size=batch_size,
         replay_buffer_maxlen=replay_buffer_maxlen,

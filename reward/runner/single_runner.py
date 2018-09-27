@@ -1,5 +1,5 @@
 import numpy as np
-from reward.runners import BaseRunner
+from reward.runner import BaseRunner
 
 
 class SingleRunner(BaseRunner):

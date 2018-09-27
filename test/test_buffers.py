@@ -158,10 +158,10 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     random.seed(seed)
     batch = replay_buffer.sample(batch_size=batch_size).concat_batch()
     random.seed(seed)
-    envs = random.choices(range(num_envs), k=batch_size)
+    env = random.choices(range(num_envs), k=batch_size)
     idxs = random.sample(range(len(memory)), k=batch_size)
 
-    for i, (i_env, i_idx) in enumerate(zip(envs, idxs)):
+    for i, (i_env, i_idx) in enumerate(zip(env, idxs)):
         np.testing.assert_equal(batch.state[i], memory[i_idx].state[i_env])
         np.testing.assert_equal(batch.action[i], memory[i_idx].action[i_env])
         np.testing.assert_equal(batch.reward[i], memory[i_idx].reward[i_env])

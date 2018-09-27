@@ -5,13 +5,13 @@ Hyperparameters were choosed from `this <https://sourcegraph.com/github.com/Alfr
 import torch
 import reward.utils as U
 from reward.agents import PGAgent
-from reward.batchers import RolloutBatcher
-from reward.envs import AtariEnv
-from reward.envs.wrappers import AtariWrapper
+from reward.batcher import RolloutBatcher
+from reward.env import AtariEnv
+from reward.env.wrappers import AtariWrapper
 from reward.models import A2CModel, ValueModel
 from reward.optimizers import JointOpt
-from reward.runners import PAACRunner
-from reward.batchers.transforms import atari_transforms
+from reward.runner import PAACRunner
+from reward.batcher.transforms import atari_transforms
 
 MAX_STEPS = 1.5e8
 NUM_ENVS = 32
@@ -19,8 +19,8 @@ HORIZON = 5
 LR = 0.0007 * NUM_ENVS
 
 # Create environment
-envs = [AtariWrapper(AtariEnv("PongNoFrameskip-v4")) for _ in range(NUM_ENVS)]
-runner = PAACRunner(envs)
+env = [AtariWrapper(AtariEnv("PongNoFrameskip-v4")) for _ in range(NUM_ENVS)]
+runner = PAACRunner(env)
 batcher = RolloutBatcher(
     runner, batch_size=HORIZON * NUM_ENVS, transforms=atari_transforms()
 )

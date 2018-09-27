@@ -1,4 +1,4 @@
-from reward.batchers.transforms import *
+from reward.batcher.transforms import *
 
 
 def atari_transforms(stack_frames=4):

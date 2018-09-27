@@ -1,14 +1,14 @@
 import torch.nn as nn
 
 import reward.utils as U
-from reward.envs import GymEnv
-from reward.runners import SingleRunner, PAACRunner
-from reward.batchers import RolloutBatcher
+from reward.env import GymEnv
+from reward.runner import SingleRunner, PAACRunner
+from reward.batcher import RolloutBatcher
 from reward.models import VanillaPGModel, ValueModel
 from reward.optimizers import SingleOpt, JointOpt, ListOpt
 from reward.agents import PGAgent
 
-from reward.envs.wrappers.record_wrappers import GymRecorder
+from reward.env.wrappers.record_wrappers import GymRecorder
 
 # Define networks configs
 policy_nn_config = U.Config(

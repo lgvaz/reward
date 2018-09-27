@@ -1,12 +1,12 @@
 from reward.agents import PGAgent
-from reward.batchers import RolloutBatcher
-from reward.envs import AtariEnv
-from reward.envs.wrappers import AtariWrapper
+from reward.batcher import RolloutBatcher
+from reward.env import AtariEnv
+from reward.env.wrappers import AtariWrapper
 from reward.models import PPOClipModel, ValueClipModel
-from reward.runners import PAACRunner
+from reward.runner import PAACRunner
 from reward.utils import piecewise_linear_schedule
 from reward.optimizers import JointOpt
-from reward.batchers.transforms import atari_transforms
+from reward.batcher.transforms import atari_transforms
 
 MAX_STEPS = 50e6
 HORIZON = 128
@@ -15,10 +15,10 @@ LOG_DIR = "tests/pong/nv/paper-16env-rewconstscaler-v3-0"
 
 
 # Create environment
-envs = [AtariWrapper(AtariEnv("PongNoFrameskip-v4")) for _ in range(NUM_ENVS)]
+env = [AtariWrapper(AtariEnv("PongNoFrameskip-v4")) for _ in range(NUM_ENVS)]
 eval_env = AtariWrapper(AtariEnv("PongNoFrameskip-v4"))
-runner = PAACRunner(envs)
-# runner = SingleRunner(envs[0])
+runner = PAACRunner(env)
+# runner = SingleRunner(env[0])
 batcher = RolloutBatcher(
     runner, batch_size=HORIZON * NUM_ENVS, transforms=atari_transforms()
 )

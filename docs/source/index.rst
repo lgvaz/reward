@@ -7,9 +7,7 @@ Reward Documentation
    :maxdepth: 1
    :caption: Package Reference
 
-   reward.agents <agents>
-   reward.models <models>
-   envs
+   env
    reward.nn <nn>
    reward.utils <utils>
 

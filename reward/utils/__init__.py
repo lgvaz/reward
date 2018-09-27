@@ -19,7 +19,7 @@ from .torch_utils import copy_weights, mean_grad
 
 import reward.utils.schedules
 import reward.utils.estimators
-import reward.utils.filters
+import reward.utils.filter
 import reward.utils.buffers
 
 __all__ = [

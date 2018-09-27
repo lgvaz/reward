@@ -1,20 +1,20 @@
 import reward as tr
 import torch.nn as nn
 from reward.agents import PGAgent
-from reward.batchers import RolloutBatcher
-from reward.envs import GymEnv
+from reward.batcher import RolloutBatcher
+from reward.env import GymEnv
 from reward.models import PPOClipModel, ValueClipModel
 from reward.optimizers import JointOpt
-from reward.runners import PAACRunner, SingleRunner
+from reward.runner import PAACRunner, SingleRunner
 from reward.utils import Config
-from reward.batchers.transforms import mujoco_transforms
-import reward.batchers.transforms as tfms
+from reward.batcher.transforms import mujoco_transforms
+import reward.batcher.transforms as tfms
 
 MAX_STEPS = 40e6
 # Create environment
-envs = [GymEnv("Hopper-v2") for _ in range(16)]
-runner = PAACRunner(envs)
-# runner = SingleRunner(envs[0])
+env = [GymEnv("Hopper-v2") for _ in range(16)]
+runner = PAACRunner(env)
+# runner = SingleRunner(env[0])
 
 batcher = RolloutBatcher(
     runner, batch_size=2048, transforms=[tfms.StateRunNorm(), tfms.RewardRunScaler()]
@@ -22,10 +22,10 @@ batcher = RolloutBatcher(
 
 # Create networks
 actor_nn = tr.arch.MLP.from_env(
-    env=envs[0], output_layer=tr.models.PPOClipModel.output_layer
+    env=env[0], output_layer=tr.models.PPOClipModel.output_layer
 )
 critic_nn = tr.arch.MLP.from_env(
-    env=envs[0], output_layer=tr.models.ValueClipModel.output_layer
+    env=env[0], output_layer=tr.models.ValueClipModel.output_layer
 )
 # Create models
 actor = tr.models.PPOClipModel(nn=actor_nn, batcher=batcher)
