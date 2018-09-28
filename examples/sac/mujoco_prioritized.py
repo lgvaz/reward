@@ -99,8 +99,10 @@ def run(
     normalize_states=False,
     repar=True,
     target_up_weight=0.005,
-    pr_weight_initial=0.7,
-    pr_weight_final=0.0,
+    pr_factor_initial=0.7,
+    pr_factor_final=0.7,
+    is_factor_initial=0.4,
+    is_factor_final=0.0,
     batch_size=256,
     replay_buffer_maxlen=1e6,
     learning_freq=1,
@@ -120,8 +122,11 @@ def run(
     runner = rw.runner.SingleRunner(env)
 
     tfms = [rw.batcher.transforms.StateRunNorm()] if normalize_states else []
-    pr_weight = U.schedules.linear_schedule(
-        pr_weight_initial, pr_weight_final, max_steps
+    pr_factor = U.schedules.linear_schedule(
+        pr_factor_initial, pr_factor_final, max_steps
+    )
+    is_factor = U.schedules.linear_schedule(
+        is_factor_initial, is_factor_final, max_steps
     )
     batcher = rw.batcher.PrReplayBatcher(
         runner=runner,
@@ -130,7 +135,8 @@ def run(
         learning_freq=learning_freq,
         grad_steps_per_batch=grad_steps_per_batch,
         transforms=tfms,
-        pr_weight=pr_weight,
+        pr_factor=pr_factor,
+        is_factor=is_factor,
     )
     state_features = batcher.get_state_info().shape[0]
     num_actions = batcher.get_action_info().shape[0]
@@ -154,6 +160,7 @@ def run(
     batcher.populate(n=1000, act_fn=policy.get_action)
     for batch in batcher.get_batches(max_steps, policy.get_action):
         batch = batch.to_tensor().concat_batch()
+        idx = U.to_np(batch.idx).astype("int")
 
         ##### Calculate losses ######
         q1_batch = q1_nn((batch.state_t, batch.action))
@@ -173,8 +180,11 @@ def run(
         q_t_next = U.estimators.td_target(
             rewards=batch.reward, dones=batch.done, v_tp1=v_target_tp1, gamma=gamma
         )
-        q1_loss = F.mse_loss(q1_batch, q_t_next.detach())
-        q2_loss = F.mse_loss(q2_batch, q_t_next.detach())
+        is_weight = U.to_tensor(batcher.get_is_weight(idx=idx))
+        td1_error = is_weight * (q1_batch - q_t_next.detach())
+        td2_error = is_weight * (q2_batch - q_t_next.detach())
+        q1_loss = td1_error.pow(2).mean()
+        q2_loss = td2_error.pow(2).mean()
 
         # V loss
         q1_new_t = q1_nn((batch.state_t, action))
@@ -199,8 +209,8 @@ def run(
         ###### Optimize ######
         q1_opt.zero_grad()
         q1_loss.backward()
-        torch.nn.utils.clip_grad_norm_(q1_nn.parameters(), clip_grad)
-        q1_grad = U.mean_grad(q1_nn)
+        # torch.nn.utils.clip_grad_norm_(q1_nn.parameters(), clip_grad)
+        # q1_grad = U.mean_grad(q1_nn)
         q1_opt.step()
 
         q2_opt.zero_grad()
@@ -211,21 +221,20 @@ def run(
 
         v_opt.zero_grad()
         v_loss.backward()
-        torch.nn.utils.clip_grad_norm_(v_nn.parameters(), clip_grad)
-        v_grad = U.mean_grad(v_nn)
+        # torch.nn.utils.clip_grad_norm_(v_nn.parameters(), clip_grad)
+        # v_grad = U.mean_grad(v_nn)
         v_opt.step()
 
         p_opt.zero_grad()
         p_loss.backward()
-        torch.nn.utils.clip_grad_norm_(p_nn.parameters(), clip_grad)
-        p_grad = U.mean_grad(p_nn)
+        # torch.nn.utils.clip_grad_norm_(p_nn.parameters(), clip_grad)
+        # p_grad = U.mean_grad(p_nn)
         p_opt.step()
 
         ###### Update target value network ######
         U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=target_up_weight)
 
         ###### Update replay batcher priorities #######
-        idx = U.to_np(batch.idx).astype("int")
         td_error = U.to_np((q_new_t - q_t_next).abs())
         batcher.update_pr(idx=idx, pr=td_error)
 
@@ -238,10 +247,10 @@ def run(
             logger.add_log("q1/loss", q1_loss)
             logger.add_log("q2/loss", q2_loss)
 
-            logger.add_log("policy/grad", p_grad)
-            logger.add_log("v/grad", v_grad)
-            logger.add_log("q1/grad", q1_grad)
-            logger.add_log("q2/grad", q2_grad)
+            # logger.add_log("policy/grad", p_grad)
+            # logger.add_log("v/grad", v_grad)
+            # logger.add_log("q1/grad", q1_grad)
+            # logger.add_log("q2/grad", q2_grad)
 
             logger.add_histogram("policy/log_prob", log_prob)
             logger.add_histogram("policy/mean", dist.loc)
