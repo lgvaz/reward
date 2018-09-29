@@ -102,7 +102,7 @@ def run(
     pr_factor_initial=0.7,
     pr_factor_final=0.7,
     is_factor_initial=0.4,
-    is_factor_final=0.0,
+    is_factor_final=1.0,
     batch_size=256,
     replay_buffer_maxlen=1e6,
     learning_freq=1,
