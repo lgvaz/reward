@@ -113,10 +113,12 @@ def run(
     gamma=0.99,
     log_freq=4000,
     cuda_default=True,
+    gpu=0,
 ):
     logger = U.Logger(log_dir)
     use_cuda = torch.cuda.is_available() and cuda_default
-    device = torch.device("cuda" if use_cuda else "cpu")
+    device = torch.device("cuda:{}".format(gpu) if use_cuda else "cpu")
+    U.device.set_device(device)
 
     # Create env and batcher
     env = rw.env.GymEnv(env_name)

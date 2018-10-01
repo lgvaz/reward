@@ -21,6 +21,7 @@ import reward.utils.schedules
 import reward.utils.estimators
 import reward.utils.filter
 import reward.utils.buffers
+import reward.utils.device
 
 __all__ = [
     "EPSILON",

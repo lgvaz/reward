@@ -4,6 +4,7 @@ from numbers import Number
 from collections import OrderedDict
 from torch.autograd import Variable
 from reward.utils import EPSILON
+from reward.utils.device import get_device
 import cv2
 from functools import wraps
 
@@ -105,7 +106,7 @@ def to_tensor(x, cuda_default=True):
         x = torch.from_numpy(x)
 
     if isinstance(x, torch.Tensor) and cuda_default and torch.cuda.is_available():
-        x = x.cuda()
+        x = x.to(get_device())
 
     else:
         raise ValueError("{} not suported".format(type(x)))
