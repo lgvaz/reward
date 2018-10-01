@@ -91,7 +91,6 @@ class TanhNormalPolicy(rw.policy.BasePolicy):
         return action
 
 
-@profile
 def run(
     env_name,
     reward_scale,
@@ -184,6 +183,7 @@ def run(
         q_t_next = U.estimators.td_target(
             rewards=batch.reward, dones=batch.done, v_tp1=v_target_tp1, gamma=gamma
         )
+        # IS weight corrects for bias introduced by prioritized sampling
         is_weight = U.to_tensor(batcher.get_is_weight(idx=idx))
         td1_error = is_weight * (q1_batch - q_t_next.detach())
         td2_error = is_weight * (q2_batch - q_t_next.detach())
@@ -199,16 +199,19 @@ def run(
 
         # Policy loss
         if repar:
-            p_loss = (log_prob - q_new_t).mean()
+            p_losses = log_prob - q_new_t
         else:
             next_log_prob = q_new_t - v_batch
-            p_loss = (log_prob * (log_prob - next_log_prob).detach()).mean()
+            p_losses = log_prob * (log_prob - next_log_prob).detach()
+        # IS weight corrects for bias introduced by prioritized sampling
+        p_losses *= is_weight
+        p_loss = p_losses.mean()
         # Policy regularization losses
         mean_loss = 1e-3 * dist.loc.pow(2).mean()
         log_std_loss = 1e-3 * dist.scale.log().pow(2).mean()
         pre_tanh_loss = 0 * pre_tanh_action.pow(2).sum(1).mean()
         # Combine all losses
-        p_loss += mean_loss + log_std_loss + pre_tanh_loss
+        p_loss_total = p_loss + mean_loss + log_std_loss + pre_tanh_loss
 
         ###### Optimize ######
         q1_opt.zero_grad()
@@ -230,7 +233,7 @@ def run(
         v_opt.step()
 
         p_opt.zero_grad()
-        p_loss.backward()
+        p_loss_total.backward()
         # torch.nn.utils.clip_grad_norm_(p_nn.parameters(), clip_grad)
         # p_grad = U.mean_grad(p_nn)
         p_opt.step()
@@ -239,8 +242,8 @@ def run(
         U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=target_up_weight)
 
         ###### Update replay batcher priorities #######
-        td_error = U.to_np((q_new_t - q_t_next).abs())
-        batcher.update_pr(idx=idx, pr=td_error)
+        priority = U.to_np(p_losses.abs()).squeeze()
+        batcher.update_pr(idx=idx, pr=priority)
 
         ###### Write logs ######
         if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rewards:
