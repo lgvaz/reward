@@ -74,6 +74,7 @@ class ReplayBuffer:
         return self.current_len
 
     def _get_batch(self, idxs):
+        idxs = np.array(idxs)
         # Get states
         b_states_t = self.states_stride_history[idxs]
         b_states_tp1 = self.states_stride_history[idxs + self.n_step]
