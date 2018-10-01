@@ -57,7 +57,7 @@ class PrReplayBuffer(ReplayBuffer):
         probs = probs / np.sum(probs)
         is_weights = (len(self) * probs) ** -self.get_is_factor(step)
 
-        return is_weights
+        return is_weights[:, None]
 
     def update_pr(self, idx, pr, step):
         pr = pr.squeeze()
