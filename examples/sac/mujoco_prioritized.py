@@ -1,3 +1,4 @@
+import pdb
 import fire
 import torch
 import numpy as np
@@ -90,6 +91,7 @@ class TanhNormalPolicy(rw.policy.BasePolicy):
         return action
 
 
+@profile
 def run(
     env_name,
     reward_scale,
@@ -157,7 +159,7 @@ def run(
     q2_opt = torch.optim.Adam(q2_nn.parameters(), lr=lr)
 
     # Main training loop
-    batcher.populate(n=1000, act_fn=policy.get_action)
+    batcher.populate(n=1000)
     for batch in batcher.get_batches(max_steps, policy.get_action):
         batch = batch.to_tensor().concat_batch()
         idx = U.to_np(batch.idx).astype("int")
@@ -259,8 +261,17 @@ def run(
             logger.add_histogram("q1/value", q1_batch)
             logger.add_histogram("q2/value", q2_batch)
 
+            logger.add_histogram("is_weight", is_weight)
+
             logger.log(step=batcher.num_steps)
 
 
 if __name__ == "__main__":
     fire.Fire(run)
+
+# run(
+#     env_name="Humanoid-v2",
+#     reward_scale=20.,
+#     log_dir="/tmp/logs/tests",
+#     normalize_states=False,
+# )
