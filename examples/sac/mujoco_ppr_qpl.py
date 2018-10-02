@@ -185,8 +185,8 @@ def run(
         )
         # IS weight corrects for bias introduced by prioritized sampling
         is_weight = U.to_tensor(batcher.get_is_weight(idx=idx))
-        td1_error = is_weight * (q1_batch - q_t_next.detach())
-        td2_error = is_weight * (q2_batch - q_t_next.detach())
+        td1_error = is_weight * q1_batch - q_t_next.detach()
+        td2_error = is_weight * q2_batch - q_t_next.detach()
         q1_loss = td1_error.pow(2).mean()
         q2_loss = td2_error.pow(2).mean()
 
