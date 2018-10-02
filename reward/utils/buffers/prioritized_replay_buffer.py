@@ -55,7 +55,8 @@ class PrReplayBuffer(ReplayBuffer):
     def get_is_weight(self, idx, step):
         probs = self.probs[idx]
         probs = probs / np.sum(probs)
-        is_weights = (len(self) * probs) ** -self.get_is_factor(step)
+        is_weights = probs ** -self.get_is_factor(step)
+        is_weights /= is_weights.max()
 
         return is_weights[:, None]
 
