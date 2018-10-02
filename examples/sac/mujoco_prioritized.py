@@ -266,7 +266,13 @@ def run(
             logger.add_histogram("q1/value", q1_batch)
             logger.add_histogram("q2/value", q2_batch)
 
-            logger.add_histogram("is_weight", is_weight)
+            logger.add_histogram("replay/is_weight", is_weight)
+            logger.add_log(
+                "replay/alpha", batcher.replay_buffer.get_pr_factor(batcher.num_steps)
+            )
+            logger.add_log(
+                "replay/beta", batcher.replay_buffer.get_is_factor(batcher.num_steps)
+            )
 
             logger.log(step=batcher.num_steps)
 
