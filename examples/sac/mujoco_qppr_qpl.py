@@ -204,8 +204,7 @@ def run(
             next_log_prob = q_new_t - v_batch
             p_losses = log_prob * (log_prob - next_log_prob).detach()
         # IS weight corrects for bias introduced by prioritized sampling
-        p_losses *= is_weight
-        p_loss = p_losses.mean()
+        p_loss = (is_weight * p_losses).mean()
         # Policy regularization losses
         mean_loss = 1e-3 * dist.loc.pow(2).mean()
         log_std_loss = 1e-3 * dist.scale.log().pow(2).mean()
