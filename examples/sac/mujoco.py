@@ -1,3 +1,4 @@
+import pdb
 import fire
 import torch
 import numpy as np
@@ -89,6 +90,12 @@ class TanhNormalPolicy(rw.policy.BasePolicy):
         assert not np.isnan(action).any()
         return action
 
+    def get_action_eval(self, state):
+        dist = self.create_dist(state=state)
+        action = U.to_np(dist.loc)
+        assert not np.isnan(action).any()
+        return action
+
 
 def run(
     env_name,
@@ -112,15 +119,20 @@ def run(
     use_cuda = torch.cuda.is_available() and cuda_default
     device = torch.device("cuda" if use_cuda else "cpu")
 
+    # Optional state normalization
+    tfms = []
+    if normalize_states:
+        tfms.append(rw.batcher.transforms.StateRunNorm())
+
     # Create env and batcher
     env = rw.env.GymEnv(env_name)
     env = rw.env.wrappers.ActionBound(env)
     runner = rw.runner.SingleRunner(env)
 
-    tfms = []
-    if normalize_states:
-        tfms.append(rw.batcher.transforms.StateRunNorm())
-    # tfms.append(rw.batcher.transforms.StackStates(3))
+    env_eval = rw.env.GymEnv(env_name)
+    env_eval = rw.env.wrappers.ActionBound(env_eval)
+    eval_runner = rw.runner.EvalRunner(env_eval, tfms=tfms)
+
     batcher = rw.batcher.ReplayBatcher(
         runner=runner,
         batch_size=batch_size,
@@ -226,6 +238,7 @@ def run(
         ###### Write logs ######
         if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rewards:
             batcher.write_logs(logger)
+            eval_runner.write_logs(act_fn=policy.get_action_eval, logger=logger)
 
             logger.add_log("policy/loss", p_loss)
             logger.add_log("v/loss", v_loss)

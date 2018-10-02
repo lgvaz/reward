@@ -11,8 +11,8 @@ class BaseRunner(ABC):
         self.env = env
         self.rewards = []
         self.num_steps = 0
-        self.ep_lengths = []
-        self.new_eps = 0
+        self.ep_lens = []
+        self.new_ep = 0
         self._last_logged_ep = 0
 
     @property
@@ -45,54 +45,21 @@ class BaseRunner(ABC):
     def sample_random_action(self):
         pass
 
-    # @property
-    # def rewards(self):
-    #     return self._rewards
-
-    # @property
-    # def num_steps(self):
-    #     return self._steps
-
-    def close(self):
-        raise NotImplementedError
+    def _wrap_name(self, s):
+        return "/".join([self.__class__.__name__, s])
 
     @property
     def num_episodes(self):
         return len(self.rewards)
 
-    def evaluate(self, env, select_action_fn, state_transform, logger):
-        tqdm.write("".join([22 * "-", " Running Evaluation ", 22 * "-"]))
-
-        state = env.reset()[None]
-        state = U.to_tensor(U.to_np(state_transform(state, training=False)))
-        traj = U.memories.SimpleMemory(initial_keys=["rewards"])
-        traj.length = 0
-
-        done = False
-        while not done:
-            action = select_action_fn(state=state)
-            next_state, reward, done, info = env.step(action)
-
-            state = next_state[None]
-            state = U.to_tensor(U.to_np(state_transform(state, training=False)))
-
-            traj.rewards.append(reward)
-            traj.length += 1
-
-        logger.add_log("Env/Reward/Evaluation", np.sum(traj.rewards))
-        logger.add_log("Env/Length/Evaluation", traj.length)
+    def close(self):
+        raise NotImplementedError
 
     def write_logs(self, logger):
-        new_eps = abs(self._last_logged_ep - self.num_episodes)
-        if new_eps != 0:
-            self.new_eps = new_eps
+        new_ep = abs(self._last_logged_ep - self.num_episodes)
+        if new_ep != 0:
+            self.new_ep = new_ep
             self._last_logged_ep = self.num_episodes
 
-        logger.add_log(
-            "Env/Reward/Episode (New)", np.mean(self.rewards[-self.new_eps :])
-        )
-        logger.add_log(
-            "Env/Length/Episode (New)", np.mean(self.ep_lengths[-self.new_eps :])
-        )
-        logger.add_log("Env/Reward/Episode (Last 50)", np.mean(self.rewards[-50:]))
-        logger.add_log("Env/Length/Episode (Last 50)", np.mean(self.ep_lengths[-50:]))
+        logger.add_log(self._wrap_name("Reward"), np.mean(self.rewards[-self.new_ep :]))
+        logger.add_log(self._wrap_name("Length"), np.mean(self.ep_lens[-self.new_ep :]))

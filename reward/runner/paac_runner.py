@@ -142,7 +142,7 @@ class PAACRunner(BaseRunner):
         for i, done in enumerate(dones):
             if done:
                 self.rewards.append(self._env_rewards_sum[i])
-                self.ep_lengths.append(self._env_ep_lengths[i])
+                self.ep_lens.append(self._env_ep_lengths[i])
                 self._env_rewards_sum[i] = 0
                 self._env_ep_lengths[i] = 0
 

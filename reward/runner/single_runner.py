@@ -30,7 +30,7 @@ class SingleRunner(BaseRunner):
         self._ep_num_steps += 1
         if done:
             self.rewards.append(self._ep_reward_sum)
-            self.ep_lengths.append(self._ep_num_steps)
+            self.ep_lens.append(self._ep_num_steps)
             self._ep_reward_sum = 0
             self._ep_num_steps = 0
             state = self.env.reset()
