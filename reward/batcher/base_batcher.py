@@ -47,6 +47,10 @@ class BaseBatcher(ABC):
     def action_info(self):
         return self.get_action_info()
 
+    @property
+    def is_best(self):
+        return self.runner.is_best
+
     def get_batches(self, max_steps, act_fn):
         pbar = tqdm(total=max_steps, dynamic_ncols=True, unit_scale=True)
         while self.num_steps < max_steps:

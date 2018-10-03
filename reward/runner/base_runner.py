@@ -13,7 +13,9 @@ class BaseRunner(ABC):
         self.num_steps = 0
         self.ep_lens = []
         self.new_ep = 0
+        self._is_best = False
         self._last_logged_ep = 0
+        self._best_rew = 0
 
     @property
     @abstractmethod
@@ -52,6 +54,10 @@ class BaseRunner(ABC):
     def num_episodes(self):
         return len(self.rewards)
 
+    @property
+    def is_best(self):
+        return self._is_best
+
     def close(self):
         raise NotImplementedError
 
@@ -61,5 +67,9 @@ class BaseRunner(ABC):
             self.new_ep = new_ep
             self._last_logged_ep = self.num_episodes
 
-        logger.add_log(self._wrap_name("Reward"), np.mean(self.rewards[-self.new_ep :]))
+        rew = np.mean(self.rewards[-self.new_ep :])
+        self._is_best = rew >= self._best_rew
+        self._best_rew = max(self._best_rew, rew)
+
+        logger.add_log(self._wrap_name("Reward"), rew)
         logger.add_log(self._wrap_name("Length"), np.mean(self.ep_lens[-self.new_ep :]))

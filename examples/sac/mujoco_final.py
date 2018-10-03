@@ -287,6 +287,13 @@ def run(
 
             logger.log(step=batcher.num_steps)
 
+            # Save models
+            is_best = batcher.is_best
+            U.save_model(p_nn, log_dir, opt=p_opt, is_best=is_best)
+            U.save_model(q1_nn, log_dir, opt=q1_opt, is_best=is_best)
+            U.save_model(q2_nn, log_dir, opt=q2_opt, is_best=is_best)
+            U.save_model(v_nn, log_dir, opt=v_opt, is_best=is_best)
+
 
 if __name__ == "__main__":
     fire.Fire(run)
