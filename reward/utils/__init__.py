@@ -10,12 +10,13 @@ from .utils import (
     one_hot,
     make_callable,
     join_first_dims,
+    map_range,
 )
 from .batch import Batch
 from .callback import Callback
 from .config import Config
 from .logger import Logger
-from .torch_utils import copy_weights, mean_grad
+from .torch_utils import copy_weights, mean_grad, save_model, load_model
 
 import reward.utils.schedules
 import reward.utils.estimators
@@ -45,4 +46,5 @@ __all__ = [
     "maybe_np",
     "copy_weights",
     "mean_grad",
+    "map_range",
 ]

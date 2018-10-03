@@ -142,6 +142,11 @@ def normalize(array):
     return (array - array.mean()) / (array.std() + EPSILON)
 
 
+def map_range(array, low, high):
+    norm_array = (array - array.min()) / (array.max() - array.min())
+    return low + (norm_array * (high - low))
+
+
 def one_hot(array, num_classes):
     return np.eye(num_classes)[array]
 
