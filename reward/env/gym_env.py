@@ -116,6 +116,10 @@ class GymEnv(BaseEnv):
     def close(self):
         self.env.close()
 
+    def remove_timestep_limit(self):
+        # TODO: Not always the case that time-limit is the first wrapper
+        self.env = self.env.env
+
     @staticmethod
     def get_space_info(space):
         """
