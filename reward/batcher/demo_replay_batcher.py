@@ -15,7 +15,12 @@ class DemoReplayBatcher(PrReplayBatcher):
 
     def _create_replay_buffer(self, maxlen):
         return U.buffers.DemoReplayBuffer(
-            maxlen=maxlen, num_envs=self.runner.num_envs, pr_demo=self.pr_demo
+            maxlen=maxlen,
+            num_envs=self.runner.num_envs,
+            min_pr=self.min_pr,
+            pr_factor=self._pr_factor,
+            is_factor=self._is_factor,
+            pr_demo=self.pr_demo,
         )
 
     def populate_expert(self, n=None, pct=None, act_fn=None):

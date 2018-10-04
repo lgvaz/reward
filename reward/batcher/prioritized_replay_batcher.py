@@ -2,6 +2,7 @@ import reward.utils as U
 from reward.batcher import ReplayBatcher
 
 
+# TODO: Fix args and kwargs
 class PrReplayBatcher(ReplayBatcher):
     def __init__(self, *args, min_pr=0.01, pr_factor=0.6, is_factor=1., **kwargs):
         self.min_pr = min_pr

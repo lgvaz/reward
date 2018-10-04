@@ -7,7 +7,7 @@ from reward.utils import make_callable
 
 # TODO: Why paper suggest using SumTree instead of this approach I did?
 class PrReplayBuffer(ReplayBuffer):
-    def __init__(self, maxlen, num_envs, min_pr=0.01, pr_factor=0.6, is_factor=1.):
+    def __init__(self, maxlen, num_envs, *, pr_factor, is_factor, min_pr=0.01):
         """
         Parameters
         ----------

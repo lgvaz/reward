@@ -4,9 +4,11 @@ from reward.utils.buffers import PrReplayBuffer
 
 class DemoReplayBuffer(PrReplayBuffer):
     def __init__(
-        self, maxlen, num_envs, min_pr=0.01, pr_factor=0.6, is_factor=1., pr_demo=0.3
+        self, maxlen, num_envs, *, pr_factor, is_factor, min_pr=0.01, pr_demo=0.3
     ):
-        super().__init__(maxlen, num_envs, min_pr=0.01, pr_factor=0.6, is_factor=1.)
+        super().__init__(
+            maxlen, num_envs, pr_factor=pr_factor, is_factor=is_factor, min_pr=min_pr
+        )
         self.pr_demo = pr_demo
         self.start_idx = 0
         self.pr_demos = np.zeros(maxlen)
