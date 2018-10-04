@@ -107,20 +107,20 @@ ENV/
 # mypy
 .mypy_cache/
 
-torchrl/cscope\.out
+reward/cscope\.out
 
-torchrl/GPATH
+reward/GPATH
 
-torchrl/GRTAGS
+reward/GRTAGS
 
-torchrl/GSYMS
+reward/GSYMS
 
-torchrl/GTAGS
+reward/GTAGS
 
-torchrl/models/base_pg_model_deprecated\.py
+reward/models/base_pg_model_deprecated\.py
 
-torchrl/models/ppo_model_deprecated\.py
+reward/models/ppo_model_deprecated\.py
 
-torchrl/models/surrogate_pg_model_deprecated\.py
+reward/models/surrogate_pg_model_deprecated\.py
 
-torchrl/models/vanilla_pg_model_deprecated\.py
+reward/models/vanilla_pg_model_deprecated\.py
