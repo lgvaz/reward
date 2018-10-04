@@ -132,13 +132,13 @@ def run(
     # Create env and batcher
     env = rw.env.GymEnv(env_name)
     env = rw.env.wrappers.ActionBound(env)
-    env.remove_timestep_limit()
+    # env.remove_timestep_limit()
     runner = rw.runner.SingleRunner(env)
 
     env_eval = rw.env.GymEnv(env_name)
     env_eval = rw.env.wrappers.ActionBound(env_eval)
     # env_eval = rw.env.wrappers.GymRecorder(env_eval, log_dir)
-    env_eval.remove_timestep_limit()
+    # env_eval.remove_timestep_limit()
     eval_runner = rw.runner.EvalRunner(env_eval, tfms=tfms)
 
     pr_factor = U.schedules.linear_schedule(
