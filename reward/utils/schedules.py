@@ -42,3 +42,12 @@ def piecewise_linear_schedule(values, boundaries):
         return funcs[-1](step)
 
     return get
+
+
+def piecewise_const_sched(values, boundaries):
+    def get(step):
+        for i, bound in enumerate(boundaries):
+            if step <= bound:
+                return values[i]
+
+    return get

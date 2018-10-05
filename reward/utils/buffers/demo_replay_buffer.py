@@ -29,6 +29,7 @@ class DemoReplayBuffer(PrReplayBuffer):
 
     def update_pr(self, idx, pr, step):
         pr = pr.squeeze()
-        self.pr_demos[: self.start_idx] = self.get_pr_demo(step)
+        # self.pr_demos[: self.start_idx] = self.get_pr_demo(step)
+        self.pr_demos[: self.start_idx] = np.max(self.probs) * self.get_pr_demo(step)
         pr = pr + self.get_min_pr(step) + self.pr_demos[idx]
         self.probs[idx] = pr ** self.get_pr_factor(step)

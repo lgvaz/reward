@@ -39,6 +39,7 @@ __all__ = [
     "DefaultMemory",
     "linear_schedule",
     "piecewise_linear_schedule",
+    "piecewise_const_schedule",
     "make_callable",
     "Callback",
     "to_tensor",
