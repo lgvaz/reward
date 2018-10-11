@@ -16,7 +16,7 @@ from .batch import Batch
 from .callback import Callback
 from .config import Config
 from .logger import Logger
-from .torch_utils import copy_weights, mean_grad, save_model, load_model
+from .torch_utils import copy_weights, mean_grad, save_model, load_model, freeze_weights
 
 import reward.utils.schedules
 import reward.utils.estimators

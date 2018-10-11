@@ -120,7 +120,7 @@ def run(
     learning_freq=1,
     grad_steps_per_batch=1,
     gamma=0.99,
-    log_freq=4000,
+    log_freq=1000,
     gpu=0,
 ):
     logger = U.Logger(log_dir)
@@ -296,6 +296,10 @@ def run(
             U.save_model(q1_nn, log_dir, opt=q1_opt, is_best=is_best, name="q1")
             U.save_model(q2_nn, log_dir, opt=q2_opt, is_best=is_best, name="q2")
             U.save_model(v_nn, log_dir, opt=v_opt, is_best=is_best)
+
+        if batcher.num_steps % int(1e6) == 0:
+            batcher.reset()
+            batcher.populate(n=1e5, act_fn=policy.get_action)
 
 
 if __name__ == "__main__":

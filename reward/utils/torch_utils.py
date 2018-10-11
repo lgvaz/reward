@@ -9,15 +9,22 @@ def copy_weights(from_nn, to_nn, weight):
         tp.data.copy_(v)
 
 
+def freeze_weights(nn):
+    for param in nn.parameters():
+        param.requires_grad = False
+
+
 def mean_grad(nn):
     return torch.stack([p.grad.mean() for p in nn.parameters()]).mean()
 
 
-def save_model(model, save_dir, opt=None, step=0, is_best=False, postfix="checkpoint"):
+def save_model(
+    model, save_dir, opt=None, step=0, is_best=False, name=None, postfix="checkpoint"
+):
     save_dir = Path(save_dir) / "models"
     save_dir.mkdir(exist_ok=True)
 
-    name = model.__class__.__name__.lower()
+    name = name or model.__class__.__name__.lower()
     path = save_dir / "{}.pth.tar".format(name + "_" + postfix)
     save = {}
 
@@ -35,6 +42,7 @@ def save_model(model, save_dir, opt=None, step=0, is_best=False, postfix="checkp
 
 
 def load_model(model, path, opt=None):
+    path = str(path)
     path += ".pth.tar"
     load = torch.load(path)
 

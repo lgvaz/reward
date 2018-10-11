@@ -107,3 +107,6 @@ class ReplayBatcher(BaseBatcher):
         batch.done = batch.done[..., None]
         # TODO: Maybe to_tensor states here
         return batch
+
+    def reset(self):
+        self.replay_buffer.reset()
