@@ -10,7 +10,7 @@ from .misc_wrappers import (
     ActionBound,
 )
 from .atari_wrapper import AtariWrapper
-from .record_wrappers import GymRecorder
+from .gym_wrapper import GymRecorder, GymRender
 
 __all__ = [
     "BaseWrapper",
@@ -26,4 +26,5 @@ __all__ = [
     "DelayedStart",
     "GymRecorder",
     "ActionBound",
+    "GymRender",
 ]

@@ -78,6 +78,9 @@ class GymEnv(BaseEnv):
         next_state, reward, done, info = self.env.step(action)
         return next_state, reward, done, info
 
+    def render(self):
+        self.env.render()
+
     # def record(self, path):
     #     self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
 
