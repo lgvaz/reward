@@ -1,5 +1,8 @@
 import pdb
+import json
+from tqdm import tqdm
 import numpy as np
+from pathlib import Path
 from reward.utils import Batch, to_np
 
 
@@ -35,16 +38,16 @@ class ReplayBuffer:
         self.current_len = 0
 
     def __len__(self):
-        return self.current_len
+        return self.current_len * self.num_envs
 
     def _get_batch(self, idxs):
         idxs = np.array(idxs)
         # Get states
-        b_states_t = self.states_stride_history[idxs]
-        b_states_tp1 = self.states_stride_history[idxs + self.n_step]
-        actions = self.actions_stride[idxs, -1:]
-        rewards = self.rewards_stride_nstep[idxs, -self.n_step :]
-        dones = self.dones_stride_nstep[idxs, -self.n_step :]
+        b_states_t = self.s_stride[idxs]
+        b_states_tp1 = self.s_stride[idxs + self.n_step]
+        actions = self.a_stride[idxs, -1:]
+        rewards = self.r_stride[idxs, -self.n_step :]
+        dones = self.d_stride[idxs, -self.n_step :]
 
         # Concatenate first two dimensions (num_envs, num_samples)
         #         b_states_t = join_first_dims(b_states_t, num_dims=2)
@@ -71,51 +74,70 @@ class ReplayBuffer:
     def available_idxs(self):
         return self.num_envs * (len(self) - self.history_len - self.n_step + 1)
 
+    def _initialize(self, state, action, reward, done):
+        self.initialized = True
+        # Allocate memory
+        self.states = np.empty((self.real_maxlen,) + state.shape, dtype=state.dtype)
+        self.actions = np.empty((self.real_maxlen,) + action.shape, dtype=action.dtype)
+        self.rewards = np.empty((self.real_maxlen,) + reward.shape, dtype=reward.dtype)
+        self.dones = np.empty((self.real_maxlen,) + done.shape, dtype=np.bool)
+
+        self._create_strides()
+
+    def _create_strides(self):
+        # Function for selecting multiple slices
+        self.s_stride = strided_axis(arr=self.states, window_size=self.history_len)
+        self.a_stride = strided_axis(arr=self.actions, window_size=self.history_len)
+        self.r_stride = strided_axis(
+            arr=self.rewards, window_size=self.history_len + self.n_step - 1
+        )
+        self.d_stride = strided_axis(
+            arr=self.dones, window_size=self.history_len + self.n_step - 1
+        )
+
     def reset(self):
         self.current_idx = -1
         self.current_len = 0
 
     def add_sample(self, state, action, reward, done):
-        self.check_shapes(state, action, reward, done)
-        if not self.initialized:
-            self.initialized = True
-            # TODO: Squeeze?
-            #             state_shape = np.squeeze(state).shape
-            # Allocate memory
-            # TODO: state dtype
-            self.states = np.empty((self.real_maxlen,) + state.shape, dtype=state.dtype)
-            self.actions = np.empty(
-                (self.real_maxlen,) + action.shape, dtype=action.dtype
-            )
-            self.rewards = np.empty(
-                (self.real_maxlen,) + reward.shape, dtype=reward.dtype
-            )
-            self.dones = np.empty((self.real_maxlen,) + done.shape, dtype=np.bool)
+        """
+        Add a single sample to the replay buffer.
 
-            # Function for selecting multiple slices
-            self.states_stride_history = strided_axis(
-                arr=self.states, window_size=self.history_len
-            )
-            self.actions_stride = strided_axis(
-                arr=self.actions, window_size=self.history_len
-            )
-            self.rewards_stride_nstep = strided_axis(
-                arr=self.rewards, window_size=self.history_len + self.n_step - 1
-            )
-            self.dones_stride_nstep = strided_axis(
-                arr=self.dones, window_size=self.history_len + self.n_step - 1
-            )
+        Expect transitions to be in the shape of (num_envs, features).
+        """
+        if not self.initialized:
+            self._initialize(state=state, action=action, reward=reward, done=done)
+
+        self.check_shapes(state, action, reward, done)
 
         # Update current position
         self.current_idx = (self.current_idx + 1) % self.real_maxlen
         self.current_len = min(self.current_len + 1, self.real_maxlen)
 
         # Store transition
-        # TODO: Squeeze?
         self.states[self.current_idx] = state
         self.actions[self.current_idx] = action
         self.rewards[self.current_idx] = reward
         self.dones[self.current_idx] = done
+
+    def add_samples(self, states, actions, rewards, dones):
+        """
+        Add a single sample to the replay buffer.
+
+        Expect transitions to be in the shape of (num_samples, num_envs, features).
+        """
+        # TODO: Possible optimization using slices
+        assert states.shape[0] == actions.shape[0] == rewards.shape[0] == dones.shape[0]
+
+        idxs = range(self.current_idx, self.current_idx + states.shape[0])
+        self.states.put(idxs, states, mode="wrap")
+        self.actions.put(idxs, actions, mode="wrap")
+        self.rewards.put(idxs, rewards, mode="wrap")
+        self.dones.put(idxs, dones, mode="wrap")
+
+        # Update current position
+        self.current_idx = (self.current_idx + states.shape[0]) % self.real_maxlen
+        self.current_len = min(self.current_len + states.shape[0], self.real_maxlen)
 
     def sample(self, batch_size):
         idxs = np.random.randint(self.available_idxs, size=batch_size)
@@ -125,20 +147,49 @@ class ReplayBuffer:
         for arr in arrs:
             assert arr.shape[0] == self.num_envs
 
+    def save(self, savedir):
+        savedir = Path(savedir) / "buffer"
+        savedir.mkdir(exist_ok=True)
+        tqdm.write("Saving buffer to {}".format(savedir))
 
-# def strided_axis(arr, window):
-#     '''
-#     https://stackoverflow.com/questions/43413582/selecting-multiple-slices-from-a-numpy-array-at-once/43413801#43413801
-#     '''
-#     shape = arr.shape
-#     strides = arr.strides
+        # Save transitions
+        np.save(savedir / "states.npy", self.states[: len(self)])
+        np.save(savedir / "actions.npy", self.actions[: len(self)])
+        np.save(savedir / "rewards.npy", self.rewards[: len(self)])
+        np.save(savedir / "dones.npy", self.dones[: len(self)])
 
-#     new_len = shape[0] - window + 1
-#     new_shape = (new_len, shape[1], window, *shape[2:])
-#     new_strides = (strides[0], strides[1], strides[0], *strides[2:])
+        # Save hyperparameters
+        ignore = [
+            "states",
+            "actions",
+            "rewards",
+            "dones",
+            "s_stride",
+            "a_stride",
+            "r_stride",
+            "d_stride",
+        ]
+        d = {k: v for k, v in self.__dict__.items() if k not in ignore}
+        with open(str(savedir / "params.json"), "w") as f:
+            json.dump(d, f, indent=4)
 
-#     return np.lib.stride_tricks.as_strided(
-#         arr, shape=new_shape, strides=new_strides, writeable=False)
+    def load(self, loaddir):
+        # TODO: This overwrites all other paramters, maybe this should be a class method
+        loaddir = Path(loaddir) / "buffer"
+        tqdm.write("Loading buffer from {}".format(loaddir))
+
+        with open(loaddir / "params.json") as f:
+            params = json.load(f)
+        self.__dict__.update(params)
+
+        # Load transitions
+        self.states = np.load(loaddir / "states.npy")
+        self.actions = np.load(loaddir / "actions.npy")
+        self.rewards = np.load(loaddir / "rewards.npy")
+        self.dones = np.load(loaddir / "dones.npy")
+
+        self._create_strides()
+        self.initialized = True
 
 
 def strided_axis(arr, window_size):

@@ -34,6 +34,7 @@ class ReplayBatcher(BaseBatcher):
     def _check_transforms(self, transforms):
         # TODO: Hack for handling StackStates transform together with replay_buffer
         # TODO: Add support for StackStates dim != 1
+        # TODO TODO TODO: Modify replay buffer history length
         self.state_stacker = None
         self.n_stacks = 1
         for tfm in transforms.copy():
@@ -110,3 +111,9 @@ class ReplayBatcher(BaseBatcher):
 
     def reset(self):
         self.replay_buffer.reset()
+
+    def save(self, savedir):
+        self.replay_buffer.save(savedir=savedir)
+
+    def load(self, loaddir):
+        self.replay_buffer.load(loaddir=loaddir)
