@@ -4,8 +4,15 @@ from reward.distributions import Normal
 
 
 class TanhNormal(Normal):
+    def _atanh(self, value):
+        return 0.5 * ((1 + value) / (1 - value + U.EPSILON) + U.EPSILON).log()
+
     def log_prob(self, value):
-        raise ValueError("For numerical stability you shoud use `log_prob_pre`")
+        # TODO: Still need to test numerical stability of this (specially _atahh)
+        pre_tanh = self._atanh(value)
+        log_prob_pre = super().log_prob(pre_tanh)
+        log_prob = log_prob_pre - (1 - value.pow(2) + U.EPSILON).log()
+        return log_prob
 
     def log_prob_pre(self, pre_tanh):
         log_prob_pre = super().log_prob(pre_tanh)
