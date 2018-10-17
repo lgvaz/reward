@@ -26,4 +26,4 @@ class GymRecorder(BaseWrapper):
 class GymRender(BaseWrapper):
     def step(self, action):
         self.env.render()
-        self.env.step(action)
+        return self.env.step(action)
