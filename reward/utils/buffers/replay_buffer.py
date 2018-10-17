@@ -49,12 +49,6 @@ class ReplayBuffer:
         rewards = self.r_stride[idxs, -self.n_step :]
         dones = self.d_stride[idxs, -self.n_step :]
 
-        # Concatenate first two dimensions (num_envs, num_samples)
-        #         b_states_t = join_first_dims(b_states_t, num_dims=2)
-        #         b_states_tp1 = join_first_dims(b_states_tp1, num_dims=2)
-        #         actions = join_first_dims(actions, num_dims=2)
-        #         rewards = join_first_dims(rewards, num_dims=2)
-        #         dones = join_first_dims(dones, num_dims=2)
         b_states_t = b_states_t.swapaxes(0, 1)
         b_states_tp1 = b_states_tp1.swapaxes(0, 1)
         actions = actions.swapaxes(0, 1)
@@ -128,16 +122,27 @@ class ReplayBuffer:
         """
         # TODO: Possible optimization using slices
         assert states.shape[0] == actions.shape[0] == rewards.shape[0] == dones.shape[0]
+        if not self.initialized:
+            self._initialize(
+                state=states[0], action=actions[0], reward=rewards[0], done=dones[0]
+            )
+        num_samples = states.shape[0]
 
-        idxs = range(self.current_idx, self.current_idx + states.shape[0])
-        self.states.put(idxs, states, mode="wrap")
-        self.actions.put(idxs, actions, mode="wrap")
-        self.rewards.put(idxs, rewards, mode="wrap")
-        self.dones.put(idxs, dones, mode="wrap")
+        part = range(self.current_idx + 1, self.current_idx + 1 + num_samples)
+        idxs = np.take(np.arange(self.real_maxlen), part, mode="wrap")
+
+        self.states[idxs] = states
+        del states
+        self.actions[idxs] = actions
+        del actions
+        self.rewards[idxs] = rewards
+        del rewards
+        self.dones[idxs] = dones
+        del dones
 
         # Update current position
-        self.current_idx = (self.current_idx + states.shape[0]) % self.real_maxlen
-        self.current_len = min(self.current_len + states.shape[0], self.real_maxlen)
+        self.current_idx = (self.current_idx + num_samples) % self.real_maxlen
+        self.current_len = min(self.current_len + num_samples, self.real_maxlen)
 
     def sample(self, batch_size):
         idxs = np.random.randint(self.available_idxs, size=batch_size)
@@ -158,38 +163,17 @@ class ReplayBuffer:
         np.save(savedir / "rewards.npy", self.rewards[: len(self)])
         np.save(savedir / "dones.npy", self.dones[: len(self)])
 
-        # Save hyperparameters
-        ignore = [
-            "states",
-            "actions",
-            "rewards",
-            "dones",
-            "s_stride",
-            "a_stride",
-            "r_stride",
-            "d_stride",
-        ]
-        d = {k: v for k, v in self.__dict__.items() if k not in ignore}
-        with open(str(savedir / "params.json"), "w") as f:
-            json.dump(d, f, indent=4)
-
     def load(self, loaddir):
-        # TODO: This overwrites all other paramters, maybe this should be a class method
         loaddir = Path(loaddir) / "buffer"
         tqdm.write("Loading buffer from {}".format(loaddir))
 
-        with open(loaddir / "params.json") as f:
-            params = json.load(f)
-        self.__dict__.update(params)
-
         # Load transitions
-        self.states = np.load(loaddir / "states.npy")
-        self.actions = np.load(loaddir / "actions.npy")
-        self.rewards = np.load(loaddir / "rewards.npy")
-        self.dones = np.load(loaddir / "dones.npy")
+        states = np.load(loaddir / "states.npy")
+        actions = np.load(loaddir / "actions.npy")
+        rewards = np.load(loaddir / "rewards.npy")
+        dones = np.load(loaddir / "dones.npy")
 
-        self._create_strides()
-        self.initialized = True
+        self.add_samples(states=states, actions=actions, rewards=rewards, dones=dones)
 
 
 def strided_axis(arr, window_size):

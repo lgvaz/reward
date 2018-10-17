@@ -121,6 +121,7 @@ def run(
     grad_steps_per_batch=1,
     gamma=0.99,
     log_freq=1000,
+    save_model_freq=250e3,
     gpu=0,
 ):
     logger = U.Logger(log_dir)
@@ -297,9 +298,8 @@ def run(
             U.save_model(q2_nn, log_dir, opt=q2_opt, is_best=is_best, name="q2")
             U.save_model(v_nn, log_dir, opt=v_opt, is_best=is_best)
 
-        if batcher.num_steps % int(1e6) == 0:
-            batcher.reset()
-            batcher.populate(n=1e5, act_fn=policy.get_action)
+        if batcher.num_steps % int(save_model_freq) == 0:
+            batcher.save_exp(log_dir)
 
 
 if __name__ == "__main__":
@@ -308,6 +308,6 @@ if __name__ == "__main__":
 # run(
 #     env_name="Humanoid-v2",
 #     reward_scale=20.,
-#     log_dir="/tmp/logs/tests",
-#     normalize_states=False,
+#     log_dir="logs/humanoid/random-2M-savebuffer-v1-0",
+#     max_steps=2e6,
 # )

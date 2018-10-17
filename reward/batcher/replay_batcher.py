@@ -112,8 +112,8 @@ class ReplayBatcher(BaseBatcher):
     def reset(self):
         self.replay_buffer.reset()
 
-    def save(self, savedir):
+    def save_exp(self, savedir):
         self.replay_buffer.save(savedir=savedir)
 
-    def load(self, loaddir):
+    def load_exp(self, loaddir):
         self.replay_buffer.load(loaddir=loaddir)

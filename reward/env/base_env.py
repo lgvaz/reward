@@ -21,6 +21,7 @@ class BaseEnv(ABC):
     """
 
     def __init__(self, env_name):
+        # TODO: Not every env has a env_name, shouldn't be in base
         self.env_name = env_name
         self.env = self._create_env()
 
