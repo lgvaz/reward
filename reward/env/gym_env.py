@@ -35,10 +35,6 @@ class GymEnv(BaseEnv):
 
         return env
 
-    @property
-    def simulator(self):
-        return GymEnv
-
     def reset(self):
         """
         Calls the reset method on the gym environment.

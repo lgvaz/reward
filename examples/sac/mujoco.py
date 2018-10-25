@@ -140,7 +140,6 @@ def run(
     env_eval = rw.env.GymEnv(env_name)
     env_eval = rw.env.wrappers.ActionBound(env_eval)
     env_eval.remove_timestep_limit()
-    # env_eval = rw.env.wrappers.GymRecorder(env_eval, log_dir)
     eval_runner = rw.runner.EvalRunner(env_eval, ep_maxlen=ep_maxlen, tfms=tfms)
 
     pr_factor = U.schedules.linear_schedule(

@@ -78,16 +78,6 @@ class BaseBatcher(ABC):
             batch = t.transform_batch(batch, training=training)
         return batch
 
-    # TODO
-    # def evaluate(self, env, act_fn, logger):
-    #     self.runner.evaluate(
-    #         env=env,
-    #         select_action_fn=act_fn,
-    #         state_transform=self.transform_state,
-    #         logger=logger,
-    #     )
-
-    # TODO: Now with transforms this is more straight-forward. RE-IMPLEMENT
     def get_state_info(self):
         info = self.runner.get_state_info()
 

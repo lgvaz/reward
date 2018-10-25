@@ -60,13 +60,6 @@ class BaseEnv(ABC):
             return dict(shape=(4,), dtype='float')
         """
 
-    @property
-    @abstractmethod
-    def simulator(self):
-        """
-        Returns the name of the simulator being used as a string.
-        """
-
     @abstractmethod
     def _create_env(self):
         """
@@ -140,23 +133,3 @@ class BaseEnv(ABC):
 
     def close(self):
         raise NotImplementedError
-
-    def update_config(self, config):
-        """
-        Updates a Config object to include information about the environment.
-
-        Parameters
-        ----------
-        config: Config
-            Object used for storing configuration.
-        """
-        config.new_section(
-            "env",
-            obj=dict(func=self.simulator, env_name=self.env_name),
-            state_info=dict(
-                (key, value)
-                for key, value in self.get_state_info().items()
-                if key not in ("low_bound", "high_bound")
-            ),
-            action_info=self.get_action_info(),
-        )
