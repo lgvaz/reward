@@ -3,6 +3,33 @@ import torch
 from pathlib import Path
 
 
+def to_tensor(x, cuda_default=True):
+    if not isinstance(x, torch.Tensor):
+        x = to_np(x)
+
+    if isinstance(x, np.ndarray):
+        # TODO: Everything to float??
+        # pytorch doesn't support bool
+        if x.dtype == "bool":
+            x = x.astype("float32")
+        # we want only single precision floats
+        if x.dtype == "float64":
+            x = x.astype("float32")
+        # TODO: this may break something
+        if x.dtype == "int":
+            x = x.astype("float32")
+
+        x = torch.from_numpy(x)
+
+    if isinstance(x, torch.Tensor) and cuda_default and torch.cuda.is_available():
+        x = x.to(get_device())
+
+    else:
+        raise ValueError("{} not suported".format(type(x)))
+
+    return x
+
+
 def copy_weights(from_nn, to_nn, weight):
     for fp, tp in zip(from_nn.parameters(), to_nn.parameters()):
         v = weight * fp.data + (1 - weight) * tp.data

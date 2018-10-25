@@ -1,10 +1,6 @@
 from .constants import EPSILON
 from .utils import (
-    get_obj,
-    env_from_config,
     to_np,
-    maybe_np,
-    to_tensor,
     explained_var,
     normalize,
     one_hot,
@@ -15,7 +11,14 @@ from .utils import (
 from .batch import Batch
 from .config import Config
 from .logger import Logger
-from .torch_utils import copy_weights, mean_grad, save_model, load_model, freeze_weights
+from .torch_utils import (
+    to_tensor,
+    copy_weights,
+    mean_grad,
+    save_model,
+    load_model,
+    freeze_weights,
+)
 
 import reward.utils.schedules
 import reward.utils.estimators
@@ -27,8 +30,6 @@ __all__ = [
     "EPSILON",
     "Config",
     "Logger",
-    "get_obj",
-    "env_from_config",
     "to_np",
     "explained_var",
     "normalize",
@@ -42,7 +43,6 @@ __all__ = [
     "make_callable",
     "to_tensor",
     "join_first_dims",
-    "maybe_np",
     "copy_weights",
     "mean_grad",
     "map_range",

@@ -63,14 +63,6 @@ Utils
 -----
 .. currentmodule:: reward.utils.utils
 
-:hidden:`get_obj`
-~~~~~~~~~~~~~~~~~
-.. autofunction:: get_obj
-
-:hidden:`env_from_config`
-~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: env_from_config
-
 :hidden:`join_transitions`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: join_transitions
