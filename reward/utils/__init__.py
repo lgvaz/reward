@@ -8,7 +8,6 @@ from .utils import (
     join_first_dims,
     map_range,
 )
-from .batch import Batch
 from .config import Config
 from .logger import Logger
 from .torch_utils import (
@@ -19,6 +18,7 @@ from .torch_utils import (
     load_model,
     freeze_weights,
 )
+from .batch import Batch
 
 import reward.utils.schedules
 import reward.utils.estimators
