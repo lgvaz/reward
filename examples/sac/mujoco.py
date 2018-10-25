@@ -192,7 +192,6 @@ def run(
     batcher.populate(n=1000)
     for batch in batcher.get_batches(max_steps, policy.get_action):
         batch = batch.to_tensor().concat_batch()
-        idx = U.to_np(batch.idx).astype("int")
 
         ##### Calculate losses ######
         q1_batch = q1_nn((batch.state_t, batch.action))

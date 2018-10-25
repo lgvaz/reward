@@ -24,5 +24,5 @@ class Batch(SimpleMemory):
         )
         return self.apply_to_all(func)
 
-    def to_tensor(self):
-        return Batch({k: to_tensor(v) for k, v in self.items()})
+    def to_tensor(self, ignore=["idx"]):
+        return Batch({k: v if k in ignore else to_tensor(v) for k, v in self.items()})
