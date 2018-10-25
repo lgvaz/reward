@@ -13,7 +13,6 @@ from .utils import (
     map_range,
 )
 from .batch import Batch
-from .callback import Callback
 from .config import Config
 from .logger import Logger
 from .torch_utils import copy_weights, mean_grad, save_model, load_model, freeze_weights
@@ -41,7 +40,6 @@ __all__ = [
     "piecewise_linear_schedule",
     "piecewise_const_schedule",
     "make_callable",
-    "Callback",
     "to_tensor",
     "join_first_dims",
     "maybe_np",
