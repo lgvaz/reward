@@ -4,9 +4,9 @@ import reward.utils as U
 from reward.batcher import BaseBatcher
 from tqdm.autonotebook import tqdm
 from reward.batcher.transforms import StackStates
+from reward.utils.buffers import ReplayBuffer
 
 
-# TODO: replay_buffer_maxlen -> maxlen
 # TODO: Renames: leraning_freq and grad_steps_per_batch
 class ReplayBatcher(BaseBatcher):
     def __init__(
@@ -17,19 +17,21 @@ class ReplayBatcher(BaseBatcher):
         learning_freq=1,
         grad_steps_per_batch=1,
         transforms=None,
-        replay_buffer_maxlen=1e6,
+        replay_buffer_fn=ReplayBuffer,
+        maxlen=1e6,
         init_replays=0.05,
     ):
         self._check_transforms(transforms)
         super().__init__(runner=runner, batch_size=batch_size, transforms=transforms)
+        self.maxlen = maxlen
         self.learning_freq = learning_freq
         self.grad_steps_per_batch = grad_steps_per_batch
-        self.replay_buffer = self._create_replay_buffer(int(replay_buffer_maxlen))
+        self.replay_buffer = self._create_replay_buffer(replay_buffer_fn)
         self._grad_iter = 0
         self.init_replays = init_replays
 
-    def _create_replay_buffer(self, maxlen):
-        return U.buffers.ReplayBuffer(maxlen=maxlen, num_envs=self.runner.num_envs)
+    def _create_replay_buffer(self, replay_buffer_fn):
+        return replay_buffer_fn(maxlen=self.maxlen, num_envs=self.runner.num_envs)
 
     def _check_transforms(self, transforms):
         # TODO: Hack for handling StackStates transform together with replay_buffer

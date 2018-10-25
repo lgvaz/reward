@@ -3,8 +3,8 @@ from reward.runner import BaseRunner
 
 
 class SingleRunner(BaseRunner):
-    def __init__(self, env):
-        super().__init__(env=env)
+    def __init__(self, env, ep_maxlen=None):
+        super().__init__(env=env, ep_maxlen=ep_maxlen)
         self._ep_reward_sum = 0
         self._ep_num_steps = 0
 
@@ -32,7 +32,7 @@ class SingleRunner(BaseRunner):
         self._ep_reward_sum += reward
         self.num_steps += 1
         self._ep_num_steps += 1
-        if done:
+        if done or self._ep_num_steps >= self.ep_maxlen:
             self.rewards.append(self._ep_reward_sum)
             self.ep_lens.append(self._ep_num_steps)
             state = self.reset()

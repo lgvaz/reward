@@ -27,9 +27,9 @@ class ReplayBuffer:
     """
 
     def __init__(self, maxlen, num_envs, history_len=1, n_step=1):
-        self.maxlen = maxlen
+        self.maxlen = int(maxlen)
         self.num_envs = num_envs
-        self.real_maxlen = maxlen // num_envs
+        self.real_maxlen = self.maxlen // self.num_envs
         self.history_len = history_len
         self.n_step = n_step
         self.initialized = False
@@ -145,7 +145,7 @@ class ReplayBuffer:
         self.current_len = min(self.current_len + num_samples, self.real_maxlen)
 
     def sample(self, batch_size):
-        idxs = np.random.randint(self.available_idxs, size=batch_size)
+        idxs = np.random.choice(self.available_idxs, size=batch_size, replace=False)
         return self._get_batch(idxs=idxs)
 
     def check_shapes(self, *arrs):
@@ -191,3 +191,48 @@ def strided_axis(arr, window_size):
     return np.lib.stride_tricks.as_strided(
         arr, shape=new_shape, strides=new_strides, writeable=False
     )
+
+
+class DictReplayBuffer:
+    # TODO: Save and load
+    def __init__(self, maxlen, num_envs):
+        assert num_envs == 1
+        self.maxlen = int(maxlen)
+        self.buffer = []
+        # Intialized at -1 so the first updated position is 0
+        self.position = -1
+
+    def __len__(self):
+        return len(self.buffer)
+
+    def __getitem__(self, key):
+        return self.buffer[key]
+
+    def _get_batch(self, idxs):
+        samples = [self[i] for i in idxs]
+        batch = Batch.from_list_of_dicts(samples)
+        # Add next state to batch
+        state_tp1 = [self[i + 1]["state_t"] for i in idxs]
+        batch.state_tp1 = state_tp1
+        batch.idx = idxs
+        return batch
+
+    def add_sample(self, state, action, reward, done):
+        # If buffer is not full, add a new element
+        if len(self.buffer) <= self.maxlen:
+            self.buffer.append(None)
+        # Store new transition at the appropriate index
+        self.position = (self.position + 1) % self.maxlen
+        self.buffer[self.position] = dict(
+            state_t=state, action=action, reward=reward, done=done
+        )
+
+    def sample(self, batch_size):
+        idxs = np.random.choice(len(self) - 1, batch_size, replace=False)
+        return self._get_batch(idxs=idxs)
+
+    def save(self, savedir):
+        raise NotImplementedError
+
+    def load(self, loaddir):
+        raise NotImplementedError

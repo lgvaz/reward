@@ -1,21 +1,34 @@
 import reward.utils as U
-from reward.batcher import PrReplayBatcher
 from tqdm import tqdm
+from reward.batcher import PrReplayBatcher
+from reward.utils.buffers import DemoReplayBuffer
 
 
 # TODO: Fix args and kwargs
 class DemoReplayBatcher(PrReplayBatcher):
     def __init__(
-        self, *args, min_pr=0.01, pr_factor=0.6, is_factor=1., pr_demo=0.3, **kwargs
+        self,
+        *args,
+        min_pr=0.01,
+        pr_factor=0.6,
+        is_factor=1.,
+        pr_demo=0.3,
+        replay_buffer_fn=DemoReplayBuffer,
+        **kwargs
     ):
         self.pr_demo = pr_demo
         super().__init__(
-            *args, min_pr=min_pr, pr_factor=pr_factor, is_factor=is_factor, **kwargs
+            *args,
+            min_pr=min_pr,
+            pr_factor=pr_factor,
+            is_factor=is_factor,
+            replay_buffer_fn=replay_buffer_fn,
+            **kwargs
         )
 
-    def _create_replay_buffer(self, maxlen):
-        return U.buffers.DemoReplayBuffer(
-            maxlen=maxlen,
+    def _create_replay_buffer(self, replay_buffer_fn):
+        return replay_buffer_fn(
+            maxlen=self.maxlen,
             num_envs=self.runner.num_envs,
             min_pr=self.min_pr,
             pr_factor=self._pr_factor,

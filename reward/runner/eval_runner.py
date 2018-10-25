@@ -4,8 +4,8 @@ from reward.runner import SingleRunner
 
 
 class EvalRunner(SingleRunner):
-    def __init__(self, env, tfms=None):
-        super().__init__(env=env)
+    def __init__(self, env, ep_maxlen=None, tfms=None):
+        super().__init__(env=env, ep_maxlen=ep_maxlen)
         self.tfms = tfms or []
 
     def transform_state(self, state):

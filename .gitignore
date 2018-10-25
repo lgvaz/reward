@@ -124,3 +124,5 @@ reward/models/ppo_model_deprecated\.py
 reward/models/surrogate_pg_model_deprecated\.py
 
 reward/models/vanilla_pg_model_deprecated\.py
+
+examples_deprecated/

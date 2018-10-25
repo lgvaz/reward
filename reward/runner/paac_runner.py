@@ -21,8 +21,8 @@ class PAACRunner(BaseRunner):
         np.int64: c_int,
     }
 
-    def __init__(self, env, num_workers=None):
-        super().__init__(env=env)
+    def __init__(self, env, ep_maxlen=None, num_workers=None):
+        super().__init__(env=env, ep_maxlen=ep_maxlen)
         self.num_workers = num_workers or multiprocessing.cpu_count()
         self._env_rewards_sum = np.zeros(self.num_envs)
         self._env_ep_lengths = np.zeros(self.num_envs)
@@ -139,6 +139,7 @@ class PAACRunner(BaseRunner):
         # Accumulate rewards
         self._env_rewards_sum += rewards
         self._env_ep_lengths += 1
+        # TODO: Incorporate ep_maxlen
         for i, done in enumerate(dones):
             if done:
                 self.rewards.append(self._env_rewards_sum[i])

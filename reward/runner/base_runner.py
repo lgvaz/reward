@@ -7,8 +7,9 @@ import reward.utils as U
 
 
 class BaseRunner(ABC):
-    def __init__(self, env):
+    def __init__(self, env, ep_maxlen=None):
         self.env = env
+        self.ep_maxlen = ep_maxlen or float("inf")
         self.rewards = []
         self.num_steps = 0
         self.ep_lens = []
