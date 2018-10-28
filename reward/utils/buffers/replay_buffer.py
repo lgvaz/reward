@@ -150,7 +150,10 @@ class ReplayBuffer:
 
     def check_shapes(self, *arrs):
         for arr in arrs:
-            assert arr.shape[0] == self.num_envs
+            dim = arr.shape[0]
+            err_msg = "Expect first dimension to be equal num_envs."
+            err_msg += " Expected {} but got {}.".format(self.num_envs, dim)
+            assert dim == self.num_envs, err_msg
 
     def save(self, savedir):
         savedir = Path(savedir) / "buffer"
