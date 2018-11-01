@@ -45,7 +45,7 @@ class ReplayBatcher(BaseBatcher):
                 self.state_stacker = tfm
                 transforms.remove(tfm)
 
-    def populate(self, n=None, pct=None, act_fn=None):
+    def populate(self, n=None, pct=None, act_fn=None, clean=True):
         assert (n and not pct) or (pct and not n)
         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
@@ -70,6 +70,9 @@ class ReplayBatcher(BaseBatcher):
             )
 
             state_t = state_tp1
+
+        if clean:
+            self.runner.clean()
 
     def get_batch(self, act_fn):
         if self.state_t is None:

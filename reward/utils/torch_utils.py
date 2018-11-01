@@ -48,6 +48,11 @@ def mean_grad(nn):
     return torch.stack([p.grad.mean() for p in nn.parameters()]).mean()
 
 
+def change_lr(opt, lr):
+    for param_group in opt.param_groups:
+        param_group["lr"] = lr
+
+
 def save_model(
     model, save_dir, opt=None, step=0, is_best=False, name=None, postfix="checkpoint"
 ):

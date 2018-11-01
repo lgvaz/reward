@@ -10,13 +10,7 @@ class BaseRunner(ABC):
     def __init__(self, env, ep_maxlen=None):
         self.env = env
         self.ep_maxlen = ep_maxlen or float("inf")
-        self.rewards = []
-        self.num_steps = 0
-        self.ep_lens = []
-        self.new_ep = 0
-        self._is_best = False
-        self._last_logged_ep = 0
-        self._best_rew = 0
+        self.clean()
 
     @property
     @abstractmethod
@@ -58,6 +52,15 @@ class BaseRunner(ABC):
     @property
     def is_best(self):
         return self._is_best
+
+    def clean(self):
+        self.rewards = []
+        self.num_steps = 0
+        self.ep_lens = []
+        self.new_ep = 0
+        self._is_best = False
+        self._last_logged_ep = 0
+        self._best_rew = 0
 
     def close(self):
         raise NotImplementedError

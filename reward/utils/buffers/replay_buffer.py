@@ -14,7 +14,7 @@ class ReplayBuffer:
     ----------
         maxlen: int
             Maximum number of transitions stored
-        history_len: int
+        stack: int
             Number of sequential states stacked when sampling
         batch_size: int
             Mini-batch size created by sample
@@ -26,11 +26,11 @@ class ReplayBuffer:
         (8 * 64 * 64 * 1M bits)
     """
 
-    def __init__(self, maxlen, num_envs, history_len=1, n_step=1):
+    def __init__(self, maxlen, num_envs, stack=1, n_step=1):
         self.maxlen = int(maxlen)
         self.num_envs = num_envs
         self.real_maxlen = self.maxlen // self.num_envs
-        self.history_len = history_len
+        self.stack = stack
         self.n_step = n_step
         self.initialized = False
         #         # Intialized at -1 so the first updated position is 0
@@ -44,7 +44,10 @@ class ReplayBuffer:
         idxs = np.array(idxs)
         # Get states
         b_states_t = self.s_stride[idxs]
-        b_states_tp1 = self.s_stride[idxs + self.n_step]
+        if self.states_tp1 is not None:
+            b_states_tp1 = self.stp1_stride[idxs]
+        else:
+            b_states_tp1 = self.s_stride[idxs + self.n_step]
         actions = self.a_stride[idxs, -1:]
         rewards = self.r_stride[idxs, -self.n_step :]
         dones = self.d_stride[idxs, -self.n_step :]
@@ -66,41 +69,57 @@ class ReplayBuffer:
 
     @property
     def available_idxs(self):
-        return self.num_envs * (len(self) - self.history_len - self.n_step + 1)
+        return self.num_envs * (len(self) - self.stack - self.n_step + 1)
 
-    def _initialize(self, state, action, reward, done):
+    def _initialize(self, state, action, reward, done, state_tp1=None):
         self.initialized = True
+        maxlen = self.real_maxlen
         # Allocate memory
-        self.states = np.empty((self.real_maxlen,) + state.shape, dtype=state.dtype)
-        self.actions = np.empty((self.real_maxlen,) + action.shape, dtype=action.dtype)
-        self.rewards = np.empty((self.real_maxlen,) + reward.shape, dtype=reward.dtype)
-        self.dones = np.empty((self.real_maxlen,) + done.shape, dtype=np.bool)
+        self.states = np.empty((maxlen,) + state.shape, dtype=state.dtype)
+        self.actions = np.empty((maxlen,) + action.shape, dtype=action.dtype)
+        self.rewards = np.empty((maxlen,) + reward.shape, dtype=reward.dtype)
+        self.dones = np.empty((maxlen,) + done.shape, dtype=np.bool)
+        if state_tp1 is not None:
+            assert state.shape == state_tp1.shape
+            self.states_tp1 = np.empty((maxlen,) + state.shape, dtype=state.dtype)
+        else:
+            self.states_tp1 = None
 
         self._create_strides()
 
     def _create_strides(self):
         # Function for selecting multiple slices
-        self.s_stride = strided_axis(arr=self.states, window_size=self.history_len)
-        self.a_stride = strided_axis(arr=self.actions, window_size=self.history_len)
+        self.s_stride = strided_axis(arr=self.states, window=self.stack)
+        self.a_stride = strided_axis(arr=self.actions, window=self.stack)
         self.r_stride = strided_axis(
-            arr=self.rewards, window_size=self.history_len + self.n_step - 1
+            arr=self.rewards, window=self.stack + self.n_step - 1
         )
         self.d_stride = strided_axis(
-            arr=self.dones, window_size=self.history_len + self.n_step - 1
+            arr=self.dones, window=self.stack + self.n_step - 1
         )
+        if self.states_tp1 is not None:
+            self.stp1_stride = strided_axis(arr=self.states_tp1, window=self.stack)
+        else:
+            self.stp1_stride = strided_axis(arr=self.states, window=self.stack)
 
     def reset(self):
         self.current_idx = -1
         self.current_len = 0
 
-    def add_sample(self, state, action, reward, done):
+    def add_sample(self, state, action, reward, done, state_tp1=None):
         """
         Add a single sample to the replay buffer.
 
         Expect transitions to be in the shape of (num_envs, features).
         """
         if not self.initialized:
-            self._initialize(state=state, action=action, reward=reward, done=done)
+            self._initialize(
+                state=state,
+                action=action,
+                reward=reward,
+                done=done,
+                state_tp1=state_tp1,
+            )
 
         self.check_shapes(state, action, reward, done)
 
@@ -113,6 +132,9 @@ class ReplayBuffer:
         self.actions[self.current_idx] = action
         self.rewards[self.current_idx] = reward
         self.dones[self.current_idx] = done
+        if state_tp1 is not None:
+            assert self.states_tp1 is not None
+            self.states_tp1[self.current_idx] = state_tp1
 
     def add_samples(self, states, actions, rewards, dones):
         """
@@ -179,7 +201,7 @@ class ReplayBuffer:
         self.add_samples(states=states, actions=actions, rewards=rewards, dones=dones)
 
 
-def strided_axis(arr, window_size):
+def strided_axis(arr, window):
     """
     https://stackoverflow.com/questions/43413582/selecting-multiple-slices-from-a-numpy-array-at-once/43413801#43413801
     """
@@ -187,8 +209,8 @@ def strided_axis(arr, window_size):
     strides = arr.strides
     num_envs = shape[1]
 
-    num_rolling_windows = num_envs * (shape[0] - window_size + 1)
-    new_shape = (num_rolling_windows, window_size, *shape[2:])
+    num_rolling_windows = num_envs * (shape[0] - window + 1)
+    new_shape = (num_rolling_windows, window, *shape[2:])
     new_strides = (strides[1], num_envs * strides[1], *strides[2:])
 
     return np.lib.stride_tricks.as_strided(

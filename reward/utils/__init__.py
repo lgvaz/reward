@@ -14,6 +14,7 @@ from .torch_utils import (
     to_tensor,
     copy_weights,
     mean_grad,
+    change_lr,
     save_model,
     load_model,
     freeze_weights,
@@ -46,4 +47,5 @@ __all__ = [
     "copy_weights",
     "mean_grad",
     "map_range",
+    "change_lr",
 ]
