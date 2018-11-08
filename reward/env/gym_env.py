@@ -35,6 +35,14 @@ class GymEnv(BaseEnv):
 
         return env
 
+    @property
+    def state_space(self):
+        return GymEnv.get_space(self.env.observation_space)
+
+    @property
+    def action_space(self):
+        return GymEnv.get_space(self.env.action_space)
+
     def reset(self):
         """
         Calls the reset method on the gym environment.
@@ -69,7 +77,7 @@ class GymEnv(BaseEnv):
         """
         # TODO: Squeezing may break some envs (e.g. Pendulum-v0)
         action = np.squeeze(action)
-        if self.get_action_info().space == "discrete":
+        if isinstance(self.action_space, U.space.Discrete):
             action = int(action)
         next_state, reward, done, info = self.env.step(action)
         return next_state, reward, done, info
@@ -79,20 +87,6 @@ class GymEnv(BaseEnv):
 
     # def record(self, path):
     #     self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
-
-    def get_state_info(self):
-        """
-        Dictionary containing the shape and type of the state space.
-        If it is continuous, also contains the minimum and maximum value.
-        """
-        return GymEnv.get_space_info(self.env.observation_space)
-
-    def get_action_info(self):
-        """
-        Dictionary containing the shape and type of the action space.
-        If it is continuous, also contains the minimum and maximum value.
-        """
-        return GymEnv.get_space_info(self.env.action_space)
 
     def sample_random_action(self):
         return self.env.action_space.sample()
@@ -120,7 +114,7 @@ class GymEnv(BaseEnv):
         self.env = self.env.env
 
     @staticmethod
-    def get_space_info(space):
+    def get_space(space):
         """
         Gets the shape of the possible types of states in gym.
 
@@ -135,18 +129,11 @@ class GymEnv(BaseEnv):
             Dictionary containing the space shape and type
         """
         if isinstance(space, gym.spaces.Box):
-            return U.memories.SimpleMemory(
-                shape=space.shape,
-                low_bound=space.low,
-                high_bound=space.high,
-                space="continuous",
-                dtype=space.dtype,
-            )
+            if space.dtype == np.float32:
+                return U.space.Continuous(
+                    low=space.low, high=space.high, shape=space.shape
+                )
         if isinstance(space, gym.spaces.Discrete):
-            return U.memories.SimpleMemory(
-                shape=space.n, space="discrete", dtype=space.dtype
-            )
+            return NotImplementedError
         if isinstance(space, gym.spaces.MultiDiscrete):
-            return U.memories.SimpleMemory(
-                shape=space.shape, space="multi_discrete", dtype=space.dtype
-            )
+            return NotImplementedError

@@ -22,20 +22,22 @@ class BaseRunner(ABC):
     def num_envs(self):
         pass
 
+    @property
+    @abstractmethod
+    def state_space(self):
+        pass
+
+    @property
+    @abstractmethod
+    def action_space(self):
+        pass
+
     @abstractmethod
     def reset(self):
         pass
 
     @abstractmethod
     def act(self, action):
-        pass
-
-    @abstractmethod
-    def get_state_info(self):
-        pass
-
-    @abstractmethod
-    def get_action_info(self):
         pass
 
     @abstractmethod

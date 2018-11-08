@@ -50,19 +50,24 @@ class ReplayBatcher(BaseBatcher):
         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
         state_t = self.runner.reset()
-        state_t = self.transform_state(state_t)
+        # state_t = self.transform_state(state_t)
 
         tqdm.write("Populating Replay Buffer...")
         for _ in tqdm(range(num_replays)):
             if act_fn is not None:
-                action = act_fn(state=U.to_tensor(state_t), step=0)
+                state_t_tfm = self.transform_state(self.state_t)
+                if self.state_stacker is not None:
+                    state_t_tfm = self.state_stacker.transform_state(state_t_tfm)
+                action = act_fn(state=U.to_tensor(state_t_tfm), step=0)
             else:
                 action = self.runner.sample_random_action()
             state_tp1, reward, done, info = self.runner.act(action)
-            state_tp1 = self.transform_state(state_tp1)
+            # state_tp1 = self.transform_state(state_tp1)
 
             self.replay_buffer.add_sample(
                 state=state_t,
+                # TODO: State_tp1 here only for testing
+                state_tp1=state_tp1,
                 action=action,
                 reward=reward,
                 done=done,
@@ -91,6 +96,8 @@ class ReplayBatcher(BaseBatcher):
 
                 self.replay_buffer.add_sample(
                     state=self.state_t,
+                    # TODO: State_tp1 here only for testing
+                    state_tp1=state_tp1,
                     action=action,
                     reward=reward,
                     done=done,

@@ -109,7 +109,7 @@ class ActionRepeat(BaseWrapper):
         """Return only every `skip`-th frame"""
         super().__init__(env=env)
         self._obs_buffer = np.zeros(
-            [2] + list(self.env.get_state_info().shape), dtype=np.uint8
+            [2] + list(self.env.state_space.shape), dtype=np.uint8
         )
         self._skip = skip
 
@@ -138,15 +138,16 @@ class ActionBound(BaseWrapper):
         super().__init__(env=env)
         self.low = low
         self.high = high
+        # TODO: Maybe assert continuous?
         self.mapper = self._map_range(
             old_low=self.low,
             old_high=self.high,
-            new_low=self.action_info.low_bound,
-            new_high=self.action_info.high_bound,
+            new_low=self.action_space.low,
+            new_high=self.action_space.high,
         )
         self.mapper_inverse = self._map_range(
-            old_low=self.action_info.low_bound,
-            old_high=self.action_info.high_bound,
+            old_low=self.action_space.low,
+            old_high=self.action_space.high,
             new_low=self.low,
             new_high=self.high,
         )

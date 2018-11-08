@@ -26,6 +26,7 @@ import reward.utils.estimators
 import reward.utils.filter
 import reward.utils.buffers
 import reward.utils.device
+import reward.utils.space
 
 __all__ = [
     "EPSILON",
@@ -48,4 +49,5 @@ __all__ = [
     "mean_grad",
     "map_range",
     "change_lr",
+    "space",
 ]

@@ -28,36 +28,30 @@ class BaseEnv(ABC):
     def __str__(self):
         return "<{}>".format(type(self).__name__)
 
+    @property
     @abstractmethod
-    def get_state_info(self):
+    def state_space(self):
         """
-        Returns a dict containing information about the state space.
-
-        The dict should contain two keys: ``shape`` indicating the state shape,
-        and ``dtype`` indicating the state type.
+        Returns a `space` object containing information about the state space.
 
         Example
         -------
-        State space containing 4 continuous actions::
+        State space containing 4 continuous observations:
 
-            return dict(shape=(4,), dtype='continuous')
+            `return reward.utils.space.Continuous(low=0, high=1, shape=(4,))`
         """
 
+    @property
     @abstractmethod
-    def get_action_info(self):
+    def action_space(self):
         """
-        Returns a dict containing information about the action space.
-
-        The dict should contain two keys: ``shape`` indicating the action shape,
-        and ``dtype`` indicating the action type.
-
-        If dtype is ``int`` it will be assumed a discrete action space.
+        Returns a `space` object containing information about the action space.
 
         Example
         -------
-        Action space containing 4 float numbers::
+        State space containing 4 continuous actions:
 
-            return dict(shape=(4,), dtype='float')
+            `return reward.utils.space.Continuous(low=0, high=1, shape=(4,))`
         """
 
     @abstractmethod
@@ -109,16 +103,6 @@ class BaseEnv(ABC):
     @abstractmethod
     def sample_random_action(self):
         pass
-
-    # TODO: Replace get_state_info by this
-    @property
-    def state_info(self):
-        return self.get_state_info()
-
-    # TODO: Replace get_action_info by this
-    @property
-    def action_info(self):
-        return self.get_action_info()
 
     @property
     def num_lives(self):

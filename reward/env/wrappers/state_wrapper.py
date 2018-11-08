@@ -14,6 +14,15 @@ class BaseStateWrapper(BaseWrapper, ABC):
     def transform(self, state):
         pass
 
+    @property
+    def state_space(self):
+        space = self.env.state_space
+        if self._shape is None:
+            self._shape = self.reset().shape
+
+        space.shape = self._shape
+        return space
+
     def reset(self):
         state = self.env.reset()
         return self.transform(state)
@@ -23,16 +32,6 @@ class BaseStateWrapper(BaseWrapper, ABC):
         state = self.transform(state)
 
         return state, reward, done, info
-
-    def get_state_info(self):
-        info = self.env.get_state_info()
-
-        if self._shape is None:
-            self._shape = self.reset().shape
-
-        info.shape = self._shape
-
-        return info
 
 
 class RGB2GRAY(BaseStateWrapper):

@@ -169,8 +169,8 @@ def run(
             transforms=tfms,
             # replay_buffer_fn=U.buffers.DictReplayBuffer,
         )
-    state_features = batcher.get_state_info().shape[0]
-    num_actions = batcher.get_action_info().shape[0]
+    state_features = batcher.state_space.shape[0]
+    num_actions = batcher.action_space.shape[0]
     # Create NNs
     p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_actions).to(device)
     policy = TanhNormalPolicy(nn=p_nn)
@@ -305,9 +305,9 @@ def run(
 if __name__ == "__main__":
     fire.Fire(run)
 
-# run(
-#     env_name="Humanoid-v2",
-#     reward_scale=20.,
-#     log_dir="/tmp/logs/humanoid/random-2M-savebuffer-v2-0",
-#     max_steps=2e6,
-# )
+run(
+    env_name="Humanoid-v2",
+    reward_scale=20.,
+    log_dir="/tmp/logs/humanoid/random-2M-tp1buffer-v3-0",
+    max_steps=2e6,
+)

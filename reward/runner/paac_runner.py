@@ -39,9 +39,19 @@ class PAACRunner(BaseRunner):
     def num_envs(self):
         return len(self.env)
 
+    @property
+    def state_space(self):
+        space = self.env[0].state_space
+        space.shape = (self.num_envs,) + space.shape
+        return space
+
+    @property
+    def action_space(self):
+        return self.env[0].action_space
+
     def _create_shared_transitions(self):
         state = self._get_shared(
-            np.zeros(self.get_state_info().shape, dtype=self.get_state_info().dtype)
+            np.zeros(self.state_space.shape, dtype=self.state_space.dtype)
         )
         action = self._get_shared(self._get_action_array())
         reward = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
@@ -90,17 +100,16 @@ class PAACRunner(BaseRunner):
             )
 
     def _get_action_array(self):
-        action_info = self.get_action_info()
-        if action_info.space == "continuous":
-            shape = (self.num_envs, np.prod(action_info.shape))
-        elif action_info.space == "discrete":
+        if isinstance(self.action_space, U.space.Continuous):
+            shape = (self.num_envs, np.prod(self.action_space.shape))
+        elif isinstance(self.action_space, U.space.Discrete):
             shape = (self.num_envs,)
         else:
             raise ValueError(
-                "Action dtype {} not implemented".format(action_info.dtype)
+                "Action space {} not implemented".format(type(self.action_space))
             )
 
-        return np.zeros(shape, dtype=action_info.dtype)
+        return np.zeros(shape, dtype=self.action_space.dtype)
 
     def _get_shared(self, array):
         """
@@ -188,14 +197,6 @@ class PAACRunner(BaseRunner):
             array[i * q + min(i, r) : (i + 1) * q + min(i + 1, r)]
             for i in range(self.num_workers)
         ]
-
-    def get_state_info(self):
-        info = self.env[0].get_state_info()
-        info.shape = (self.num_envs,) + info.shape
-        return info
-
-    def get_action_info(self):
-        return self.env[0].get_action_info()
 
     def terminate_workers(self):
         for worker in self.workers:

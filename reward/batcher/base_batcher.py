@@ -40,12 +40,19 @@ class BaseBatcher(ABC):
         return self.runner.num_episodes
 
     @property
-    def state_info(self):
-        return self.get_state_info()
+    def state_space(self):
+        space = self.runner.state_space
+
+        if self._state_shape is None:
+            state = self.runner.reset()
+            self._state_shape = tuple(self.transform_state(state).shape)
+        space.shape = self._state_shape[1:]
+
+        return space
 
     @property
-    def action_info(self):
-        return self.get_action_info()
+    def action_space(self):
+        return self.runner.action_space
 
     @property
     def is_best(self):
@@ -77,19 +84,6 @@ class BaseBatcher(ABC):
         for t in self.transforms:
             batch = t.transform_batch(batch, training=training)
         return batch
-
-    def get_state_info(self):
-        info = self.runner.get_state_info()
-
-        if self._state_shape is None:
-            state = self.runner.reset()
-            self._state_shape = tuple(self.transform_state(state).shape)
-        info.shape = self._state_shape[1:]
-
-        return info
-
-    def get_action_info(self):
-        return self.runner.get_action_info()
 
     def write_logs(self, logger):
         self.runner.write_logs(logger)

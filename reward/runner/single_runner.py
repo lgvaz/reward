@@ -16,6 +16,16 @@ class SingleRunner(BaseRunner):
     def num_envs(self):
         return 1
 
+    @property
+    def state_space(self):
+        space = self.env.state_space
+        space.shape = (1,) + space.shape
+        return space
+
+    @property
+    def action_space(self):
+        return self.env.action_space
+
     def reset(self):
         self._ep_reward_sum = 0
         self._ep_num_steps = 0
@@ -41,14 +51,6 @@ class SingleRunner(BaseRunner):
 
     def sample_random_action(self):
         return np.array(self.env.sample_random_action())[None]
-
-    def get_state_info(self):
-        info = self.env.get_state_info()
-        info.shape = (1,) + info.shape
-        return info
-
-    def get_action_info(self):
-        return self.env.get_action_info()
 
     def close(self):
         self.env.close()
