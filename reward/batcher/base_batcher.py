@@ -1,6 +1,7 @@
+import reward.utils as U
 from abc import ABC, abstractmethod
 from tqdm.autonotebook import tqdm
-import reward.utils as U
+from boltons.cacheutils import cachedproperty
 
 
 class BaseBatcher(ABC):
@@ -14,7 +15,6 @@ class BaseBatcher(ABC):
         self.transforms = transforms or []
         self.batch = None
         self.state_t = None
-        self._state_shape = None
 
     def __str__(self):
         return "<{}>".format(type(self).__name__)
@@ -39,15 +39,11 @@ class BaseBatcher(ABC):
     def num_episodes(self):
         return self.runner.num_episodes
 
-    @property
+    @cachedproperty
     def state_space(self):
         space = self.runner.state_space
-
-        if self._state_shape is None:
-            state = self.runner.reset()
-            self._state_shape = tuple(self.transform_state(state).shape)
-        space.shape = self._state_shape[1:]
-
+        state = self.runner.reset()
+        space.shape = tuple(self.transform_state(state).shape)[1:]
         return space
 
     @property

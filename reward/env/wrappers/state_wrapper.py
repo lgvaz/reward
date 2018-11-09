@@ -1,8 +1,9 @@
-from abc import ABC, abstractmethod
 import numpy as np
 import cv2
 import reward.utils as U
+from abc import ABC, abstractmethod
 from reward.env.wrappers import BaseWrapper
+from boltons.cacheutils import cachedproperty
 
 
 class BaseStateWrapper(BaseWrapper, ABC):
@@ -14,7 +15,7 @@ class BaseStateWrapper(BaseWrapper, ABC):
     def transform(self, state):
         pass
 
-    @property
+    @cachedproperty
     def state_space(self):
         space = self.env.state_space
         if self._shape is None:

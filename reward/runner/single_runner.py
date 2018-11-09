@@ -1,5 +1,6 @@
 import numpy as np
 from reward.runner import BaseRunner
+from boltons.cacheutils import cachedproperty
 
 
 class SingleRunner(BaseRunner):
@@ -16,13 +17,13 @@ class SingleRunner(BaseRunner):
     def num_envs(self):
         return 1
 
-    @property
+    @cachedproperty
     def state_space(self):
         space = self.env.state_space
         space.shape = (1,) + space.shape
         return space
 
-    @property
+    @cachedproperty
     def action_space(self):
         return self.env.action_space
 

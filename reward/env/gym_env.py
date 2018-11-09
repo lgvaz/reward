@@ -1,6 +1,7 @@
 import numpy as np
-from reward.env.base_env import BaseEnv
 import reward.utils as U
+from reward.env.base_env import BaseEnv
+from boltons.cacheutils import cachedproperty
 
 # Soft dependency
 try:
@@ -20,26 +21,19 @@ class GymEnv(BaseEnv):
     env_name: str
         The Gym ID of the env. For a list of available envs check
         `this <https://gym.openai.com/envs/>`_ page.
-    wrappers: list
-        List of wrappers to be applied on the env.
-        Each wrapper should be a function that receives and returns the env.
     """
 
-    def __init__(self, env_name, **kwargs):
+    def __init__(self, env_name):
         if not _has_gym:
             raise ImportError("Could not import gym")
-        super().__init__(env_name, **kwargs)
+        self.env_name = env_name
+        super().__init__()
 
-    def _create_env(self):
-        env = gym.make(self.env_name)
-
-        return env
-
-    @property
+    @cachedproperty
     def state_space(self):
         return GymEnv.get_space(self.env.observation_space)
 
-    @property
+    @cachedproperty
     def action_space(self):
         return GymEnv.get_space(self.env.action_space)
 
@@ -112,6 +106,9 @@ class GymEnv(BaseEnv):
     def remove_timestep_limit(self):
         # TODO: Not always the case that time-limit is the first wrapper
         self.env = self.env.env
+
+    def _create_env(self):
+        return gym.make(self.env_name)
 
     @staticmethod
     def get_space(space):

@@ -1,34 +1,20 @@
 from abc import ABC, abstractmethod
+from boltons.cacheutils import cachedproperty
 
 
 class BaseEnv(ABC):
     """
     Abstract base class used for implementing new environments.
-
-    Includes some basic functionalities, like the option to use a running mean
-    and standard deviation for normalizing states.
-
-    Parameters
-    ----------
-    env_name: str
-        The environment name.
-    fixed_normalize_states: bool
-        If True, use the state min and max value to normalize the states (Default is False).
-    running_normalize_states: bool
-        If True, use the running mean and std to normalize the states (Default is False).
-    scale_reward: bool
-        If True, use the running std to scale the rewards (Default is False).
     """
 
-    def __init__(self, env_name):
-        # TODO: Not every env has a env_name, shouldn't be in base
-        self.env_name = env_name
+    def __init__(self):
         self.env = self._create_env()
 
     def __str__(self):
         return "<{}>".format(type(self).__name__)
 
-    @property
+    # TODO: Follow https://github.com/mahmoud/boltons/pull/184
+    @cachedproperty
     @abstractmethod
     def state_space(self):
         """
@@ -41,7 +27,7 @@ class BaseEnv(ABC):
             `return reward.utils.space.Continuous(low=0, high=1, shape=(4,))`
         """
 
-    @property
+    @cachedproperty
     @abstractmethod
     def action_space(self):
         """
@@ -52,16 +38,6 @@ class BaseEnv(ABC):
         State space containing 4 continuous actions:
 
             `return reward.utils.space.Continuous(low=0, high=1, shape=(4,))`
-        """
-
-    @abstractmethod
-    def _create_env(self):
-        """
-        Creates ans returns an environment.
-
-        Returns
-        -------
-            Environment object.
         """
 
     @abstractmethod
@@ -101,8 +77,14 @@ class BaseEnv(ABC):
         """
 
     @abstractmethod
-    def sample_random_action(self):
-        pass
+    def _create_env(self):
+        """
+        Creates ans returns an environment.
+
+        Returns
+        -------
+            Environment object.
+        """
 
     @property
     def num_lives(self):
@@ -111,6 +93,9 @@ class BaseEnv(ABC):
     @property
     def unwrapped(self):
         return self
+
+    def sample_random_action(self):
+        return self.action_space.sample()
 
     def record(self, path):
         raise NotImplementedError

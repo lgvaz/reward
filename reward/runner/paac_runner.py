@@ -10,6 +10,7 @@ import numpy as np
 
 import reward.utils as U
 from reward.runner import BaseRunner
+from boltons.cacheutils import cachedproperty
 
 
 class PAACRunner(BaseRunner):
@@ -39,13 +40,13 @@ class PAACRunner(BaseRunner):
     def num_envs(self):
         return len(self.env)
 
-    @property
+    @cachedproperty
     def state_space(self):
         space = self.env[0].state_space
         space.shape = (self.num_envs,) + space.shape
         return space
 
-    @property
+    @cachedproperty
     def action_space(self):
         return self.env[0].action_space
 

@@ -1,9 +1,8 @@
-from abc import ABC, abstractmethod
-
-import numpy as np
-from tqdm.autonotebook import tqdm
-
 import reward.utils as U
+import numpy as np
+from abc import ABC, abstractmethod
+from tqdm.autonotebook import tqdm
+from boltons.cacheutils import cachedproperty
 
 
 class BaseRunner(ABC):
@@ -22,12 +21,12 @@ class BaseRunner(ABC):
     def num_envs(self):
         pass
 
-    @property
+    @cachedproperty
     @abstractmethod
     def state_space(self):
         pass
 
-    @property
+    @cachedproperty
     @abstractmethod
     def action_space(self):
         pass
