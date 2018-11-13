@@ -24,9 +24,9 @@ def to_tensor(x, cuda_default=True):
 
         x = torch.from_numpy(x)
 
-    if isinstance(x, torch.Tensor) and cuda_default and torch.cuda.is_available():
+    # TODO: Use try except instead
+    if isinstance(x, torch.Tensor):
         x = x.to(get_device())
-
     else:
         raise ValueError("{} not suported".format(type(x)))
 
