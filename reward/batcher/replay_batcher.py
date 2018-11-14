@@ -21,8 +21,8 @@ class ReplayBatcher(BaseBatcher):
         maxlen=1e6,
         init_replays=0.05,
     ):
-        self._check_transforms(transforms)
         super().__init__(runner=runner, batch_size=batch_size, transforms=transforms)
+        self._check_transforms()
         self.maxlen = maxlen
         self.learning_freq = learning_freq
         self.grad_steps_per_batch = grad_steps_per_batch
@@ -33,13 +33,13 @@ class ReplayBatcher(BaseBatcher):
     def _create_replay_buffer(self, replay_buffer_fn):
         return replay_buffer_fn(maxlen=self.maxlen, num_envs=self.runner.num_envs)
 
-    def _check_transforms(self, transforms):
+    def _check_transforms(self):
         # TODO: Hack for handling StackStates transform together with replay_buffer
         # TODO: Add support for StackStates dim != 1
         # TODO TODO TODO: Modify replay buffer history length
         self.state_stacker = None
         self.n_stacks = 1
-        for tfm in transforms.copy():
+        for tfm in self.transforms.copy():
             if isinstance(tfm, StackStates):
                 self.n_stacks = tfm.n
                 self.state_stacker = tfm
@@ -80,12 +80,11 @@ class ReplayBatcher(BaseBatcher):
             self.runner.clean()
 
     def get_batch(self, act_fn):
-        if self.state_t is None:
-            self.state_t = self.runner.reset()
-
         self._grad_iter = (self._grad_iter + 1) % self.grad_steps_per_batch
         if self._grad_iter == 0:
             for i in range(self.learning_freq):
+                if self.state_t is None:
+                    self.state_t = self.runner.reset()
                 state_t_tfm = self.transform_state(self.state_t)
                 # TODO: Hacky way of stacking
                 if self.state_stacker is not None:
