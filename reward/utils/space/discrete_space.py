@@ -10,3 +10,6 @@ class Discrete(BaseSpace):
 
     def __repr__(self):
         return "Discrete(num_actions={})".format(self.num_actions)
+
+    def sample(self):
+        return np.random.randint(low=0, high=self.num_actions, size=(1,))
