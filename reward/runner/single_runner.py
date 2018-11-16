@@ -24,8 +24,8 @@ class SingleRunner(BaseRunner):
         return space
 
     @cachedproperty
-    def action_space(self):
-        return self.env.action_space
+    def ac_space(self):
+        return self.env.ac_space
 
     def reset(self):
         self._ep_r_sum = 0
@@ -34,10 +34,10 @@ class SingleRunner(BaseRunner):
         state = self.env.reset()
         return state[None]
 
-    def act(self, action):
+    def act(self, ac):
         # TODO: Squeezing action may break some cases (when action is not an array)
         # Pendulum-v0 was not working correctly if action were not squeezed
-        state, r, done, info = self.env.step(action)
+        state, r, done, info = self.env.step(ac)
         state = state[None]
 
         self._ep_r_sum += r
@@ -50,8 +50,8 @@ class SingleRunner(BaseRunner):
 
         return state, np.array(r)[None], np.array(done)[None], info
 
-    def sample_random_action(self):
-        return np.array(self.env.sample_random_action())[None]
+    def sample_random_ac(self):
+        return np.array(self.env.sample_random_ac())[None]
 
     def close(self):
         self.env.close()

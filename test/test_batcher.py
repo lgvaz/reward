@@ -66,7 +66,7 @@ class TestRolloutBatcher(TestBatcher):
     def _test_rollout_batcher_simple(self, env):
         assert self.num_steps % self.batch_size == 0
 
-        acs = np.array([env.sample_random_action() for _ in range(self.num_steps)])
+        acs = np.array([env.sample_random_ac() for _ in range(self.num_steps)])
 
         # Get expected batch
         env.seed(self.seed)
@@ -75,13 +75,13 @@ class TestRolloutBatcher(TestBatcher):
 
         # Get actual batch
         env.seed(self.seed)
-        action_gen = (a for a in acs)
-        action_fn = lambda state, step: next(action_gen)
+        ac_gen = (a for a in acs)
+        ac_fn = lambda state, step: next(ac_gen)
 
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
         for i in range(0, self.num_steps, self.batch_size):
-            batch = batcher.get_batch(select_action_fn=action_fn)
+            batch = batcher.get_batch(select_ac_fn=ac_fn)
 
             np.testing.assert_allclose(batch.s, exp_s[i : i + self.batch_size])
             np.testing.assert_allclose(batch.r, exp_r[i : i + self.batch_size])
@@ -96,7 +96,7 @@ class TestRolloutBatcher(TestBatcher):
         horizon = self.batch_size // self.num_envs
         acs = np.array(
             [
-                [env[0].sample_random_action() for _ in range(self.num_steps)]
+                [env[0].sample_random_ac() for _ in range(self.num_steps)]
                 for _ in range(self.num_envs)
             ]
         ).swapaxes(0, 1)
@@ -111,10 +111,10 @@ class TestRolloutBatcher(TestBatcher):
         runner = PAACRunner(env)
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
-        action_gen = (a for a in acs)
-        action_fn = lambda state, step: next(action_gen)
+        ac_gen = (a for a in acs)
+        ac_fn = lambda state, step: next(ac_gen)
         for i in range(0, self.num_steps // self.num_envs, horizon):
-            batch = batcher.get_batch(select_action_fn=action_fn)
+            batch = batcher.get_batch(select_ac_fn=ac_fn)
 
             np.testing.assert_allclose(batch.s, exp_s[i : i + horizon])
             np.testing.assert_allclose(batch.r, exp_r[i : i + horizon])

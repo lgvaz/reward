@@ -20,8 +20,8 @@ class EvalRunner(SingleRunner):
 
             while not done:
                 state = U.to_tensor(self.transform_state(state))
-                action = act_fn(state)
-                state, r, done, info = self.act(action)
+                ac = act_fn(state)
+                state, r, done, info = self.act(ac)
 
         return self.rs[-num_ep:]
 

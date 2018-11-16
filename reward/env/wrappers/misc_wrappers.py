@@ -18,15 +18,15 @@ class DelayedStart(BaseWrapper):
         self._step = 0
         super().__init__(env=env)
 
-    def step(self, action):
+    def step(self, ac):
         if not self.woke:
-            action = self.sample_random_action()
+            ac = self.sample_random_ac()
         if self._step == self.wake_step:
             self.woke = True
             self.reset()
 
         self._step += 1
-        return self.env.step(action)
+        return self.env.step(ac)
 
 
 class EpisodicLife(BaseWrapper):
@@ -38,8 +38,8 @@ class EpisodicLife(BaseWrapper):
         self.was_real_done = True
         super().__init__(env=env)
 
-    def step(self, action):
-        obs, r, done, info = self.env.step(action)
+    def step(self, ac):
+        obs, r, done, info = self.env.step(ac)
         self.was_real_done = done
         # check current lives, make loss of life terminal,
         # then update lives to handle bonus lives
@@ -76,8 +76,8 @@ class RandomReset(BaseWrapper):
         self.env.reset()
 
         for _ in range(self.wake_step):
-            action = self.env.sample_random_action()
-            state, r, done, info = self.env.step(action)
+            ac = self.env.sample_random_ac()
+            state, r, done, info = self.env.step(ac)
 
             if done:
                 state = self.env.reset()
@@ -88,8 +88,8 @@ class RandomReset(BaseWrapper):
 class FireReset(BaseWrapper):
     def __init__(self, env):
         """Take action on reset for environments that are fixed until firing."""
-        assert env.get_action_meanings()[1] == "FIRE"
-        assert len(env.get_action_meanings()) >= 3
+        assert env.get_ac_meanings()[1] == "FIRE"
+        assert len(env.get_ac_meanings()) >= 3
         super().__init__(env=env)
 
     def reset(self):
@@ -113,12 +113,12 @@ class ActionRepeat(BaseWrapper):
         )
         self._skip = skip
 
-    def step(self, action):
+    def step(self, ac):
         """Repeat action, sum reward, and max over last observations."""
         total_r = 0.0
         done = None
         for i in range(self._skip):
-            obs, r, done, info = self.env.step(action)
+            obs, r, done, info = self.env.step(ac)
             if i == self._skip - 2:
                 self._obs_buffer[0] = obs
             if i == self._skip - 1:
@@ -142,12 +142,12 @@ class ActionBound(BaseWrapper):
         self.mapper = self._map_range(
             old_low=self.low,
             old_high=self.high,
-            new_low=self.action_space.low,
-            new_high=self.action_space.high,
+            new_low=self.ac_space.low,
+            new_high=self.ac_space.high,
         )
         self.mapper_inverse = self._map_range(
-            old_low=self.action_space.low,
-            old_high=self.action_space.high,
+            old_low=self.ac_space.low,
+            old_high=self.ac_space.high,
             new_low=self.low,
             new_high=self.high,
         )
@@ -162,10 +162,10 @@ class ActionBound(BaseWrapper):
 
         return get
 
-    def step(self, action):
-        action = self.mapper(action)
-        return self.env.step(action)
+    def step(self, ac):
+        ac = self.mapper(ac)
+        return self.env.step(ac)
 
-    def sample_random_action(self):
-        action = self.env.sample_random_action()
-        return self.mapper_inverse(action)
+    def sample_random_ac(self):
+        ac = self.env.sample_random_ac()
+        return self.mapper_inverse(ac)

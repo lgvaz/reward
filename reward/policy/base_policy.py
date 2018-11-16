@@ -10,5 +10,5 @@ class BasePolicy:
         pass
 
     @abstractmethod
-    def get_action(self, state, step):
+    def get_ac(self, state, step):
         pass

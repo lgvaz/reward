@@ -47,8 +47,8 @@ class BaseBatcher(ABC):
         return space
 
     @property
-    def action_space(self):
-        return self.runner.action_space
+    def ac_space(self):
+        return self.runner.ac_space
 
     @property
     def is_best(self):

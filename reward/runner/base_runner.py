@@ -28,7 +28,7 @@ class BaseRunner(ABC):
 
     @cachedproperty
     @abstractmethod
-    def action_space(self):
+    def ac_space(self):
         pass
 
     @abstractmethod
@@ -36,11 +36,11 @@ class BaseRunner(ABC):
         pass
 
     @abstractmethod
-    def act(self, action):
+    def act(self, ac):
         pass
 
     @abstractmethod
-    def sample_random_action(self):
+    def sample_random_ac(self):
         pass
 
     def _wrap_name(self, s):

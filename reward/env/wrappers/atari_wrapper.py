@@ -20,7 +20,7 @@ class AtariWrapper(BaseWrapper):
         env = DelayedStart(env, max_delay=max_delay)
         env = RandomReset(env, num_acs=random_start_acs)
         env = ActionRepeat(env, skip=frame_skip)
-        if "FIRE" in env.get_action_meanings():
+        if "FIRE" in env.get_ac_meanings():
             env = FireReset(env)
         env = RGB2GRAY(env)
         env = Rescale(env, shape=shape)

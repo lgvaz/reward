@@ -73,8 +73,8 @@ class QValueNN(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
-        state, action = x
-        x = torch.cat([state, action], dim=1)
+        state, ac = x
+        x = torch.cat([state, ac], dim=1)
         return self.layers(x)
 
 
@@ -84,17 +84,17 @@ class TanhNormalPolicy(rw.policy.BasePolicy):
         mean, log_std = parameters
         return rw.distributions.TanhNormal(loc=mean, scale=log_std.exp())
 
-    def get_action(self, state, step):
+    def get_ac(self, state, step):
         dist = self.create_dist(state=state)
-        action = U.to_np(dist.sample())
-        assert not np.isnan(action).any()
-        return action
+        ac = U.to_np(dist.sample())
+        assert not np.isnan(ac).any()
+        return ac
 
-    def get_action_eval(self, state):
+    def get_ac_eval(self, state):
         dist = self.create_dist(state=state)
-        action = U.to_np(dist.loc)
-        assert not np.isnan(action).any()
-        return action
+        ac = U.to_np(dist.loc)
+        assert not np.isnan(ac).any()
+        return ac
 
 
 def run(
@@ -170,7 +170,7 @@ def run(
             # replay_buffer_fn=U.buffers.DictReplayBuffer,
         )
     state_features = batcher.state_space.shape[0]
-    num_acs = batcher.action_space.shape[0]
+    num_acs = batcher.ac_space.shape[0]
     # Create NNs
     p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_acs).to(device)
     policy = TanhNormalPolicy(nn=p_nn)
@@ -189,20 +189,20 @@ def run(
 
     # Main training loop
     batcher.populate(n=1000)
-    for batch in batcher.get_batches(max_steps, policy.get_action):
+    for batch in batcher.get_batches(max_steps, policy.get_ac):
         batch = batch.to_tensor().concat_batch()
 
         ##### Calculate losses ######
-        q1_batch = q1_nn((batch.s, batch.action))
-        q2_batch = q2_nn((batch.s, batch.action))
+        q1_batch = q1_nn((batch.s, batch.ac))
+        q2_batch = q2_nn((batch.s, batch.ac))
         v_batch = v_nn(batch.s)
 
         dist = policy.create_dist(batch.s)
         if repar:
-            action, pre_tanh_action = dist.rsample_with_pre()
+            ac, pre_tanh_ac = dist.rsample_with_pre()
         else:
-            action, pre_tanh_action = dist.sample_with_pre()
-        log_prob = dist.log_prob_pre(pre_tanh_action).sum(-1, keepdim=True)
+            ac, pre_tanh_ac = dist.sample_with_pre()
+        log_prob = dist.log_prob_pre(pre_tanh_ac).sum(-1, keepdim=True)
         log_prob /= float(reward_scale)
 
         # Q loss
@@ -221,8 +221,8 @@ def run(
         q2_loss = td2_error.pow(2).mean()
 
         # V loss
-        q1_new_t = q1_nn((batch.s, action))
-        q2_new_t = q2_nn((batch.s, action))
+        q1_new_t = q1_nn((batch.s, ac))
+        q2_new_t = q2_nn((batch.s, ac))
         q_new_t = torch.min(q1_new_t, q2_new_t)
         next_value = q_new_t - log_prob
         v_loss = F.mse_loss(v_batch, next_value.detach())
@@ -238,7 +238,7 @@ def run(
         # Policy regularization losses
         mean_loss = 1e-3 * dist.loc.pow(2).mean()
         log_std_loss = 1e-3 * dist.scale.log().pow(2).mean()
-        pre_tanh_loss = 0 * pre_tanh_action.pow(2).sum(1).mean()
+        pre_tanh_loss = 0 * pre_tanh_ac.pow(2).sum(1).mean()
         # Combine all losses
         p_loss_total = p_loss + mean_loss + log_std_loss + pre_tanh_loss
 
@@ -272,7 +272,7 @@ def run(
         ###### Write logs ######
         if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rs:
             batcher.write_logs(logger)
-            eval_runner.write_logs(act_fn=policy.get_action_eval, logger=logger)
+            eval_runner.write_logs(act_fn=policy.get_ac_eval, logger=logger)
 
             logger.add_log("Policy/loss", p_loss)
             logger.add_log("V/loss", v_loss)

@@ -47,20 +47,20 @@ class PAACRunner(BaseRunner):
         return space
 
     @cachedproperty
-    def action_space(self):
-        return self.env[0].action_space
+    def ac_space(self):
+        return self.env[0].ac_space
 
     def _create_shared_transitions(self):
         state = self._get_shared(
             np.zeros(self.state_space.shape, dtype=self.state_space.dtype)
         )
-        action = self._get_shared(self._get_action_array())
+        ac = self._get_shared(self._get_ac_array())
         r = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         info = [self.manager.dict() for _ in range(self.num_envs)]
 
         self.shared_tran = U.memories.SimpleMemory(
-            state=state, r=r, done=done, action=action, info=info
+            state=state, r=r, done=done, ac=ac, info=info
         )
 
     def _create_workers(self):
@@ -80,12 +80,12 @@ class PAACRunner(BaseRunner):
             self.split(self.shared_tran.state),
             self.split(self.shared_tran.r),
             self.split(self.shared_tran.done),
-            self.split(self.shared_tran.action),
+            self.split(self.shared_tran.ac),
             self.split(self.shared_tran.info),
         ):
 
             shared_tran = U.memories.SimpleMemory(
-                state=s_s, r=s_r, done=s_d, action=s_a, info=s_i
+                state=s_s, r=s_r, done=s_d, ac=s_a, info=s_i
             )
             parent_conn, child_conn = Pipe()
             queue = Queue()
@@ -100,17 +100,17 @@ class PAACRunner(BaseRunner):
                 WorkerNTuple(process=process, connection=queue, barrier=parent_conn)
             )
 
-    def _get_action_array(self):
-        if isinstance(self.action_space, U.space.Continuous):
-            shape = (self.num_envs, np.prod(self.action_space.shape))
-        elif isinstance(self.action_space, U.space.Discrete):
+    def _get_ac_array(self):
+        if isinstance(self.ac_space, U.space.Continuous):
+            shape = (self.num_envs, np.prod(self.ac_space.shape))
+        elif isinstance(self.ac_space, U.space.Discrete):
             shape = (self.num_envs,)
         else:
             raise ValueError(
-                "Action space {} not implemented".format(type(self.action_space))
+                "Action space {} not implemented".format(type(self.ac_space))
             )
 
-        return np.zeros(shape, dtype=self.action_space.dtype)
+        return np.zeros(shape, dtype=self.ac_space.dtype)
 
     def _get_shared(self, array):
         """
@@ -133,9 +133,9 @@ class PAACRunner(BaseRunner):
         shared = RawArray(dtype, array.reshape(-1))
         return np.frombuffer(shared, dtype).reshape(shape)
 
-    def act(self, action):
+    def act(self, ac):
         # Send actions to worker
-        self.shared_tran.action[...] = action
+        self.shared_tran.ac[...] = ac
         for worker in self.workers:
             worker.connection.put(True)
         self.sync()
@@ -172,8 +172,8 @@ class PAACRunner(BaseRunner):
 
         return states
 
-    def sample_random_action(self):
-        return np.array([env.sample_random_action() for env in self.env])
+    def sample_random_ac(self):
+        return np.array([env.sample_random_ac() for env in self.env])
 
     def sync(self):
         for worker in self.workers:
@@ -230,7 +230,7 @@ class EnvWorker(Process):
                     self.shared_tran.state[i] = env.reset()
 
             else:
-                for i, (a, env) in enumerate(zip(self.shared_tran.action, self.env)):
+                for i, (a, env) in enumerate(zip(self.shared_tran.ac, self.env)):
                     sn, r, done, info = env.step(a)
 
                     if done:

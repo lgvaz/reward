@@ -27,7 +27,7 @@ def create_env(num_envs):
 @pytest.mark.parametrize("env", create_env(num_envs=1))
 def test_single_runner(env):
     env = env[0]
-    acs = [env.sample_random_action() for _ in range(NUM_STEPS)]
+    acs = [env.sample_random_ac() for _ in range(NUM_STEPS)]
     runner = SingleRunner(env)
 
     env.seed(SEED)
@@ -48,7 +48,7 @@ def test_paac_runner(env):
     seeds = np.random.choice(4200, NUM_ENVS)
     acs = np.array(
         [
-            [env[0].sample_random_action() for _ in range(NUM_STEPS)]
+            [env[0].sample_random_ac() for _ in range(NUM_STEPS)]
             for _ in range(NUM_ENVS)
         ]
     )

@@ -58,17 +58,17 @@ class ReplayBatcher(BaseBatcher):
                 s_tfm = self.transform_state(self.s)
                 if self.state_stacker is not None:
                     s_tfm = self.state_stacker.transform_state(s_tfm)
-                action = act_fn(state=U.to_tensor(s_tfm), step=0)
+                ac = act_fn(state=U.to_tensor(s_tfm), step=0)
             else:
-                action = self.runner.sample_random_action()
-            sn, r, done, info = self.runner.act(action)
+                ac = self.runner.sample_random_ac()
+            sn, r, done, info = self.runner.act(ac)
             # sn = self.transform_state(sn)
 
             self.replay_buffer.add_sample(
                 state=s,
                 # TODO: sn here only for testing
                 sn=sn,
-                action=action,
+                ac=ac,
                 r=r,
                 done=done,
                 # info=info,
@@ -89,15 +89,15 @@ class ReplayBatcher(BaseBatcher):
                 # TODO: Hacky way of stacking
                 if self.state_stacker is not None:
                     s_tfm = self.state_stacker.transform_state(s_tfm)
-                action = act_fn(U.to_tensor(s_tfm), self.num_steps)
+                ac = act_fn(U.to_tensor(s_tfm), self.num_steps)
 
-                sn, r, done, info = self.runner.act(action)
+                sn, r, done, info = self.runner.act(ac)
 
                 self.replay_buffer.add_sample(
                     state=self.s,
                     # TODO: sn here only for testing
                     sn=sn,
-                    action=action,
+                    ac=ac,
                     r=r,
                     done=done,
                     # info=info,

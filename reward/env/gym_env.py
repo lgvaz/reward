@@ -34,7 +34,7 @@ class GymEnv(BaseEnv):
         return GymEnv.get_space(self.env.observation_space)
 
     @cachedproperty
-    def action_space(self):
+    def ac_space(self):
         return GymEnv.get_space(self.env.action_space)
 
     def reset(self):
@@ -48,7 +48,7 @@ class GymEnv(BaseEnv):
         """
         return self.env.reset()
 
-    def step(self, action):
+    def step(self, ac):
         """
         Calls the step method on the gym environment.
 
@@ -70,10 +70,10 @@ class GymEnv(BaseEnv):
             Flag indicating the termination of the episode.
         """
         # TODO: Squeezing may break some envs (e.g. Pendulum-v0)
-        action = np.squeeze(action)
-        if isinstance(self.action_space, U.space.Discrete):
-            action = int(action)
-        sn, r, done, info = self.env.step(action)
+        ac = np.squeeze(ac)
+        if isinstance(self.ac_space, U.space.Discrete):
+            ac = int(ac)
+        sn, r, done, info = self.env.step(ac)
         return sn, r, done, info
 
     def render(self):
@@ -82,7 +82,7 @@ class GymEnv(BaseEnv):
     # def record(self, path):
     #     self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
 
-    def sample_random_action(self):
+    def sample_random_ac(self):
         return self.env.action_space.sample()
 
     def seed(self, value):

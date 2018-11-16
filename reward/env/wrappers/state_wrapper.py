@@ -28,8 +28,8 @@ class BaseStateWrapper(BaseWrapper, ABC):
         state = self.env.reset()
         return self.transform(state)
 
-    def step(self, action):
-        state, r, done, info = self.env.step(action)
+    def step(self, ac):
+        state, r, done, info = self.env.step(ac)
         state = self.transform(state)
 
         return state, r, done, info

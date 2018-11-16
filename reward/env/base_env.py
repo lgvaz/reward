@@ -29,13 +29,13 @@ class BaseEnv(ABC):
 
     @cachedproperty
     @abstractmethod
-    def action_space(self):
+    def ac_space(self):
         """
         Returns a `space` object containing information about the action space.
 
         Example
         -------
-        State space containing 4 continuous actions:
+        State space containing 4 continuous acs:
 
             `return reward.utils.space.Continuous(low=0, high=1, shape=(4,))`
         """
@@ -52,7 +52,7 @@ class BaseEnv(ABC):
         """
 
     @abstractmethod
-    def step(self, action):
+    def step(self, ac):
         """
         Receives an action and execute it on the environment.
 
@@ -94,8 +94,8 @@ class BaseEnv(ABC):
     def unwrapped(self):
         return self
 
-    def sample_random_action(self):
-        return self.action_space.sample()
+    def sample_random_ac(self):
+        return self.ac_space.sample()
 
     def record(self, path):
         raise NotImplementedError
