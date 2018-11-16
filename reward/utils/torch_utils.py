@@ -6,7 +6,7 @@ from reward.utils import to_np
 from reward.utils.device import get_device
 
 
-def to_tensor(x, cuda_default=True, force=False):
+def to_tensor(x):
     if not isinstance(x, torch.Tensor):
         x = to_np(x)
         if x.dtype == "bool": x = x.astype("float32")
