@@ -45,7 +45,7 @@ class ReplayBuffer:
         idxs = np.array(idxs)
         # Get states
         sb = self.s_stride[idxs]
-        if self.states_tp1 is not None:
+        if self.sn is not None:
             snb = self.stp1_stride[idxs]
         else:
             snb = self.s_stride[idxs + self.n_step]
@@ -77,9 +77,9 @@ class ReplayBuffer:
         self.ds = np.empty((maxlen,) + done.shape, dtype=np.bool)
         if sn is not None:
             assert state.shape == sn.shape
-            self.states_tp1 = np.empty((maxlen,) + state.shape, dtype=state.dtype)
+            self.sn = np.empty((maxlen,) + state.shape, dtype=state.dtype)
         else:
-            self.states_tp1 = None
+            self.sn = None
 
         self._create_strides()
 
@@ -89,8 +89,8 @@ class ReplayBuffer:
         self.a_stride = strided_axis(arr=self.acs, window=self.stack)
         self.r_stride = strided_axis(arr=self.rs, window=self.stack + self.n_step - 1)
         self.d_stride = strided_axis(arr=self.ds, window=self.stack + self.n_step - 1)
-        if self.states_tp1 is not None:
-            self.stp1_stride = strided_axis(arr=self.states_tp1, window=self.stack)
+        if self.sn is not None:
+            self.stp1_stride = strided_axis(arr=self.sn, window=self.stack)
         else:
             self.stp1_stride = strided_axis(arr=self.states, window=self.stack)
 
@@ -125,8 +125,8 @@ class ReplayBuffer:
         self.rs[self.idx] = reward
         self.ds[self.idx] = done
         if sn is not None:
-            assert self.states_tp1 is not None
-            self.states_tp1[self.idx] = sn
+            assert self.sn is not None
+            self.sn[self.idx] = sn
 
     def add_samples(self, states, acs, rs, ds):
         """
