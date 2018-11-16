@@ -33,11 +33,11 @@ def test_single_runner(env):
     env.seed(SEED)
     exp_s, exp_r, exp_d, exp_i = create_expected_trajs(env, acs)
     env.seed(SEED)
-    states, rs, dones, infos = create_runner_trajs(runner, acs)
+    states, rs, ds, infos = create_runner_trajs(runner, acs)
 
     np.testing.assert_allclose(states, exp_s[:, None])
     np.testing.assert_allclose(rs, exp_r[:, None])
-    np.testing.assert_allclose(dones, exp_d[:, None])
+    np.testing.assert_allclose(ds, exp_d[:, None])
     np.testing.assert_equal(infos, exp_i)
 
     runner.close()
@@ -63,18 +63,18 @@ def test_paac_runner(env):
     # Runner
     [env.seed(int(seed)) for env, seed in zip(env, seeds)]
     runner = PAACRunner(env)
-    states, rs, dones, infos = create_runner_trajs(runner, acs.swapaxes(0, 1))
+    states, rs, ds, infos = create_runner_trajs(runner, acs.swapaxes(0, 1))
 
     np.testing.assert_allclose(states, exp_s)
     np.testing.assert_allclose(rs, exp_r)
-    np.testing.assert_allclose(dones, exp_d)
+    np.testing.assert_allclose(ds, exp_d)
     np.testing.assert_equal(infos, exp_i)
 
     runner.close()
 
 
 def create_expected_trajs(env, acs):
-    states, rs, dones, infos = [], [], [], []
+    states, rs, ds, infos = [], [], [], []
 
     state = env.reset()
     for a in acs:
@@ -82,7 +82,7 @@ def create_expected_trajs(env, acs):
 
         states.append(state)
         rs.append(r)
-        dones.append(done)
+        ds.append(done)
         infos.append(info)
 
         if done:
@@ -90,11 +90,11 @@ def create_expected_trajs(env, acs):
 
         state = sn
 
-    return list(map(np.array, [states, rs, dones, infos]))
+    return list(map(np.array, [states, rs, ds, infos]))
 
 
 def create_runner_trajs(runner, acs):
-    states, rs, dones, infos = [], [], [], []
+    states, rs, ds, infos = [], [], [], []
 
     state = runner.reset()
     for a in acs:
@@ -102,9 +102,9 @@ def create_runner_trajs(runner, acs):
 
         states.append(state)
         rs.append(r)
-        dones.append(done)
+        ds.append(done)
         infos.append(info)
 
         state = sn
 
-    return list(map(np.array, [states, rs, dones, infos]))
+    return list(map(np.array, [states, rs, ds, infos]))

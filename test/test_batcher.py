@@ -18,7 +18,7 @@ class TestBatcher(unittest.TestCase):
         self.batch_size = 200
 
     def create_runner_trajs(self, runner, acs):
-        states, rs, dones, infos = [], [], [], []
+        states, rs, ds, infos = [], [], [], []
 
         state = runner.reset()
         for a in acs:
@@ -26,12 +26,12 @@ class TestBatcher(unittest.TestCase):
 
             states.append(state)
             rs.append(r)
-            dones.append(done)
+            ds.append(done)
             infos.append(info)
 
             state = sn
 
-        return list(map(np.array, [states, rs, dones, infos]))
+        return list(map(np.array, [states, rs, ds, infos]))
 
 
 class TestRolloutBatcher(TestBatcher):

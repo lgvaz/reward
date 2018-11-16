@@ -143,21 +143,21 @@ class PAACRunner(BaseRunner):
 
         sns = self.shared_tran.state.copy()
         rs = self.shared_tran.r.copy()
-        dones = self.shared_tran.done.copy()
+        ds = self.shared_tran.done.copy()
         infos = list(map(dict, self.shared_tran.info))
 
         # Accumulate rs
         self._env_rs_sum += rs
         self._env_ep_lengths += 1
         # TODO: Incorporate ep_maxlen
-        for i, done in enumerate(dones):
+        for i, done in enumerate(ds):
             if done:
                 self.rs.append(self._env_rs_sum[i])
                 self.ep_lens.append(self._env_ep_lengths[i])
                 self._env_rs_sum[i] = 0
                 self._env_ep_lengths[i] = 0
 
-        return sns, rs, dones, infos
+        return sns, rs, ds, infos
 
     def reset(self):
         """
