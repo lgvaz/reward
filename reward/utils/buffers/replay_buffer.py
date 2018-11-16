@@ -59,9 +59,7 @@ class ReplayBuffer:
         rs = rs.swapaxes(0, 1)
         ds = ds.swapaxes(0, 1)
 
-        return Batch(
-            s=sb, sn=snb, ac=acs, r=rs, d=ds, idx=idxs
-        )
+        return Batch(s=sb, sn=snb, ac=acs, r=rs, d=ds, idx=idxs)
 
     @property
     def available_idxs(self):
@@ -71,7 +69,7 @@ class ReplayBuffer:
         self.initialized = True
         maxlen = self.real_maxlen
         # Allocate memory
-        self.states = np.empty((maxlen,) + state.shape, dtype=state.dtype)
+        self.ss = np.empty((maxlen,) + state.shape, dtype=state.dtype)
         self.acs = np.empty((maxlen,) + ac.shape, dtype=ac.dtype)
         self.rs = np.empty((maxlen,) + r.shape, dtype=r.dtype)
         self.ds = np.empty((maxlen,) + d.shape, dtype=np.bool)
@@ -85,14 +83,14 @@ class ReplayBuffer:
 
     def _create_strides(self):
         # Function for selecting multiple slices
-        self.s_stride = strided_axis(arr=self.states, window=self.stack)
+        self.s_stride = strided_axis(arr=self.ss, window=self.stack)
         self.a_stride = strided_axis(arr=self.acs, window=self.stack)
         self.r_stride = strided_axis(arr=self.rs, window=self.stack + self.n_step - 1)
         self.d_stride = strided_axis(arr=self.ds, window=self.stack + self.n_step - 1)
         if self.sn is not None:
             self.stp1_stride = strided_axis(arr=self.sn, window=self.stack)
         else:
-            self.stp1_stride = strided_axis(arr=self.states, window=self.stack)
+            self.stp1_stride = strided_axis(arr=self.ss, window=self.stack)
 
     def reset(self):
         self.idx = -1
@@ -105,13 +103,7 @@ class ReplayBuffer:
         Expect transitions to be in the shape of (num_envs, features).
         """
         if not self.initialized:
-            self._initialize(
-                state=state,
-                ac=ac,
-                r=r,
-                d=d,
-                sn=sn,
-            )
+            self._initialize(state=state, ac=ac, r=r, d=d, sn=sn)
 
         self.check_shapes(state, ac, r, d)
 
@@ -120,7 +112,7 @@ class ReplayBuffer:
         self._len = min(self._len + 1, self.real_maxlen)
 
         # Store transition
-        self.states[self.idx] = state
+        self.ss[self.idx] = state
         self.acs[self.idx] = ac
         self.rs[self.idx] = r
         self.ds[self.idx] = d
@@ -128,23 +120,23 @@ class ReplayBuffer:
             assert self.sn is not None
             self.sn[self.idx] = sn
 
-    def add_samples(self, states, acs, rs, ds):
+    def add_samples(self, ss, acs, rs, ds):
         """
         Add a single sample to the replay buffer.
 
         Expect transitions to be in the shape of (num_samples, num_envs, features).
         """
         # TODO: Possible optimization using slices
-        assert states.shape[0] == acs.shape[0] == rs.shape[0] == ds.shape[0]
+        assert ss.shape[0] == acs.shape[0] == rs.shape[0] == ds.shape[0]
         if not self.initialized:
-            self._initialize(state=states[0], ac=acs[0], r=rs[0], d=ds[0])
-        num_samples = states.shape[0]
+            self._initialize(state=ss[0], ac=acs[0], r=rs[0], d=ds[0])
+        num_samples = ss.shape[0]
 
         part = range(self.idx + 1, self.idx + 1 + num_samples)
         idxs = np.take(np.arange(self.real_maxlen), part, mode="wrap")
 
-        self.states[idxs] = states
-        del states
+        self.ss[idxs] = ss
+        del ss
         self.acs[idxs] = acs
         del acs
         self.rs[idxs] = rs
@@ -173,7 +165,7 @@ class ReplayBuffer:
         tqdm.write("Saving buffer to {}".format(savedir))
 
         # Save transitions
-        np.save(savedir / "states.npy", self.states[: len(self)])
+        np.save(savedir / "states.npy", self.ss[: len(self)])
         np.save(savedir / "acs.npy", self.acs[: len(self)])
         np.save(savedir / "rs.npy", self.rs[: len(self)])
         np.save(savedir / "ds.npy", self.ds[: len(self)])
@@ -183,12 +175,12 @@ class ReplayBuffer:
         tqdm.write("Loading buffer from {}".format(loaddir))
 
         # Load transitions
-        states = np.load(loaddir / "states.npy")
+        ss = np.load(loaddir / "states.npy")
         acs = np.load(loaddir / "acs.npy")
         rs = np.load(loaddir / "rs.npy")
         ds = np.load(loaddir / "ds.npy")
 
-        self.add_samples(states=states, acs=acs, rs=rs, ds=ds)
+        self.add_samples(ss=ss, acs=acs, rs=rs, ds=ds)
 
 
 def strided_axis(arr, window):
@@ -238,9 +230,7 @@ class DictReplayBuffer:
             self.buffer.append(None)
         # Store new transition at the appropriate index
         self.position = (self.position + 1) % self.maxlen
-        self.buffer[self.position] = dict(
-            s=state, ac=ac, r=r, d=d
-        )
+        self.buffer[self.position] = dict(s=state, ac=ac, r=r, d=d)
 
     def sample(self, batch_size):
         idxs = np.random.choice(len(self) - 1, batch_size, replace=False)

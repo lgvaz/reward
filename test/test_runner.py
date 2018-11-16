@@ -33,9 +33,9 @@ def test_single_runner(env):
     env.seed(SEED)
     exp_s, exp_r, exp_d, exp_i = create_expected_trajs(env, acs)
     env.seed(SEED)
-    states, rs, ds, infos = create_runner_trajs(runner, acs)
+    ss, rs, ds, infos = create_runner_trajs(runner, acs)
 
-    np.testing.assert_allclose(states, exp_s[:, None])
+    np.testing.assert_allclose(ss, exp_s[:, None])
     np.testing.assert_allclose(rs, exp_r[:, None])
     np.testing.assert_allclose(ds, exp_d[:, None])
     np.testing.assert_equal(infos, exp_i)
@@ -47,10 +47,7 @@ def test_single_runner(env):
 def test_paac_runner(env):
     seeds = np.random.choice(4200, NUM_ENVS)
     acs = np.array(
-        [
-            [env[0].sample_random_ac() for _ in range(NUM_STEPS)]
-            for _ in range(NUM_ENVS)
-        ]
+        [[env[0].sample_random_ac() for _ in range(NUM_STEPS)] for _ in range(NUM_ENVS)]
     )
 
     # Expected
@@ -63,9 +60,9 @@ def test_paac_runner(env):
     # Runner
     [env.seed(int(seed)) for env, seed in zip(env, seeds)]
     runner = PAACRunner(env)
-    states, rs, ds, infos = create_runner_trajs(runner, acs.swapaxes(0, 1))
+    ss, rs, ds, infos = create_runner_trajs(runner, acs.swapaxes(0, 1))
 
-    np.testing.assert_allclose(states, exp_s)
+    np.testing.assert_allclose(ss, exp_s)
     np.testing.assert_allclose(rs, exp_r)
     np.testing.assert_allclose(ds, exp_d)
     np.testing.assert_equal(infos, exp_i)
@@ -74,13 +71,13 @@ def test_paac_runner(env):
 
 
 def create_expected_trajs(env, acs):
-    states, rs, ds, infos = [], [], [], []
+    ss, rs, ds, infos = [], [], [], []
 
     state = env.reset()
     for a in acs:
         sn, r, d, info = env.step(a)
 
-        states.append(state)
+        ss.append(state)
         rs.append(r)
         ds.append(d)
         infos.append(info)
@@ -90,21 +87,21 @@ def create_expected_trajs(env, acs):
 
         state = sn
 
-    return list(map(np.array, [states, rs, ds, infos]))
+    return list(map(np.array, [ss, rs, ds, infos]))
 
 
 def create_runner_trajs(runner, acs):
-    states, rs, ds, infos = [], [], [], []
+    ss, rs, ds, infos = [], [], [], []
 
     state = runner.reset()
     for a in acs:
         sn, r, d, info = runner.act(a)
 
-        states.append(state)
+        ss.append(state)
         rs.append(r)
         ds.append(d)
         infos.append(info)
 
         state = sn
 
-    return list(map(np.array, [states, rs, ds, infos]))
+    return list(map(np.array, [ss, rs, ds, infos]))

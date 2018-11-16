@@ -168,9 +168,9 @@ class PAACRunner(BaseRunner):
             worker.connection.put(None)
         # Receive results
         self.sync()
-        states = self.shared_tran.state.copy()
+        ss = self.shared_tran.state.copy()
 
-        return states
+        return ss
 
     def sample_random_ac(self):
         return np.array([env.sample_random_ac() for env in self.env])
