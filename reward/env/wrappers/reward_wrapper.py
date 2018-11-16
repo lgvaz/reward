@@ -4,11 +4,11 @@ from reward.env.wrappers import BaseWrapper
 
 class BaseRewardWrapper(BaseWrapper, ABC):
     @abstractmethod
-    def transform(self, reward):
+    def transform(self, r):
         pass
 
     def step(self, action):
-        state, reward, done, info = self.env.step(action)
-        reward = self.transform(reward)
+        state, r, done, info = self.env.step(action)
+        r = self.transform(r)
 
-        return state, reward, done, info
+        return state, r, done, info

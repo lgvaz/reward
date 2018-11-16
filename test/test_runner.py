@@ -78,10 +78,10 @@ def create_expected_trajs(env, actions):
 
     state = env.reset()
     for a in actions:
-        next_state, reward, done, info = env.step(a)
+        next_state, r, done, info = env.step(a)
 
         states.append(state)
-        rs.append(reward)
+        rs.append(r)
         dones.append(done)
         infos.append(info)
 
@@ -98,10 +98,10 @@ def create_runner_trajs(runner, actions):
 
     state = runner.reset()
     for a in actions:
-        next_state, reward, done, info = runner.act(a)
+        next_state, r, done, info = runner.act(a)
 
         states.append(state)
-        rs.append(reward)
+        rs.append(r)
         dones.append(done)
         infos.append(info)
 

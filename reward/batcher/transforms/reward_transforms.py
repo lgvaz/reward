@@ -8,7 +8,7 @@ class RewardConstScaler(BaseTransform):
         self.factor = factor
 
     def transform_batch(self, batch, training=True):
-        batch.reward = batch.reward * self.factor
+        batch.r = batch.r * self.factor
 
         return batch
 
@@ -19,7 +19,7 @@ class RewardRunScaler(BaseTransform):
         self.filt = U.filter.MeanStdFilter(num_features=1)
 
     def transform_batch(self, batch, training=True):
-        rew_shape = batch.reward.shape
+        rew_shape = batch.r.shape
         if len(rew_shape) != 2:
             raise ValueError(
                 "Reward shape should be in the form (num_steps, num_envs) and is {}".format(
@@ -27,12 +27,12 @@ class RewardRunScaler(BaseTransform):
                 )
             )
 
-        batch.reward = self.filt.scale(batch.reward.reshape(-1, 1), add_sample=training)
+        batch.r = self.filt.scale(batch.r.reshape(-1, 1), add_sample=training)
 
         if training:
             self.filt.update()
 
-        batch.reward = U.to_np(batch.reward).reshape(rew_shape)
+        batch.r = U.to_np(batch.r).reshape(rew_shape)
 
         return batch
 
@@ -48,7 +48,7 @@ class RewardClipper(BaseTransform):
         self.rs = None
 
     def transform_batch(self, batch, training=True):
-        batch.reward = batch.reward.clip(min=-self.clip_range, max=self.clip_range)
-        self.rs = batch.reward
+        batch.r = batch.r.clip(min=-self.clip_range, max=self.clip_range)
+        self.rs = batch.r
 
         return batch

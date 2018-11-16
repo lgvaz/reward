@@ -22,10 +22,10 @@ class TestBatcher(unittest.TestCase):
 
         state = runner.reset()
         for a in actions:
-            next_state, reward, done, info = runner.act(a)
+            next_state, r, done, info = runner.act(a)
 
             states.append(state)
-            rs.append(reward)
+            rs.append(r)
             dones.append(done)
             infos.append(info)
 
@@ -84,7 +84,7 @@ class TestRolloutBatcher(TestBatcher):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
             np.testing.assert_allclose(batch.s, exp_s[i : i + self.batch_size])
-            np.testing.assert_allclose(batch.reward, exp_r[i : i + self.batch_size])
+            np.testing.assert_allclose(batch.r, exp_r[i : i + self.batch_size])
             np.testing.assert_allclose(batch.done, exp_d[i : i + self.batch_size])
             np.testing.assert_equal(batch.info, exp_i[i : i + self.batch_size])
 
@@ -117,7 +117,7 @@ class TestRolloutBatcher(TestBatcher):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
             np.testing.assert_allclose(batch.s, exp_s[i : i + horizon])
-            np.testing.assert_allclose(batch.reward, exp_r[i : i + horizon])
+            np.testing.assert_allclose(batch.r, exp_r[i : i + horizon])
             np.testing.assert_allclose(batch.done, exp_d[i : i + horizon])
             np.testing.assert_equal(batch.info, exp_i[i : i + horizon])
 

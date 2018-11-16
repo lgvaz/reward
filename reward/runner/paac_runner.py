@@ -55,12 +55,12 @@ class PAACRunner(BaseRunner):
             np.zeros(self.state_space.shape, dtype=self.state_space.dtype)
         )
         action = self._get_shared(self._get_action_array())
-        reward = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
+        r = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         info = [self.manager.dict() for _ in range(self.num_envs)]
 
         self.shared_tran = U.memories.SimpleMemory(
-            state=state, reward=reward, done=done, action=action, info=info
+            state=state, r=r, done=done, action=action, info=info
         )
 
     def _create_workers(self):
@@ -78,14 +78,14 @@ class PAACRunner(BaseRunner):
         for env_i, s_s, s_r, s_d, s_a, s_i in zip(
             self.split(self.env),
             self.split(self.shared_tran.state),
-            self.split(self.shared_tran.reward),
+            self.split(self.shared_tran.r),
             self.split(self.shared_tran.done),
             self.split(self.shared_tran.action),
             self.split(self.shared_tran.info),
         ):
 
             shared_tran = U.memories.SimpleMemory(
-                state=s_s, reward=s_r, done=s_d, action=s_a, info=s_i
+                state=s_s, r=s_r, done=s_d, action=s_a, info=s_i
             )
             parent_conn, child_conn = Pipe()
             queue = Queue()
@@ -142,7 +142,7 @@ class PAACRunner(BaseRunner):
         self.num_steps += self.num_envs
 
         next_states = self.shared_tran.state.copy()
-        rs = self.shared_tran.reward.copy()
+        rs = self.shared_tran.r.copy()
         dones = self.shared_tran.done.copy()
         infos = list(map(dict, self.shared_tran.info))
 
@@ -231,13 +231,13 @@ class EnvWorker(Process):
 
             else:
                 for i, (a, env) in enumerate(zip(self.shared_tran.action, self.env)):
-                    next_state, reward, done, info = env.step(a)
+                    next_state, r, done, info = env.step(a)
 
                     if done:
                         next_state = env.reset()
 
                     self.shared_tran.state[i] = next_state
-                    self.shared_tran.reward[i] = reward
+                    self.shared_tran.r[i] = r
                     self.shared_tran.done[i] = done
                     self.shared_tran.info[i].update(info)
 

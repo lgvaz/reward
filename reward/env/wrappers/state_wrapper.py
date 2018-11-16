@@ -29,10 +29,10 @@ class BaseStateWrapper(BaseWrapper, ABC):
         return self.transform(state)
 
     def step(self, action):
-        state, reward, done, info = self.env.step(action)
+        state, r, done, info = self.env.step(action)
         state = self.transform(state)
 
-        return state, reward, done, info
+        return state, r, done, info
 
 
 class RGB2GRAY(BaseStateWrapper):

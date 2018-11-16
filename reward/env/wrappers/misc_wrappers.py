@@ -39,7 +39,7 @@ class EpisodicLife(BaseWrapper):
         super().__init__(env=env)
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        obs, r, done, info = self.env.step(action)
         self.was_real_done = done
         # check current lives, make loss of life terminal,
         # then update lives to handle bonus lives
@@ -50,7 +50,7 @@ class EpisodicLife(BaseWrapper):
             # the environment advertises done.
             done = True
         self.lives = lives
-        return obs, reward, done, info
+        return obs, r, done, info
 
     def reset(self):
         """Reset only when lives are exhausted.
@@ -77,7 +77,7 @@ class RandomReset(BaseWrapper):
 
         for _ in range(self.wake_step):
             action = self.env.sample_random_action()
-            state, reward, done, info = self.env.step(action)
+            state, r, done, info = self.env.step(action)
 
             if done:
                 state = self.env.reset()
@@ -94,10 +94,10 @@ class FireReset(BaseWrapper):
 
     def reset(self):
         state = self.env.reset()
-        state, reward, done, _ = self.env.step(1)
+        state, r, done, _ = self.env.step(1)
         if done:
             self.env.reset()
-        state, reward, done, _ = self.env.step(2)
+        state, r, done, _ = self.env.step(2)
         if done:
             self.env.reset()
 
@@ -115,22 +115,22 @@ class ActionRepeat(BaseWrapper):
 
     def step(self, action):
         """Repeat action, sum reward, and max over last observations."""
-        total_reward = 0.0
+        total_r = 0.0
         done = None
         for i in range(self._skip):
-            obs, reward, done, info = self.env.step(action)
+            obs, r, done, info = self.env.step(action)
             if i == self._skip - 2:
                 self._obs_buffer[0] = obs
             if i == self._skip - 1:
                 self._obs_buffer[1] = obs
-            total_reward += reward
+            total_r += r
             if done:
                 break
         # Note that the observation on the done=True frame
         # doesn't matter
         max_frame = self._obs_buffer.max(axis=0)
 
-        return max_frame, total_reward, done, info
+        return max_frame, total_r, done, info
 
 
 class ActionBound(BaseWrapper):

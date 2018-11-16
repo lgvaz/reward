@@ -11,17 +11,17 @@ class RolloutBatcher(BaseBatcher):
             self.s = U.to_tensor(self.s)
 
         horizon = self.batch_size // self.runner.num_envs
-        batch = U.Batch(initial_keys=["s_and_tp1", "action", "reward", "done"])
+        batch = U.Batch(initial_keys=["s_and_tp1", "action", "r", "done"])
 
         for i in range(horizon):
             action = act_fn(self.s, self.num_steps)
 
-            sn, reward, done, info = self.runner.act(action)
+            sn, r, done, info = self.runner.act(action)
             sn = U.to_tensor(self.transform_state(sn))
 
             batch.s_and_tp1.append(self.s)
             batch.action.append(action)
-            batch.reward.append(reward)
+            batch.r.append(r)
             batch.done.append(done)
             # batch.info.append(info)
 
@@ -32,7 +32,7 @@ class RolloutBatcher(BaseBatcher):
         batch.s = batch.s_and_tp1[:-1]
         batch.sn = batch.s_and_tp1[1:]
         batch.action = U.to_np(batch.action)
-        batch.reward = U.to_np(batch.reward)
+        batch.r = U.to_np(batch.r)
         batch.done = U.to_np(batch.done)
 
         batch = self.transform_batch(batch)

@@ -144,13 +144,13 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     for i in range(int(maxlen * 1.5 / num_envs)):
         state = i * create_test_array(num_envs=num_envs, shape=shape)
         action = i * create_test_array(num_envs=num_envs)
-        reward = i * create_test_array(num_envs=num_envs)
+        r = i * create_test_array(num_envs=num_envs)
         done = (i * 10 == 0) * np.ones((num_envs,))
 
-        replay_buffer.add_sample(state=state, action=action, reward=reward, done=done)
+        replay_buffer.add_sample(state=state, action=action, r=r, done=done)
         memory.append(
             U.memories.SimpleMemory(
-                state=state, action=action, reward=reward, done=done
+                state=state, action=action, r=r, done=done
             )
         )
     assert len(replay_buffer) == real_maxlen
@@ -164,7 +164,7 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     for i, (i_env, i_idx) in enumerate(zip(env, idxs)):
         np.testing.assert_equal(batch.state[i], memory[i_idx].state[i_env])
         np.testing.assert_equal(batch.action[i], memory[i_idx].action[i_env])
-        np.testing.assert_equal(batch.reward[i], memory[i_idx].reward[i_env])
+        np.testing.assert_equal(batch.r[i], memory[i_idx].r[i_env])
         np.testing.assert_equal(batch.done[i], memory[i_idx].done[i_env])
 
 

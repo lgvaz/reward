@@ -21,7 +21,7 @@ class EvalRunner(SingleRunner):
             while not done:
                 state = U.to_tensor(self.transform_state(state))
                 action = act_fn(state)
-                state, reward, done, info = self.act(action)
+                state, r, done, info = self.act(action)
 
         return self.rs[-num_ep:]
 

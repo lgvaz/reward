@@ -69,11 +69,11 @@ def test_frame2float(num_envs, shape):
 
 def test_reward_const_scaler():
     transform = tfms.RewardConstScaler(factor=0.1)
-    reward = np.random.normal(size=(32,))
-    batch = U.Batch(reward=reward.copy())
+    r = np.random.normal(size=(32,))
+    batch = U.Batch(r=r.copy())
 
-    trans_rew = U.to_np(transform.transform_batch(batch).reward)
-    expected = reward * 0.1
+    trans_rew = U.to_np(transform.transform_batch(batch).r)
+    expected = r * 0.1
 
     np.testing.assert_allclose(trans_rew, expected)
 
@@ -85,13 +85,13 @@ def test_reward_run_scaler(num_envs):
     filter_ = U.filter.MeanStdFilter(num_features=1)
 
     for _ in range(10):
-        reward = np.random.normal(size=shape)
-        batch = U.Batch(reward=reward)
-        trans_reward = U.to_np(transform.transform_batch(batch).reward)
-        expected = U.to_np(filter_.scale(reward.reshape(-1, 1))).reshape(shape)
+        r = np.random.normal(size=shape)
+        batch = U.Batch(r=r)
+        trans_r = U.to_np(transform.transform_batch(batch).r)
+        expected = U.to_np(filter_.scale(r.reshape(-1, 1))).reshape(shape)
         filter_.update()
 
-        np.testing.assert_equal(trans_reward, expected)
+        np.testing.assert_equal(trans_r, expected)
 
 
 def test_reward_run_scaler_error():
@@ -99,8 +99,8 @@ def test_reward_run_scaler_error():
 
     def test_shape_error(shape):
         with pytest.raises(ValueError):
-            reward = np.random.normal(size=shape)
-            batch = U.Batch(reward=reward)
+            r = np.random.normal(size=shape)
+            batch = U.Batch(r=r)
             transform.transform_batch(batch)
 
     test_shape_error(shape=(1,))
