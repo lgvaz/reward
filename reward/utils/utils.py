@@ -4,21 +4,15 @@ from numbers import Number
 from reward.utils import EPSILON
 
 
-def to_np(value):
-    if isinstance(value, Number):
-        return np.array(value)
-    if isinstance(value, np.ndarray):
-        return value
-    if isinstance(value, torch.Tensor):
-        return value.detach().cpu().numpy()
-
+def to_np(v):
+    if isinstance(v, Number): return np.array(v)
+    if isinstance(v, (np.ndarray, np.generic)): return v
+    if isinstance(v, torch.Tensor): return v.detach().cpu().numpy()
     # If iterable
-    try:
-        return np.array([to_np(v) for v in value])
-    except TypeError:
-        return np.array(value)
+    try: return np.array([to_np(v) for v in v])
+    except TypeError: return np.array(v)
 
-    raise ValueError("Data type {} not supported".format(value.__class__.__name__))
+    raise ValueError("Data type {} not supported".format(v.__class__.__name__))
 
 
 def explained_var(target, preds):
