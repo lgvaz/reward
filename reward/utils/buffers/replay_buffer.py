@@ -26,11 +26,11 @@ class ReplayBuffer:
         (8 * 64 * 64 * 1M bits)
     """
 
-    def __init__(self, maxlen, n_envs, stack=1, n_step=1):
+    def __init__(self, maxlen, num_envs, stack=1, n_step=1):
         self.maxlen = int(maxlen)
-        self.n_envs = n_envs
+        self.num_envs = num_envs
         # TODO: Real maxlen ?
-        self.real_maxlen = self.maxlen // self.n_envs
+        self.real_maxlen = self.maxlen // self.num_envs
         self.stack = stack
         self.n_step = n_step
         self.initialized = False
@@ -39,7 +39,7 @@ class ReplayBuffer:
         self._len = 0
 
     def __len__(self):
-        return self._len * self.n_envs
+        return self._len * self.num_envs
 
     def _get_batch(self, idxs):
         idxs = np.array(idxs)
@@ -65,7 +65,7 @@ class ReplayBuffer:
 
     @property
     def available_idxs(self):
-        return self.n_envs * (len(self) - self.stack - self.n_step + 1)
+        return self.num_envs * (len(self) - self.stack - self.n_step + 1)
 
     def _initialize(self, state, action, reward, done, sn=None):
         self.initialized = True
@@ -102,7 +102,7 @@ class ReplayBuffer:
         """
         Add a single sample to the replay buffer.
 
-        Expect transitions to be in the shape of (n_envs, features).
+        Expect transitions to be in the shape of (num_envs, features).
         """
         if not self.initialized:
             self._initialize(
@@ -132,7 +132,7 @@ class ReplayBuffer:
         """
         Add a single sample to the replay buffer.
 
-        Expect transitions to be in the shape of (num_samples, n_envs, features).
+        Expect transitions to be in the shape of (num_samples, num_envs, features).
         """
         # TODO: Possible optimization using slices
         assert states.shape[0] == acs.shape[0] == rs.shape[0] == ds.shape[0]
@@ -163,9 +163,9 @@ class ReplayBuffer:
     def check_shapes(self, *arrs):
         for arr in arrs:
             dim = arr.shape[0]
-            err_msg = "Expect first dimension to be equal n_envs."
-            err_msg += " Expected {} but got {}.".format(self.n_envs, dim)
-            assert dim == self.n_envs, err_msg
+            err_msg = "Expect first dimension to be equal num_envs."
+            err_msg += " Expected {} but got {}.".format(self.num_envs, dim)
+            assert dim == self.num_envs, err_msg
 
     def save(self, savedir):
         savedir = Path(savedir) / "buffer"
@@ -197,11 +197,11 @@ def strided_axis(arr, window):
     """
     shape = arr.shape
     strides = arr.strides
-    n_envs = shape[1]
+    num_envs = shape[1]
 
-    num_rolling_windows = n_envs * (shape[0] - window + 1)
+    num_rolling_windows = num_envs * (shape[0] - window + 1)
     new_shape = (num_rolling_windows, window, *shape[2:])
-    new_strides = (strides[1], n_envs * strides[1], *strides[2:])
+    new_strides = (strides[1], num_envs * strides[1], *strides[2:])
 
     return np.lib.stride_tricks.as_strided(
         arr, shape=new_shape, strides=new_strides, writeable=False
@@ -210,8 +210,8 @@ def strided_axis(arr, window):
 
 class DictReplayBuffer:
     # TODO: Save and load
-    def __init__(self, maxlen, n_envs):
-        assert n_envs == 1
+    def __init__(self, maxlen, num_envs):
+        assert num_envs == 1
         self.maxlen = int(maxlen)
         self.buffer = []
         # Intialized at -1 so the first updated position is 0
