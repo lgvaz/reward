@@ -141,7 +141,7 @@ class PAACRunner(BaseRunner):
         self.sync()
         self.num_steps += self.num_envs
 
-        next_states = self.shared_tran.state.copy()
+        sns = self.shared_tran.state.copy()
         rs = self.shared_tran.r.copy()
         dones = self.shared_tran.done.copy()
         infos = list(map(dict, self.shared_tran.info))
@@ -157,7 +157,7 @@ class PAACRunner(BaseRunner):
                 self._env_rs_sum[i] = 0
                 self._env_ep_lengths[i] = 0
 
-        return next_states, rs, dones, infos
+        return sns, rs, dones, infos
 
     def reset(self):
         """
