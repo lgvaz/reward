@@ -67,9 +67,9 @@ class EpisodicLife(BaseWrapper):
 
 
 class RandomReset(BaseWrapper):
-    def __init__(self, env, num_actions=30):
-        self.num_actions = num_actions
-        self.wake_step = np.random.choice(self.num_actions) + 1
+    def __init__(self, env, num_acs=30):
+        self.num_acs = num_acs
+        self.wake_step = np.random.choice(self.num_acs) + 1
         super().__init__(env=env)
 
     def reset(self):

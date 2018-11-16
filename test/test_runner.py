@@ -27,13 +27,13 @@ def create_env(num_envs):
 @pytest.mark.parametrize("env", create_env(num_envs=1))
 def test_single_runner(env):
     env = env[0]
-    actions = [env.sample_random_action() for _ in range(NUM_STEPS)]
+    acs = [env.sample_random_action() for _ in range(NUM_STEPS)]
     runner = SingleRunner(env)
 
     env.seed(SEED)
-    exp_s, exp_r, exp_d, exp_i = create_expected_trajs(env, actions)
+    exp_s, exp_r, exp_d, exp_i = create_expected_trajs(env, acs)
     env.seed(SEED)
-    states, rs, dones, infos = create_runner_trajs(runner, actions)
+    states, rs, dones, infos = create_runner_trajs(runner, acs)
 
     np.testing.assert_allclose(states, exp_s[:, None])
     np.testing.assert_allclose(rs, exp_r[:, None])
@@ -46,7 +46,7 @@ def test_single_runner(env):
 @pytest.mark.parametrize("env", create_env(num_envs=NUM_ENVS))
 def test_paac_runner(env):
     seeds = np.random.choice(4200, NUM_ENVS)
-    actions = np.array(
+    acs = np.array(
         [
             [env[0].sample_random_action() for _ in range(NUM_STEPS)]
             for _ in range(NUM_ENVS)
@@ -57,13 +57,13 @@ def test_paac_runner(env):
     [env.seed(int(seed)) for env, seed in zip(env, seeds)]
     exp_s, exp_r, exp_d, exp_i = [
         np.array(a).swapaxes(0, 1)
-        for a in zip(*[create_expected_trajs(env, a) for env, a in zip(env, actions)])
+        for a in zip(*[create_expected_trajs(env, a) for env, a in zip(env, acs)])
     ]
 
     # Runner
     [env.seed(int(seed)) for env, seed in zip(env, seeds)]
     runner = PAACRunner(env)
-    states, rs, dones, infos = create_runner_trajs(runner, actions.swapaxes(0, 1))
+    states, rs, dones, infos = create_runner_trajs(runner, acs.swapaxes(0, 1))
 
     np.testing.assert_allclose(states, exp_s)
     np.testing.assert_allclose(rs, exp_r)
@@ -73,12 +73,12 @@ def test_paac_runner(env):
     runner.close()
 
 
-def create_expected_trajs(env, actions):
+def create_expected_trajs(env, acs):
     states, rs, dones, infos = [], [], [], []
 
     state = env.reset()
-    for a in actions:
-        next_state, r, done, info = env.step(a)
+    for a in acs:
+        sn, r, done, info = env.step(a)
 
         states.append(state)
         rs.append(r)
@@ -86,25 +86,25 @@ def create_expected_trajs(env, actions):
         infos.append(info)
 
         if done:
-            next_state = env.reset()
+            sn = env.reset()
 
-        state = next_state
+        state = sn
 
     return list(map(np.array, [states, rs, dones, infos]))
 
 
-def create_runner_trajs(runner, actions):
+def create_runner_trajs(runner, acs):
     states, rs, dones, infos = [], [], [], []
 
     state = runner.reset()
-    for a in actions:
-        next_state, r, done, info = runner.act(a)
+    for a in acs:
+        sn, r, done, info = runner.act(a)
 
         states.append(state)
         rs.append(r)
         dones.append(done)
         infos.append(info)
 
-        state = next_state
+        state = sn
 
     return list(map(np.array, [states, rs, dones, infos]))

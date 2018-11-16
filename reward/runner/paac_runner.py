@@ -231,12 +231,12 @@ class EnvWorker(Process):
 
             else:
                 for i, (a, env) in enumerate(zip(self.shared_tran.action, self.env)):
-                    next_state, r, done, info = env.step(a)
+                    sn, r, done, info = env.step(a)
 
                     if done:
-                        next_state = env.reset()
+                        sn = env.reset()
 
-                    self.shared_tran.state[i] = next_state
+                    self.shared_tran.state[i] = sn
                     self.shared_tran.r[i] = r
                     self.shared_tran.done[i] = done
                     self.shared_tran.info[i].update(info)

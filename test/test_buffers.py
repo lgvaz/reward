@@ -184,9 +184,9 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
 #     for i_sample in range(0, len(replay_buffer) - num_envs, num_envs):
 #         for i_env in range(num_envs):
 #             state = replay_buffer[i_sample + i_env].state.data
-#             next_state = replay_buffer[i_sample + i_env + num_envs].state.data
+#             sn = replay_buffer[i_sample + i_env + num_envs].state.data
 
-#             for arr1, arr2 in zip(state[1:], next_state[:-1]):
+#             for arr1, arr2 in zip(state[1:], sn[:-1]):
 #                 if not np.shares_memory(arr1, arr2):
 #                     raise ValueError('Arrays should share memory')
 

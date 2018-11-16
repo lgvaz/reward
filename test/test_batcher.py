@@ -17,19 +17,19 @@ class TestBatcher(unittest.TestCase):
         self.seed = np.random.choice(4200)
         self.batch_size = 200
 
-    def create_runner_trajs(self, runner, actions):
+    def create_runner_trajs(self, runner, acs):
         states, rs, dones, infos = [], [], [], []
 
         state = runner.reset()
-        for a in actions:
-            next_state, r, done, info = runner.act(a)
+        for a in acs:
+            sn, r, done, info = runner.act(a)
 
             states.append(state)
             rs.append(r)
             dones.append(done)
             infos.append(info)
 
-            state = next_state
+            state = sn
 
         return list(map(np.array, [states, rs, dones, infos]))
 
@@ -66,16 +66,16 @@ class TestRolloutBatcher(TestBatcher):
     def _test_rollout_batcher_simple(self, env):
         assert self.num_steps % self.batch_size == 0
 
-        actions = np.array([env.sample_random_action() for _ in range(self.num_steps)])
+        acs = np.array([env.sample_random_action() for _ in range(self.num_steps)])
 
         # Get expected batch
         env.seed(self.seed)
         runner = SingleRunner(env)
-        exp_s, exp_r, exp_d, exp_i = self.create_runner_trajs(runner, actions)
+        exp_s, exp_r, exp_d, exp_i = self.create_runner_trajs(runner, acs)
 
         # Get actual batch
         env.seed(self.seed)
-        action_gen = (a for a in actions)
+        action_gen = (a for a in acs)
         action_fn = lambda state, step: next(action_gen)
 
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
@@ -94,7 +94,7 @@ class TestRolloutBatcher(TestBatcher):
     def _test_rollout_batcher_paac(self, env):
         seeds = np.random.choice(4200, self.num_envs)
         horizon = self.batch_size // self.num_envs
-        actions = np.array(
+        acs = np.array(
             [
                 [env[0].sample_random_action() for _ in range(self.num_steps)]
                 for _ in range(self.num_envs)
@@ -104,14 +104,14 @@ class TestRolloutBatcher(TestBatcher):
         # Expected
         [env.seed(int(seed)) for env, seed in zip(env, seeds)]
         runner = PAACRunner(env)
-        exp_s, exp_r, exp_d, exp_i = self.create_runner_trajs(runner, actions)
+        exp_s, exp_r, exp_d, exp_i = self.create_runner_trajs(runner, acs)
 
         # Batcher
         [env.seed(int(seed)) for env, seed in zip(env, seeds)]
         runner = PAACRunner(env)
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
-        action_gen = (a for a in actions)
+        action_gen = (a for a in acs)
         action_fn = lambda state, step: next(action_gen)
         for i in range(0, self.num_steps // self.num_envs, horizon):
             batch = batcher.get_batch(select_action_fn=action_fn)

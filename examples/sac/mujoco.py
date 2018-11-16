@@ -59,11 +59,11 @@ class ValueNN(nn.Module):
 
 
 class QValueNN(nn.Module):
-    def __init__(self, num_inputs, num_actions, hidden_units=256, activation=nn.ReLU):
+    def __init__(self, num_inputs, num_acs, hidden_units=256, activation=nn.ReLU):
         super().__init__()
 
         layers = []
-        layers += [nn.Linear(num_inputs + num_actions, hidden_units), activation()]
+        layers += [nn.Linear(num_inputs + num_acs, hidden_units), activation()]
         layers += [nn.Linear(hidden_units, hidden_units), activation()]
         final_layer = nn.Linear(hidden_units, 1)
         final_layer.weight.data.uniform_(-3e-3, 3e-3)
@@ -170,17 +170,17 @@ def run(
             # replay_buffer_fn=U.buffers.DictReplayBuffer,
         )
     state_features = batcher.state_space.shape[0]
-    num_actions = batcher.action_space.shape[0]
+    num_acs = batcher.action_space.shape[0]
     # Create NNs
-    p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_actions).to(device)
+    p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_acs).to(device)
     policy = TanhNormalPolicy(nn=p_nn)
 
     v_nn = ValueNN(num_inputs=state_features).to(device)
     v_nn_target = ValueNN(num_inputs=state_features).to(device).eval()
     U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=1.)
 
-    q1_nn = QValueNN(num_inputs=state_features, num_actions=num_actions).to(device)
-    q2_nn = QValueNN(num_inputs=state_features, num_actions=num_actions).to(device)
+    q1_nn = QValueNN(num_inputs=state_features, num_acs=num_acs).to(device)
+    q2_nn = QValueNN(num_inputs=state_features, num_acs=num_acs).to(device)
 
     p_opt = torch.optim.Adam(p_nn.parameters(), lr=lr)
     v_opt = torch.optim.Adam(v_nn.parameters(), lr=lr)
