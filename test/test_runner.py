@@ -78,14 +78,14 @@ def create_expected_trajs(env, acs):
 
     state = env.reset()
     for a in acs:
-        sn, r, done, info = env.step(a)
+        sn, r, d, info = env.step(a)
 
         states.append(state)
         rs.append(r)
-        ds.append(done)
+        ds.append(d)
         infos.append(info)
 
-        if done:
+        if d:
             sn = env.reset()
 
         state = sn
@@ -98,11 +98,11 @@ def create_runner_trajs(runner, acs):
 
     state = runner.reset()
     for a in acs:
-        sn, r, done, info = runner.act(a)
+        sn, r, d, info = runner.act(a)
 
         states.append(state)
         rs.append(r)
-        ds.append(done)
+        ds.append(d)
         infos.append(info)
 
         state = sn

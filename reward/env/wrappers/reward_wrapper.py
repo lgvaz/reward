@@ -8,7 +8,7 @@ class BaseRewardWrapper(BaseWrapper, ABC):
         pass
 
     def step(self, ac):
-        state, r, done, info = self.env.step(ac)
+        state, r, d, info = self.env.step(ac)
         r = self.transform(r)
 
-        return state, r, done, info
+        return state, r, d, info

@@ -73,8 +73,8 @@ class GymEnv(BaseEnv):
         ac = np.squeeze(ac)
         if isinstance(self.ac_space, U.space.Discrete):
             ac = int(ac)
-        sn, r, done, info = self.env.step(ac)
-        return sn, r, done, info
+        sn, r, d, info = self.env.step(ac)
+        return sn, r, d, info
 
     def render(self):
         self.env.render()

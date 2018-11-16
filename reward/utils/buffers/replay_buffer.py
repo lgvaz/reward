@@ -60,21 +60,21 @@ class ReplayBuffer:
         ds = ds.swapaxes(0, 1)
 
         return Batch(
-            s=sb, sn=snb, ac=acs, r=rs, done=ds, idx=idxs
+            s=sb, sn=snb, ac=acs, r=rs, d=ds, idx=idxs
         )
 
     @property
     def available_idxs(self):
         return self.num_envs * (len(self) - self.stack - self.n_step + 1)
 
-    def _initialize(self, state, ac, r, done, sn=None):
+    def _initialize(self, state, ac, r, d, sn=None):
         self.initialized = True
         maxlen = self.real_maxlen
         # Allocate memory
         self.states = np.empty((maxlen,) + state.shape, dtype=state.dtype)
         self.acs = np.empty((maxlen,) + ac.shape, dtype=ac.dtype)
         self.rs = np.empty((maxlen,) + r.shape, dtype=r.dtype)
-        self.ds = np.empty((maxlen,) + done.shape, dtype=np.bool)
+        self.ds = np.empty((maxlen,) + d.shape, dtype=np.bool)
         if sn is not None:
             assert state.shape == sn.shape
             self.sn = np.empty((maxlen,) + state.shape, dtype=state.dtype)
@@ -98,7 +98,7 @@ class ReplayBuffer:
         self.idx = -1
         self._len = 0
 
-    def add_sample(self, state, ac, r, done, sn=None):
+    def add_sample(self, state, ac, r, d, sn=None):
         """
         Add a single sample to the replay buffer.
 
@@ -109,11 +109,11 @@ class ReplayBuffer:
                 state=state,
                 ac=ac,
                 r=r,
-                done=done,
+                d=d,
                 sn=sn,
             )
 
-        self.check_shapes(state, ac, r, done)
+        self.check_shapes(state, ac, r, d)
 
         # Update current position
         self.idx = (self.idx + 1) % self.real_maxlen
@@ -123,7 +123,7 @@ class ReplayBuffer:
         self.states[self.idx] = state
         self.acs[self.idx] = ac
         self.rs[self.idx] = r
-        self.ds[self.idx] = done
+        self.ds[self.idx] = d
         if sn is not None:
             assert self.sn is not None
             self.sn[self.idx] = sn
@@ -137,7 +137,7 @@ class ReplayBuffer:
         # TODO: Possible optimization using slices
         assert states.shape[0] == acs.shape[0] == rs.shape[0] == ds.shape[0]
         if not self.initialized:
-            self._initialize(state=states[0], ac=acs[0], r=rs[0], done=ds[0])
+            self._initialize(state=states[0], ac=acs[0], r=rs[0], d=ds[0])
         num_samples = states.shape[0]
 
         part = range(self.idx + 1, self.idx + 1 + num_samples)
@@ -232,14 +232,14 @@ class DictReplayBuffer:
         batch.idx = idxs
         return batch
 
-    def add_sample(self, state, ac, r, done):
+    def add_sample(self, state, ac, r, d):
         # If buffer is not full, add a new element
         if len(self.buffer) <= self.maxlen:
             self.buffer.append(None)
         # Store new transition at the appropriate index
         self.position = (self.position + 1) % self.maxlen
         self.buffer[self.position] = dict(
-            s=state, ac=ac, r=r, done=done
+            s=state, ac=ac, r=r, d=d
         )
 
     def sample(self, batch_size):

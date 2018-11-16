@@ -145,12 +145,12 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
         state = i * create_test_array(num_envs=num_envs, shape=shape)
         ac = i * create_test_array(num_envs=num_envs)
         r = i * create_test_array(num_envs=num_envs)
-        done = (i * 10 == 0) * np.ones((num_envs,))
+        d = (i * 10 == 0) * np.ones((num_envs,))
 
-        replay_buffer.add_sample(state=state, ac=ac, r=r, done=done)
+        replay_buffer.add_sample(state=state, ac=ac, r=r, d=d)
         memory.append(
             U.memories.SimpleMemory(
-                state=state, ac=ac, r=r, done=done
+                state=state, ac=ac, r=r, d=d
             )
         )
     assert len(replay_buffer) == real_maxlen
@@ -165,7 +165,7 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
         np.testing.assert_equal(batch.state[i], memory[i_idx].state[i_env])
         np.testing.assert_equal(batch.ac[i], memory[i_idx].ac[i_env])
         np.testing.assert_equal(batch.r[i], memory[i_idx].r[i_env])
-        np.testing.assert_equal(batch.done[i], memory[i_idx].done[i_env])
+        np.testing.assert_equal(batch.d[i], memory[i_idx].d[i_env])
 
 
 # TODO: Doesn't work with new RingBuffer, should be substituted by StackFrames test

@@ -49,14 +49,14 @@
 #                 ac = act_fn(state=U.to_tensor(s), step=0)
 #             else:
 #                 ac = self.runner.sample_random_ac()
-#             sn, reward, done, info = self.runner.act(ac)
+#             sn, reward, d, info = self.runner.act(ac)
 #             sn = self.transform_state(sn)
 
 #             self.replay_buffer.add_sample_demo(
 #                 state=s,
 #                 ac=ac,
 #                 r=r,
-#                 done=done,
+#                 d=d,
 #                 # info=info,
 #             )
 
@@ -92,14 +92,14 @@ class DemoReplayBatcher(ReplayBatcher):
                 ac = act_fn(state=U.to_tensor(s), step=0)
             else:
                 ac = self.runner.sample_random_ac()
-            sn, r, done, info = self.runner.act(ac)
+            sn, r, d, info = self.runner.act(ac)
             sn = self.transform_state(sn)
 
             self.replay_buffer.add_sample_demo(
                 state=s,
                 ac=ac,
                 r=r,
-                done=done,
+                d=d,
                 # info=info,
             )
 

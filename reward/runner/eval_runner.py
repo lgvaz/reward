@@ -15,13 +15,13 @@ class EvalRunner(SingleRunner):
 
     def run_n_episodes(self, act_fn, num_ep=1):
         for _ in range(num_ep):
-            done = False
+            d = False
             state = self.reset()
 
-            while not done:
+            while not d:
                 state = U.to_tensor(self.transform_state(state))
                 ac = act_fn(state)
-                state, r, done, info = self.act(ac)
+                state, r, d, info = self.act(ac)
 
         return self.rs[-num_ep:]
 

@@ -61,7 +61,7 @@ class ReplayBatcher(BaseBatcher):
                 ac = act_fn(state=U.to_tensor(s_tfm), step=0)
             else:
                 ac = self.runner.sample_random_ac()
-            sn, r, done, info = self.runner.act(ac)
+            sn, r, d, info = self.runner.act(ac)
             # sn = self.transform_state(sn)
 
             self.replay_buffer.add_sample(
@@ -70,7 +70,7 @@ class ReplayBatcher(BaseBatcher):
                 sn=sn,
                 ac=ac,
                 r=r,
-                done=done,
+                d=d,
                 # info=info,
             )
 
@@ -91,7 +91,7 @@ class ReplayBatcher(BaseBatcher):
                     s_tfm = self.state_stacker.transform_state(s_tfm)
                 ac = act_fn(U.to_tensor(s_tfm), self.num_steps)
 
-                sn, r, done, info = self.runner.act(ac)
+                sn, r, d, info = self.runner.act(ac)
 
                 self.replay_buffer.add_sample(
                     state=self.s,
@@ -99,7 +99,7 @@ class ReplayBatcher(BaseBatcher):
                     sn=sn,
                     ac=ac,
                     r=r,
-                    done=done,
+                    d=d,
                     # info=info,
                 )
 
@@ -116,7 +116,7 @@ class ReplayBatcher(BaseBatcher):
         batch = self.transform_batch(batch)
         # TODO: Check if this next lines are correct
         batch.r = batch.r[..., None]
-        batch.done = batch.done[..., None]
+        batch.d = batch.d[..., None]
         # TODO: Maybe to_tensor states here
         return batch
 

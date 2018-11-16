@@ -56,11 +56,11 @@ class PAACRunner(BaseRunner):
         )
         ac = self._get_shared(self._get_ac_array())
         r = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
-        done = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
+        d = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         info = [self.manager.dict() for _ in range(self.num_envs)]
 
         self.shared_tran = U.memories.SimpleMemory(
-            state=state, r=r, done=done, ac=ac, info=info
+            state=state, r=r, d=d, ac=ac, info=info
         )
 
     def _create_workers(self):
@@ -79,13 +79,13 @@ class PAACRunner(BaseRunner):
             self.split(self.env),
             self.split(self.shared_tran.state),
             self.split(self.shared_tran.r),
-            self.split(self.shared_tran.done),
+            self.split(self.shared_tran.d),
             self.split(self.shared_tran.ac),
             self.split(self.shared_tran.info),
         ):
 
             shared_tran = U.memories.SimpleMemory(
-                state=s_s, r=s_r, done=s_d, ac=s_a, info=s_i
+                state=s_s, r=s_r, d=s_d, ac=s_a, info=s_i
             )
             parent_conn, child_conn = Pipe()
             queue = Queue()
@@ -143,15 +143,15 @@ class PAACRunner(BaseRunner):
 
         sns = self.shared_tran.state.copy()
         rs = self.shared_tran.r.copy()
-        ds = self.shared_tran.done.copy()
+        ds = self.shared_tran.d.copy()
         infos = list(map(dict, self.shared_tran.info))
 
         # Accumulate rs
         self._env_rs_sum += rs
         self._env_ep_lengths += 1
         # TODO: Incorporate ep_maxlen
-        for i, done in enumerate(ds):
-            if done:
+        for i, d in enumerate(ds):
+            if d:
                 self.rs.append(self._env_rs_sum[i])
                 self.ep_lens.append(self._env_ep_lengths[i])
                 self._env_rs_sum[i] = 0
@@ -231,14 +231,14 @@ class EnvWorker(Process):
 
             else:
                 for i, (a, env) in enumerate(zip(self.shared_tran.ac, self.env)):
-                    sn, r, done, info = env.step(a)
+                    sn, r, d, info = env.step(a)
 
-                    if done:
+                    if d:
                         sn = env.reset()
 
                     self.shared_tran.state[i] = sn
                     self.shared_tran.r[i] = r
-                    self.shared_tran.done[i] = done
+                    self.shared_tran.d[i] = d
                     self.shared_tran.info[i].update(info)
 
             self.barrier.send(True)

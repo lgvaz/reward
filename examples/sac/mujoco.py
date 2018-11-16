@@ -208,7 +208,7 @@ def run(
         # Q loss
         v_target_tp1 = v_nn_target(batch.sn)
         q_t_next = U.estimators.td_target(
-            rs=batch.r, ds=batch.done, v_tp1=v_target_tp1, gamma=gamma
+            rs=batch.r, ds=batch.d, v_tp1=v_target_tp1, gamma=gamma
         )
         # IS weight corrects for bias introduced by prioritized sampling
         is_weight = U.to_tensor(batcher.get_is_weight(idx=idx)) if prioritized else 1.
