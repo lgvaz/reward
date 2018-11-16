@@ -126,3 +126,6 @@ reward/models/surrogate_pg_model_deprecated\.py
 reward/models/vanilla_pg_model_deprecated\.py
 
 examples_deprecated/
+
+docs/source/_build/
+.vscode/settings.json

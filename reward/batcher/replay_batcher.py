@@ -61,20 +61,20 @@ class ReplayBatcher(BaseBatcher):
                 action = act_fn(state=U.to_tensor(state_t_tfm), step=0)
             else:
                 action = self.runner.sample_random_action()
-            state_tp1, reward, done, info = self.runner.act(action)
-            # state_tp1 = self.transform_state(state_tp1)
+            sn, reward, done, info = self.runner.act(action)
+            # sn = self.transform_state(sn)
 
             self.replay_buffer.add_sample(
                 state=state_t,
-                # TODO: State_tp1 here only for testing
-                state_tp1=state_tp1,
+                # TODO: sn here only for testing
+                sn=sn,
                 action=action,
                 reward=reward,
                 done=done,
                 # info=info,
             )
 
-            state_t = state_tp1
+            state_t = sn
 
         if clean:
             self.runner.clean()
@@ -91,28 +91,28 @@ class ReplayBatcher(BaseBatcher):
                     state_t_tfm = self.state_stacker.transform_state(state_t_tfm)
                 action = act_fn(U.to_tensor(state_t_tfm), self.num_steps)
 
-                state_tp1, reward, done, info = self.runner.act(action)
+                sn, reward, done, info = self.runner.act(action)
 
                 self.replay_buffer.add_sample(
                     state=self.state_t,
-                    # TODO: State_tp1 here only for testing
-                    state_tp1=state_tp1,
+                    # TODO: sn here only for testing
+                    sn=sn,
                     action=action,
                     reward=reward,
                     done=done,
                     # info=info,
                 )
 
-                self.state_t = state_tp1
+                self.state_t = sn
 
         batch = self.replay_buffer.sample(self.batch_size)
         # TODO: Refactor next lines, training=False incorrect?
         batch.state_t = self.transform_state(
             U.join_first_dims(batch.state_t, 2), training=False
         ).reshape(batch.state_t.shape)
-        batch.state_tp1 = self.transform_state(
-            U.join_first_dims(batch.state_tp1, 2), training=False
-        ).reshape(batch.state_tp1.shape)
+        batch.sn = self.transform_state(
+            U.join_first_dims(batch.sn, 2), training=False
+        ).reshape(batch.sn.shape)
         batch = self.transform_batch(batch)
         # TODO: Check if this next lines are correct
         batch.reward = batch.reward[..., None]

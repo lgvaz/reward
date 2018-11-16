@@ -206,7 +206,7 @@ def run(
         log_prob /= float(reward_scale)
 
         # Q loss
-        v_target_tp1 = v_nn_target(batch.state_tp1)
+        v_target_tp1 = v_nn_target(batch.sn)
         q_t_next = U.estimators.td_target(
             rewards=batch.reward, dones=batch.done, v_tp1=v_target_tp1, gamma=gamma
         )

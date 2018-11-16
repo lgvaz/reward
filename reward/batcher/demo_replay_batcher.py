@@ -49,8 +49,8 @@
 #                 action = act_fn(state=U.to_tensor(state_t), step=0)
 #             else:
 #                 action = self.runner.sample_random_action()
-#             state_tp1, reward, done, info = self.runner.act(action)
-#             state_tp1 = self.transform_state(state_tp1)
+#             sn, reward, done, info = self.runner.act(action)
+#             sn = self.transform_state(sn)
 
 #             self.replay_buffer.add_sample_demo(
 #                 state=state_t,
@@ -60,7 +60,7 @@
 #                 # info=info,
 #             )
 
-#             state_t = state_tp1
+#             state_t = sn
 
 #         if clean:
 #             self.runner.clean()
@@ -92,8 +92,8 @@ class DemoReplayBatcher(ReplayBatcher):
                 action = act_fn(state=U.to_tensor(state_t), step=0)
             else:
                 action = self.runner.sample_random_action()
-            state_tp1, reward, done, info = self.runner.act(action)
-            state_tp1 = self.transform_state(state_tp1)
+            sn, reward, done, info = self.runner.act(action)
+            sn = self.transform_state(sn)
 
             self.replay_buffer.add_sample_demo(
                 state=state_t,
@@ -103,7 +103,7 @@ class DemoReplayBatcher(ReplayBatcher):
                 # info=info,
             )
 
-            state_t = state_tp1
+            state_t = sn
 
         if clean:
             self.runner.clean()
