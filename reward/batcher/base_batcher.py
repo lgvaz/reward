@@ -14,7 +14,7 @@ class BaseBatcher(ABC):
         self.batch_size = batch_size
         self.transforms = transforms or []
         self.batch = None
-        self.state_t = None
+        self.s = None
 
     def __str__(self):
         return "<{}>".format(type(self).__name__)

@@ -6,31 +6,31 @@ from reward.batcher import BaseBatcher
 
 class RolloutBatcher(BaseBatcher):
     def get_batch(self, act_fn):
-        if self.state_t is None:
-            self.state_t = self.transform_state(self.runner.reset())
-            self.state_t = U.to_tensor(self.state_t)
+        if self.s is None:
+            self.s = self.transform_state(self.runner.reset())
+            self.s = U.to_tensor(self.s)
 
         horizon = self.batch_size // self.runner.num_envs
-        batch = U.Batch(initial_keys=["state_t_and_tp1", "action", "reward", "done"])
+        batch = U.Batch(initial_keys=["s_and_tp1", "action", "reward", "done"])
 
         for i in range(horizon):
-            action = act_fn(self.state_t, self.num_steps)
+            action = act_fn(self.s, self.num_steps)
 
             sn, reward, done, info = self.runner.act(action)
             sn = U.to_tensor(self.transform_state(sn))
 
-            batch.state_t_and_tp1.append(self.state_t)
+            batch.s_and_tp1.append(self.s)
             batch.action.append(action)
             batch.reward.append(reward)
             batch.done.append(done)
             # batch.info.append(info)
 
-            self.state_t = sn
-        batch.state_t_and_tp1.append(self.state_t)
+            self.s = sn
+        batch.s_and_tp1.append(self.s)
 
-        batch.state_t_and_tp1 = torch.stack(batch.state_t_and_tp1)
-        batch.state_t = batch.state_t_and_tp1[:-1]
-        batch.sn = batch.state_t_and_tp1[1:]
+        batch.s_and_tp1 = torch.stack(batch.s_and_tp1)
+        batch.s = batch.s_and_tp1[:-1]
+        batch.sn = batch.s_and_tp1[1:]
         batch.action = U.to_np(batch.action)
         batch.reward = U.to_np(batch.reward)
         batch.done = U.to_np(batch.done)

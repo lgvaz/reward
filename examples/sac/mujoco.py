@@ -193,11 +193,11 @@ def run(
         batch = batch.to_tensor().concat_batch()
 
         ##### Calculate losses ######
-        q1_batch = q1_nn((batch.state_t, batch.action))
-        q2_batch = q2_nn((batch.state_t, batch.action))
-        v_batch = v_nn(batch.state_t)
+        q1_batch = q1_nn((batch.s, batch.action))
+        q2_batch = q2_nn((batch.s, batch.action))
+        v_batch = v_nn(batch.s)
 
-        dist = policy.create_dist(batch.state_t)
+        dist = policy.create_dist(batch.s)
         if repar:
             action, pre_tanh_action = dist.rsample_with_pre()
         else:
@@ -221,8 +221,8 @@ def run(
         q2_loss = td2_error.pow(2).mean()
 
         # V loss
-        q1_new_t = q1_nn((batch.state_t, action))
-        q2_new_t = q2_nn((batch.state_t, action))
+        q1_new_t = q1_nn((batch.s, action))
+        q2_new_t = q2_nn((batch.s, action))
         q_new_t = torch.min(q1_new_t, q2_new_t)
         next_value = q_new_t - log_prob
         v_loss = F.mse_loss(v_batch, next_value.detach())

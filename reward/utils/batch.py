@@ -8,7 +8,7 @@ from reward.utils import to_tensor, join_first_dims, to_np
 
 class Batch(SimpleMemory):
     def __len__(self):
-        return len(self["state_t"])
+        return len(self["s"])
 
     def apply_to_all(self, func):
         return Batch((k, func(v)) for k, v in self.items())

@@ -83,7 +83,7 @@ class TestRolloutBatcher(TestBatcher):
         for i in range(0, self.num_steps, self.batch_size):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
-            np.testing.assert_allclose(batch.state_t, exp_s[i : i + self.batch_size])
+            np.testing.assert_allclose(batch.s, exp_s[i : i + self.batch_size])
             np.testing.assert_allclose(batch.reward, exp_r[i : i + self.batch_size])
             np.testing.assert_allclose(batch.done, exp_d[i : i + self.batch_size])
             np.testing.assert_equal(batch.info, exp_i[i : i + self.batch_size])
@@ -116,7 +116,7 @@ class TestRolloutBatcher(TestBatcher):
         for i in range(0, self.num_steps // self.num_envs, horizon):
             batch = batcher.get_batch(select_action_fn=action_fn)
 
-            np.testing.assert_allclose(batch.state_t, exp_s[i : i + horizon])
+            np.testing.assert_allclose(batch.s, exp_s[i : i + horizon])
             np.testing.assert_allclose(batch.reward, exp_r[i : i + horizon])
             np.testing.assert_allclose(batch.done, exp_d[i : i + horizon])
             np.testing.assert_equal(batch.info, exp_i[i : i + horizon])

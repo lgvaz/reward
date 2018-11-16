@@ -40,27 +40,27 @@
 #         assert (n and not pct) or (pct and not n)
 #         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
-#         state_t = self.runner.reset()
-#         state_t = self.transform_state(state_t)
+#         s = self.runner.reset()
+#         s = self.transform_state(s)
 
 #         tqdm.write("Populating Replay Buffer...")
 #         for _ in tqdm(range(num_replays)):
 #             if act_fn is not None:
-#                 action = act_fn(state=U.to_tensor(state_t), step=0)
+#                 action = act_fn(state=U.to_tensor(s), step=0)
 #             else:
 #                 action = self.runner.sample_random_action()
 #             sn, reward, done, info = self.runner.act(action)
 #             sn = self.transform_state(sn)
 
 #             self.replay_buffer.add_sample_demo(
-#                 state=state_t,
+#                 state=s,
 #                 action=action,
 #                 reward=reward,
 #                 done=done,
 #                 # info=info,
 #             )
 
-#             state_t = sn
+#             s = sn
 
 #         if clean:
 #             self.runner.clean()
@@ -83,27 +83,27 @@ class DemoReplayBatcher(ReplayBatcher):
         assert (n and not pct) or (pct and not n)
         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
-        state_t = self.runner.reset()
-        state_t = self.transform_state(state_t)
+        s = self.runner.reset()
+        s = self.transform_state(s)
 
         tqdm.write("Populating Replay Buffer...")
         for _ in tqdm(range(num_replays)):
             if act_fn is not None:
-                action = act_fn(state=U.to_tensor(state_t), step=0)
+                action = act_fn(state=U.to_tensor(s), step=0)
             else:
                 action = self.runner.sample_random_action()
             sn, reward, done, info = self.runner.act(action)
             sn = self.transform_state(sn)
 
             self.replay_buffer.add_sample_demo(
-                state=state_t,
+                state=s,
                 action=action,
                 reward=reward,
                 done=done,
                 # info=info,
             )
 
-            state_t = sn
+            s = sn
 
         if clean:
             self.runner.clean()

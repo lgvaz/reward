@@ -60,7 +60,7 @@ class ReplayBuffer:
         ds = ds.swapaxes(0, 1)
 
         return Batch(
-            state_t=sb, sn=snb, action=acs, reward=rs, done=ds, idx=idxs
+            s=sb, sn=snb, action=acs, reward=rs, done=ds, idx=idxs
         )
 
     @property
@@ -227,7 +227,7 @@ class DictReplayBuffer:
         samples = [self[i] for i in idxs]
         batch = Batch.from_list_of_dicts(samples)
         # Add next state to batch
-        sn = [self[i + 1]["state_t"] for i in idxs]
+        sn = [self[i + 1]["s"] for i in idxs]
         batch.sn = sn
         batch.idx = idxs
         return batch
@@ -239,7 +239,7 @@ class DictReplayBuffer:
         # Store new transition at the appropriate index
         self.position = (self.position + 1) % self.maxlen
         self.buffer[self.position] = dict(
-            state_t=state, action=action, reward=reward, done=done
+            s=state, action=action, reward=reward, done=done
         )
 
     def sample(self, batch_size):
