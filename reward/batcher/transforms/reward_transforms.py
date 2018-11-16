@@ -45,10 +45,10 @@ class RewardClipper(BaseTransform):
     def __init__(self, clip_range=1.):
         super().__init__()
         self.clip_range = clip_range
-        self.rewards = None
+        self.rs = None
 
     def transform_batch(self, batch, training=True):
         batch.reward = batch.reward.clip(min=-self.clip_range, max=self.clip_range)
-        self.rewards = batch.reward
+        self.rs = batch.reward
 
         return batch

@@ -3,7 +3,7 @@ import numpy as np
 import reward.utils as U
 
 from reward.utils.estimators.estimation_funcs import (
-    discounted_sum_rewards,
+    discounted_sum_rs,
     gae_estimation,
     td_target,
 )
@@ -18,7 +18,7 @@ def dones():
 
 @pytest.fixture
 @before_after_equal
-def rewards():
+def rs():
     return np.array(
         [
             [0.0, 1.0, 3.0, 0.0, 0.0, 0.0, 1.0, 2.0],
@@ -61,7 +61,7 @@ def gae_lambda():
 
 
 @pytest.mark.parametrize("tensor", [False, True])
-def test_discounted_sum_rewards(rewards, dones, state_value_t, gamma, tensor):
+def test_discounted_sum_rs(rs, dones, state_value_t, gamma, tensor):
     expected_discounted_return = np.array(
         [
             [
@@ -79,19 +79,19 @@ def test_discounted_sum_rewards(rewards, dones, state_value_t, gamma, tensor):
     ).T
 
     if tensor:
-        rewards, dones, state_value_t = map(
-            U.to_tensor, (rewards, dones, state_value_t)
+        rs, dones, state_value_t = map(
+            U.to_tensor, (rs, dones, state_value_t)
         )
 
-    result = discounted_sum_rewards(
-        rewards=rewards, dones=dones, v_t_last=state_value_t[-1], gamma=gamma
+    result = discounted_sum_rs(
+        rs=rs, dones=dones, v_t_last=state_value_t[-1], gamma=gamma
     )
 
     np.testing.assert_allclose(U.to_np(result), expected_discounted_return)
 
 
 @pytest.mark.parametrize("tensor", [False, True])
-def test_td_target(rewards, dones, state_value_tp1, gamma, tensor):
+def test_td_target(rs, dones, state_value_tp1, gamma, tensor):
     expected_td_target = np.array(
         [
             [
@@ -118,16 +118,16 @@ def test_td_target(rewards, dones, state_value_tp1, gamma, tensor):
     ).T
 
     if tensor:
-        rewards, dones, state_value_tp1 = map(
-            U.to_tensor, (rewards, dones, state_value_tp1)
+        rs, dones, state_value_tp1 = map(
+            U.to_tensor, (rs, dones, state_value_tp1)
         )
-    result = td_target(rewards=rewards, dones=dones, v_tp1=state_value_tp1, gamma=gamma)
+    result = td_target(rs=rs, dones=dones, v_tp1=state_value_tp1, gamma=gamma)
     np.testing.assert_allclose(U.to_np(result), expected_td_target)
 
 
 @pytest.mark.parametrize("tensor", [False, True])
 def test_gae_estimation(
-    rewards, dones, state_value_t, state_value_tp1, gamma, gae_lambda, tensor
+    rs, dones, state_value_t, state_value_tp1, gamma, gae_lambda, tensor
 ):
     expected_td_target = np.array(
         [
@@ -154,18 +154,18 @@ def test_gae_estimation(
         ]
     ).T
     td_residuals = expected_td_target - state_value_t
-    expected_gae = np.zeros(rewards.shape)
+    expected_gae = np.zeros(rs.shape)
     gae_sum = np.zeros(expected_gae.shape[1])
-    for i in reversed(range(rewards.shape[0])):
+    for i in reversed(range(rs.shape[0])):
         gae_sum = td_residuals[i] + (1 - dones[i]) * (gamma * gae_lambda) * (gae_sum)
         expected_gae[i] = gae_sum
 
     if tensor:
-        rewards, dones, state_value_t, state_value_tp1 = map(
-            U.to_tensor, (rewards, dones, state_value_t, state_value_tp1)
+        rs, dones, state_value_t, state_value_tp1 = map(
+            U.to_tensor, (rs, dones, state_value_t, state_value_tp1)
         )
     result = gae_estimation(
-        rewards=rewards,
+        rs=rs,
         dones=dones,
         v_t=state_value_t,
         v_tp1=state_value_tp1,

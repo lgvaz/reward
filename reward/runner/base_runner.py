@@ -48,14 +48,14 @@ class BaseRunner(ABC):
 
     @property
     def num_episodes(self):
-        return len(self.rewards)
+        return len(self.rs)
 
     @property
     def is_best(self):
         return self._is_best
 
     def clean(self):
-        self.rewards = []
+        self.rs = []
         self.num_steps = 0
         self.ep_lens = []
         self.new_ep = 0
@@ -72,7 +72,7 @@ class BaseRunner(ABC):
             self.new_ep = new_ep
             self._last_logged_ep = self.num_episodes
 
-        rew = np.mean(self.rewards[-self.new_ep :])
+        rew = np.mean(self.rs[-self.new_ep :])
         self._is_best = rew >= self._best_rew
         self._best_rew = max(self._best_rew, rew)
 

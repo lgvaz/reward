@@ -25,7 +25,7 @@ class PAACRunner(BaseRunner):
     def __init__(self, env, ep_maxlen=None, num_workers=None):
         super().__init__(env=env, ep_maxlen=ep_maxlen)
         self.num_workers = num_workers or multiprocessing.cpu_count()
-        self._env_rewards_sum = np.zeros(self.num_envs)
+        self._env_rs_sum = np.zeros(self.num_envs)
         self._env_ep_lengths = np.zeros(self.num_envs)
         self.manager = Manager()
 
@@ -142,22 +142,22 @@ class PAACRunner(BaseRunner):
         self.num_steps += self.num_envs
 
         next_states = self.shared_tran.state.copy()
-        rewards = self.shared_tran.reward.copy()
+        rs = self.shared_tran.reward.copy()
         dones = self.shared_tran.done.copy()
         infos = list(map(dict, self.shared_tran.info))
 
-        # Accumulate rewards
-        self._env_rewards_sum += rewards
+        # Accumulate rs
+        self._env_rs_sum += rs
         self._env_ep_lengths += 1
         # TODO: Incorporate ep_maxlen
         for i, done in enumerate(dones):
             if done:
-                self.rewards.append(self._env_rewards_sum[i])
+                self.rs.append(self._env_rs_sum[i])
                 self.ep_lens.append(self._env_ep_lengths[i])
-                self._env_rewards_sum[i] = 0
+                self._env_rs_sum[i] = 0
                 self._env_ep_lengths[i] = 0
 
-        return next_states, rewards, dones, infos
+        return next_states, rs, dones, infos
 
     def reset(self):
         """

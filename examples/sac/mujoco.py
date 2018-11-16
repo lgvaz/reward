@@ -208,7 +208,7 @@ def run(
         # Q loss
         v_target_tp1 = v_nn_target(batch.sn)
         q_t_next = U.estimators.td_target(
-            rewards=batch.reward, dones=batch.done, v_tp1=v_target_tp1, gamma=gamma
+            rs=batch.reward, dones=batch.done, v_tp1=v_target_tp1, gamma=gamma
         )
         # IS weight corrects for bias introduced by prioritized sampling
         is_weight = U.to_tensor(batcher.get_is_weight(idx=idx)) if prioritized else 1.
@@ -270,7 +270,7 @@ def run(
             batcher.update_pr(idx=idx, pr=priority)
 
         ###### Write logs ######
-        if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rewards:
+        if batcher.num_steps % int(log_freq) == 0 and batcher.runner.rs:
             batcher.write_logs(logger)
             eval_runner.write_logs(act_fn=policy.get_action_eval, logger=logger)
 

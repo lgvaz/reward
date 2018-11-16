@@ -23,7 +23,7 @@ class EvalRunner(SingleRunner):
                 action = act_fn(state)
                 state, reward, done, info = self.act(action)
 
-        return self.rewards[-num_ep:]
+        return self.rs[-num_ep:]
 
     def write_logs(self, act_fn, logger):
         self.run_n_episodes(act_fn=act_fn, num_ep=1)
