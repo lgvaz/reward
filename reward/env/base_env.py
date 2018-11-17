@@ -87,18 +87,13 @@ class BaseEnv(ABC):
         """
 
     @property
-    def num_lives(self):
-        raise NotImplementedError
+    def num_lives(self): raise NotImplementedError
 
     @property
-    def unwrapped(self):
-        return self
+    def unwrapped(self): return self
 
-    def sample_random_ac(self):
-        return self.ac_space.sample()
+    def sample_random_ac(self): return self.ac_space.sample()
 
-    def record(self, path):
-        raise NotImplementedError
+    def record(self, path): raise NotImplementedError
 
-    def close(self):
-        raise NotImplementedError
+    def close(self): raise NotImplementedError

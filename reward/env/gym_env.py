@@ -24,18 +24,15 @@ class GymEnv(BaseEnv):
     """
 
     def __init__(self, env_name):
-        if not _has_gym:
-            raise ImportError("Could not import gym")
+        if not _has_gym: raise ImportError("Could not import gym")
         self.env_name = env_name
         super().__init__()
 
     @cachedproperty
-    def s_space(self):
-        return GymEnv.get_space(self.env.observation_space)
+    def s_space(self): return GymEnv.get_space(self.env.observation_space)
 
     @cachedproperty
-    def ac_space(self):
-        return GymEnv.get_space(self.env.action_space)
+    def ac_space(self): return GymEnv.get_space(self.env.action_space)
 
     def reset(self):
         """
@@ -71,22 +68,15 @@ class GymEnv(BaseEnv):
         """
         # TODO: Squeezing may break some envs (e.g. Pendulum-v0)
         ac = np.squeeze(ac)
-        if isinstance(self.ac_space, U.space.Discrete):
-            ac = int(ac)
+        if isinstance(self.ac_space, U.space.Discrete): ac = int(ac)
         sn, r, d, info = self.env.step(ac)
         return sn, r, d, info
 
-    def render(self):
-        self.env.render()
+    def render(self): self.env.render()
 
-    # def record(self, path):
-    #     self.env = Monitor(env=self.env, directory=path, video_callable=lambda x: True)
+    def sample_random_ac(self): return self.env.action_space.sample()
 
-    def sample_random_ac(self):
-        return self.env.action_space.sample()
-
-    def seed(self, value):
-        self.env.seed(value)
+    def seed(self, value): self.env.seed(value)
 
     def update_config(self, config):
         """
@@ -100,15 +90,12 @@ class GymEnv(BaseEnv):
         super().update_config(config)
         config.env.obj.update(dict(wrappers=self.wrappers))
 
-    def close(self):
-        self.env.close()
+    def close(self): self.env.close()
 
-    def remove_timestep_limit(self):
-        # TODO: Not always the case that time-limit is the first wrapper
-        self.env = self.env.env
+    # TODO: Not always the case that time-limit is the first wrapper
+    def remove_timestep_limit(self): self.env = self.env.env
 
-    def _create_env(self):
-        return gym.make(self.env_name)
+    def _create_env(self): return gym.make(self.env_name)
 
     @staticmethod
     def get_space(space):
