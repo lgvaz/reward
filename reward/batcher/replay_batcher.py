@@ -37,12 +37,12 @@ class ReplayBatcher(BaseBatcher):
         # TODO: Hack for handling StackStates transform together with replay_buffer
         # TODO: Add support for StackStates dim != 1
         # TODO TODO TODO: Modify replay buffer history length
-        self.state_stacker = None
+        self.s_stacker = None
         self.n_stacks = 1
         for tfm in self.transforms.copy():
             if isinstance(tfm, StackStates):
                 self.n_stacks = tfm.n
-                self.state_stacker = tfm
+                self.s_stacker = tfm
                 transforms.remove(tfm)
 
     def populate(self, n=None, pct=None, act_fn=None, clean=True):
@@ -50,22 +50,22 @@ class ReplayBatcher(BaseBatcher):
         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
         s = self.runner.reset()
-        # s = self.transform_state(s)
+        # s = self.transform_s(s)
 
         tqdm.write("Populating Replay Buffer...")
         for _ in tqdm(range(num_replays)):
             if act_fn is not None:
-                s_tfm = self.transform_state(self.s)
-                if self.state_stacker is not None:
-                    s_tfm = self.state_stacker.transform_state(s_tfm)
-                ac = act_fn(state=U.to_tensor(s_tfm), step=0)
+                s_tfm = self.transform_s(self.s)
+                if self.s_stacker is not None:
+                    s_tfm = self.s_stacker.transform_s(s_tfm)
+                ac = act_fn(s=U.to_tensor(s_tfm), step=0)
             else:
                 ac = self.runner.sample_random_ac()
             sn, r, d, info = self.runner.act(ac)
-            # sn = self.transform_state(sn)
+            # sn = self.transform_s(sn)
 
             self.replay_buffer.add_sample(
-                state=s,
+                s=s,
                 # TODO: sn here only for testing
                 sn=sn,
                 ac=ac,
@@ -85,16 +85,16 @@ class ReplayBatcher(BaseBatcher):
             for i in range(self.learning_freq):
                 if self.s is None:
                     self.s = self.runner.reset()
-                s_tfm = self.transform_state(self.s)
+                s_tfm = self.transform_s(self.s)
                 # TODO: Hacky way of stacking
-                if self.state_stacker is not None:
-                    s_tfm = self.state_stacker.transform_state(s_tfm)
+                if self.s_stacker is not None:
+                    s_tfm = self.s_stacker.transform_s(s_tfm)
                 ac = act_fn(U.to_tensor(s_tfm), self.num_steps)
 
                 sn, r, d, info = self.runner.act(ac)
 
                 self.replay_buffer.add_sample(
-                    state=self.s,
+                    s=self.s,
                     # TODO: sn here only for testing
                     sn=sn,
                     ac=ac,
@@ -107,10 +107,10 @@ class ReplayBatcher(BaseBatcher):
 
         batch = self.replay_buffer.sample(self.batch_size)
         # TODO: Refactor next lines, training=False incorrect?
-        batch.s = self.transform_state(
+        batch.s = self.transform_s(
             U.join_first_dims(batch.s, 2), training=False
         ).reshape(batch.s.shape)
-        batch.sn = self.transform_state(
+        batch.sn = self.transform_s(
             U.join_first_dims(batch.sn, 2), training=False
         ).reshape(batch.sn.shape)
         batch = self.transform_batch(batch)

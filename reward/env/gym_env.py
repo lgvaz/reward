@@ -30,7 +30,7 @@ class GymEnv(BaseEnv):
         super().__init__()
 
     @cachedproperty
-    def state_space(self):
+    def s_space(self):
         return GymEnv.get_space(self.env.observation_space)
 
     @cachedproperty

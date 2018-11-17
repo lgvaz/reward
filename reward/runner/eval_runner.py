@@ -8,20 +8,20 @@ class EvalRunner(SingleRunner):
         super().__init__(env=env, ep_maxlen=ep_maxlen)
         self.tfms = tfms or []
 
-    def transform_state(self, state):
+    def transform_s(self, s):
         for t in self.tfms:
-            state = t.transform_state(state=state, training=False)
-        return state
+            s = t.transform_s(s=s, training=False)
+        return s
 
     def run_n_episodes(self, act_fn, num_ep=1):
         for _ in range(num_ep):
             d = False
-            state = self.reset()
+            s = self.reset()
 
             while not d:
-                state = U.to_tensor(self.transform_state(state))
-                ac = act_fn(state)
-                state, r, d, info = self.act(ac)
+                s = U.to_tensor(self.transform_s(s))
+                ac = act_fn(s)
+                s, r, d, info = self.act(ac)
 
         return self.rs[-num_ep:]
 

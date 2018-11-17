@@ -40,10 +40,10 @@ class BaseBatcher(ABC):
         return self.runner.num_episodes
 
     @cachedproperty
-    def state_space(self):
-        space = self.runner.state_space
-        state = self.runner.reset()
-        space.shape = tuple(self.transform_state(state).shape)[1:]
+    def s_space(self):
+        space = self.runner.s_space
+        s = self.runner.reset()
+        space.shape = tuple(self.transform_s(s).shape)[1:]
         return space
 
     @property
@@ -62,7 +62,7 @@ class BaseBatcher(ABC):
 
         pbar.close()
 
-    def transform_state(self, state, training=True):
+    def transform_s(self, s, training=True):
         """
         Apply functions to state, called before selecting an action.
         """
@@ -70,8 +70,8 @@ class BaseBatcher(ABC):
         # state = U.to_tensor(state)
         # state = U.to_np(state)
         for t in self.transforms:
-            state = t.transform_state(state, training=training)
-        return state
+            s = t.transform_s(s, training=training)
+        return s
 
     def transform_batch(self, batch, training=True):
         """

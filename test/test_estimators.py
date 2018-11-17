@@ -29,7 +29,7 @@ def rs():
 
 @pytest.fixture
 @before_after_equal
-def state_value_t_and_tp1():
+def s_value_t_and_tp1():
     return np.array(
         [
             [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 42.0],
@@ -40,14 +40,14 @@ def state_value_t_and_tp1():
 
 @pytest.fixture
 @before_after_equal
-def state_value_t(state_value_t_and_tp1):
-    return state_value_t_and_tp1[:-1]
+def s_value_t(s_value_t_and_tp1):
+    return s_value_t_and_tp1[:-1]
 
 
 @pytest.fixture
 @before_after_equal
-def state_value_tp1(state_value_t_and_tp1):
-    return state_value_t_and_tp1[1:]
+def s_value_tp1(s_value_t_and_tp1):
+    return s_value_t_and_tp1[1:]
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def gae_lambda():
 
 
 @pytest.mark.parametrize("tensor", [False, True])
-def test_discounted_sum_rs(rs, ds, state_value_t, gamma, tensor):
+def test_discounted_sum_rs(rs, ds, s_value_t, gamma, tensor):
     expected_discounted_return = np.array(
         [
             [
@@ -79,19 +79,15 @@ def test_discounted_sum_rs(rs, ds, state_value_t, gamma, tensor):
     ).T
 
     if tensor:
-        rs, ds, state_value_t = map(
-            U.to_tensor, (rs, ds, state_value_t)
-        )
+        rs, ds, s_value_t = map(U.to_tensor, (rs, ds, s_value_t))
 
-    result = discounted_sum_rs(
-        rs=rs, ds=ds, v_t_last=state_value_t[-1], gamma=gamma
-    )
+    result = discounted_sum_rs(rs=rs, ds=ds, v_t_last=s_value_t[-1], gamma=gamma)
 
     np.testing.assert_allclose(U.to_np(result), expected_discounted_return)
 
 
 @pytest.mark.parametrize("tensor", [False, True])
-def test_td_target(rs, ds, state_value_tp1, gamma, tensor):
+def test_td_target(rs, ds, s_value_tp1, gamma, tensor):
     expected_td_target = np.array(
         [
             [
@@ -118,17 +114,13 @@ def test_td_target(rs, ds, state_value_tp1, gamma, tensor):
     ).T
 
     if tensor:
-        rs, ds, state_value_tp1 = map(
-            U.to_tensor, (rs, ds, state_value_tp1)
-        )
-    result = td_target(rs=rs, ds=ds, v_tp1=state_value_tp1, gamma=gamma)
+        rs, ds, s_value_tp1 = map(U.to_tensor, (rs, ds, s_value_tp1))
+    result = td_target(rs=rs, ds=ds, v_tp1=s_value_tp1, gamma=gamma)
     np.testing.assert_allclose(U.to_np(result), expected_td_target)
 
 
 @pytest.mark.parametrize("tensor", [False, True])
-def test_gae_estimation(
-    rs, ds, state_value_t, state_value_tp1, gamma, gae_lambda, tensor
-):
+def test_gae_estimation(rs, ds, s_value_t, s_value_tp1, gamma, gae_lambda, tensor):
     expected_td_target = np.array(
         [
             [
@@ -153,7 +145,7 @@ def test_gae_estimation(
             ],
         ]
     ).T
-    td_residuals = expected_td_target - state_value_t
+    td_residuals = expected_td_target - s_value_t
     expected_gae = np.zeros(rs.shape)
     gae_sum = np.zeros(expected_gae.shape[1])
     for i in reversed(range(rs.shape[0])):
@@ -161,14 +153,14 @@ def test_gae_estimation(
         expected_gae[i] = gae_sum
 
     if tensor:
-        rs, ds, state_value_t, state_value_tp1 = map(
-            U.to_tensor, (rs, ds, state_value_t, state_value_tp1)
+        rs, ds, s_value_t, s_value_tp1 = map(
+            U.to_tensor, (rs, ds, s_value_t, s_value_tp1)
         )
     result = gae_estimation(
         rs=rs,
         ds=ds,
-        v_t=state_value_t,
-        v_tp1=state_value_tp1,
+        v_t=s_value_t,
+        v_tp1=s_value_tp1,
         gamma=gamma,
         gae_lambda=gae_lambda,
     )

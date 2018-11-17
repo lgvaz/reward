@@ -23,7 +23,7 @@ class BaseRunner(ABC):
 
     @cachedproperty
     @abstractmethod
-    def state_space(self):
+    def s_space(self):
         pass
 
     @cachedproperty

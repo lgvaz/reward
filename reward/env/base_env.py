@@ -16,7 +16,7 @@ class BaseEnv(ABC):
     # TODO: Follow https://github.com/mahmoud/boltons/pull/184
     @cachedproperty
     @abstractmethod
-    def state_space(self):
+    def s_space(self):
         """
         Returns a `space` object containing information about the state space.
 

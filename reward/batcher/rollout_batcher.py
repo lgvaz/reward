@@ -7,7 +7,7 @@ from reward.batcher import BaseBatcher
 class RolloutBatcher(BaseBatcher):
     def get_batch(self, act_fn):
         if self.s is None:
-            self.s = self.transform_state(self.runner.reset())
+            self.s = self.transform_s(self.runner.reset())
             self.s = U.to_tensor(self.s)
 
         horizon = self.batch_size // self.runner.num_envs
@@ -17,7 +17,7 @@ class RolloutBatcher(BaseBatcher):
             ac = act_fn(self.s, self.num_steps)
 
             sn, r, d, info = self.runner.act(ac)
-            sn = U.to_tensor(self.transform_state(sn))
+            sn = U.to_tensor(self.transform_s(sn))
 
             batch.s_and_tp1.append(self.s)
             batch.ac.append(ac)

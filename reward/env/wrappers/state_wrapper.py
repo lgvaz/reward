@@ -12,12 +12,12 @@ class BaseStateWrapper(BaseWrapper, ABC):
         self._shape = None
 
     @abstractmethod
-    def transform(self, state):
+    def transform(self, s):
         pass
 
     @cachedproperty
-    def state_space(self):
-        space = self.env.state_space
+    def s_space(self):
+        space = self.env.s_space
         if self._shape is None:
             self._shape = self.reset().shape
 
@@ -25,19 +25,19 @@ class BaseStateWrapper(BaseWrapper, ABC):
         return space
 
     def reset(self):
-        state = self.env.reset()
-        return self.transform(state)
+        s = self.env.reset()
+        return self.transform(s)
 
     def step(self, ac):
-        state, r, d, info = self.env.step(ac)
-        state = self.transform(state)
+        s, r, d, info = self.env.step(ac)
+        s = self.transform(s)
 
-        return state, r, d, info
+        return s, r, d, info
 
 
 class RGB2GRAY(BaseStateWrapper):
-    def transform(self, state):
-        return cv2.cvtColor(state, cv2.COLOR_RGB2GRAY)[..., None]
+    def transform(self, s):
+        return cv2.cvtColor(s, cv2.COLOR_RGB2GRAY)[..., None]
 
 
 class Rescale(BaseStateWrapper):
@@ -45,14 +45,14 @@ class Rescale(BaseStateWrapper):
         super().__init__(env=env)
         self.shape = shape
 
-    def transform(self, state):
-        assert state.ndim == 3 or state.ndim == 2
-        state = cv2.resize(state, self.shape, interpolation=cv2.INTER_NEAREST)
+    def transform(self, s):
+        assert s.ndim == 3 or s.ndim == 2
+        s = cv2.resize(s, self.shape, interpolation=cv2.INTER_NEAREST)
 
-        return state if state.ndim == 3 else state[:, :, None]
+        return s if s.ndim == 3 else s[:, :, None]
 
 
 class HWC2CHW(BaseStateWrapper):
-    def transform(self, state):
-        assert state.ndim == 3, "frame have {} dims but must have 3".format(state.ndim)
-        return np.rollaxis(state, -1)
+    def transform(self, s):
+        assert s.ndim == 3, "frame have {} dims but must have 3".format(s.ndim)
+        return np.rollaxis(s, -1)

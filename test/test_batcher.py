@@ -20,16 +20,16 @@ class TestBatcher(unittest.TestCase):
     def create_runner_trajs(self, runner, acs):
         ss, rs, ds, infos = [], [], [], []
 
-        state = runner.reset()
+        s = runner.reset()
         for a in acs:
             sn, r, d, info = runner.act(a)
 
-            ss.append(state)
+            ss.append(s)
             rs.append(r)
             ds.append(d)
             infos.append(info)
 
-            state = sn
+            s = sn
 
         return list(map(np.array, [ss, rs, ds, infos]))
 
@@ -76,7 +76,7 @@ class TestRolloutBatcher(TestBatcher):
         # Get actual batch
         env.seed(self.seed)
         ac_gen = (a for a in acs)
-        ac_fn = lambda state, step: next(ac_gen)
+        ac_fn = lambda s, step: next(ac_gen)
 
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
@@ -112,7 +112,7 @@ class TestRolloutBatcher(TestBatcher):
         batcher = RolloutBatcher(runner, batch_size=self.batch_size)
 
         ac_gen = (a for a in acs)
-        ac_fn = lambda state, step: next(ac_gen)
+        ac_fn = lambda s, step: next(ac_gen)
         for i in range(0, self.num_steps // self.num_envs, horizon):
             batch = batcher.get_batch(select_ac_fn=ac_fn)
 

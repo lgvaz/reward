@@ -41,8 +41,8 @@ class PAACRunner(BaseRunner):
         return len(self.env)
 
     @cachedproperty
-    def state_space(self):
-        space = self.env[0].state_space
+    def s_space(self):
+        space = self.env[0].s_space
         space.shape = (self.num_envs,) + space.shape
         return space
 
@@ -51,17 +51,13 @@ class PAACRunner(BaseRunner):
         return self.env[0].ac_space
 
     def _create_shared_transitions(self):
-        state = self._get_shared(
-            np.zeros(self.state_space.shape, dtype=self.state_space.dtype)
-        )
+        s = self._get_shared(np.zeros(self.s_space.shape, dtype=self.s_space.dtype))
         ac = self._get_shared(self._get_ac_array())
         r = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         d = self._get_shared(np.zeros(self.num_envs, dtype=np.float32))
         info = [self.manager.dict() for _ in range(self.num_envs)]
 
-        self.shared_tran = U.memories.SimpleMemory(
-            state=state, r=r, d=d, ac=ac, info=info
-        )
+        self.shared_tran = U.memories.SimpleMemory(s=s, r=r, d=d, ac=ac, info=info)
 
     def _create_workers(self):
         """
@@ -77,16 +73,14 @@ class PAACRunner(BaseRunner):
 
         for env_i, s_s, s_r, s_d, s_a, s_i in zip(
             self.split(self.env),
-            self.split(self.shared_tran.state),
+            self.split(self.shared_tran.s),
             self.split(self.shared_tran.r),
             self.split(self.shared_tran.d),
             self.split(self.shared_tran.ac),
             self.split(self.shared_tran.info),
         ):
 
-            shared_tran = U.memories.SimpleMemory(
-                state=s_s, r=s_r, d=s_d, ac=s_a, info=s_i
-            )
+            shared_tran = U.memories.SimpleMemory(s=s_s, r=s_r, d=s_d, ac=s_a, info=s_i)
             parent_conn, child_conn = Pipe()
             queue = Queue()
 
@@ -141,7 +135,7 @@ class PAACRunner(BaseRunner):
         self.sync()
         self.num_steps += self.num_envs
 
-        sns = self.shared_tran.state.copy()
+        sns = self.shared_tran.s.copy()
         rs = self.shared_tran.r.copy()
         ds = self.shared_tran.d.copy()
         infos = list(map(dict, self.shared_tran.info))
@@ -168,7 +162,7 @@ class PAACRunner(BaseRunner):
             worker.connection.put(None)
         # Receive results
         self.sync()
-        ss = self.shared_tran.state.copy()
+        ss = self.shared_tran.s.copy()
 
         return ss
 
@@ -227,7 +221,7 @@ class EnvWorker(Process):
 
             if data is None:
                 for i, env in enumerate(self.env):
-                    self.shared_tran.state[i] = env.reset()
+                    self.shared_tran.s[i] = env.reset()
 
             else:
                 for i, (a, env) in enumerate(zip(self.shared_tran.ac, self.env)):
@@ -236,7 +230,7 @@ class EnvWorker(Process):
                     if d:
                         sn = env.reset()
 
-                    self.shared_tran.state[i] = sn
+                    self.shared_tran.s[i] = sn
                     self.shared_tran.r[i] = r
                     self.shared_tran.d[i] = d
                     self.shared_tran.info[i].update(info)

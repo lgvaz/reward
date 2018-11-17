@@ -77,12 +77,12 @@ class RandomReset(BaseWrapper):
 
         for _ in range(self.wake_step):
             ac = self.env.sample_random_ac()
-            state, r, d, info = self.env.step(ac)
+            s, r, d, info = self.env.step(ac)
 
             if d:
-                state = self.env.reset()
+                s = self.env.reset()
 
-        return state
+        return s
 
 
 class FireReset(BaseWrapper):
@@ -93,24 +93,22 @@ class FireReset(BaseWrapper):
         super().__init__(env=env)
 
     def reset(self):
-        state = self.env.reset()
-        state, r, d, _ = self.env.step(1)
+        s = self.env.reset()
+        s, r, d, _ = self.env.step(1)
         if d:
             self.env.reset()
-        state, r, d, _ = self.env.step(2)
+        s, r, d, _ = self.env.step(2)
         if d:
             self.env.reset()
 
-        return state
+        return s
 
 
 class ActionRepeat(BaseWrapper):
     def __init__(self, env, skip):
         """Return only every `skip`-th frame"""
         super().__init__(env=env)
-        self._obs_buffer = np.zeros(
-            [2] + list(self.env.state_space.shape), dtype=np.uint8
-        )
+        self._obs_buffer = np.zeros([2] + list(self.env.s_space.shape), dtype=np.uint8)
         self._skip = skip
 
     def step(self, ac):

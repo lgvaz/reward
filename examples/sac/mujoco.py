@@ -73,25 +73,25 @@ class QValueNN(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
-        state, ac = x
-        x = torch.cat([state, ac], dim=1)
+        s, ac = x
+        x = torch.cat([s, ac], dim=1)
         return self.layers(x)
 
 
 class TanhNormalPolicy(rw.policy.BasePolicy):
-    def create_dist(self, state):
-        parameters = self.nn(state)
+    def create_dist(self, s):
+        parameters = self.nn(s)
         mean, log_std = parameters
         return rw.distributions.TanhNormal(loc=mean, scale=log_std.exp())
 
-    def get_ac(self, state, step):
-        dist = self.create_dist(state=state)
+    def get_ac(self, s, step):
+        dist = self.create_dist(s=s)
         ac = U.to_np(dist.sample())
         assert not np.isnan(ac).any()
         return ac
 
-    def get_ac_eval(self, state):
-        dist = self.create_dist(state=state)
+    def get_ac_eval(self, s):
+        dist = self.create_dist(s=s)
         ac = U.to_np(dist.loc)
         assert not np.isnan(ac).any()
         return ac
@@ -169,18 +169,18 @@ def run(
             transforms=tfms,
             # replay_buffer_fn=U.buffers.DictReplayBuffer,
         )
-    state_features = batcher.state_space.shape[0]
+    s_features = batcher.s_space.shape[0]
     num_acs = batcher.ac_space.shape[0]
     # Create NNs
-    p_nn = PolicyNN(num_inputs=state_features, num_outputs=num_acs).to(device)
+    p_nn = PolicyNN(num_inputs=s_features, num_outputs=num_acs).to(device)
     policy = TanhNormalPolicy(nn=p_nn)
 
-    v_nn = ValueNN(num_inputs=state_features).to(device)
-    v_nn_target = ValueNN(num_inputs=state_features).to(device).eval()
+    v_nn = ValueNN(num_inputs=s_features).to(device)
+    v_nn_target = ValueNN(num_inputs=s_features).to(device).eval()
     U.copy_weights(from_nn=v_nn, to_nn=v_nn_target, weight=1.)
 
-    q1_nn = QValueNN(num_inputs=state_features, num_acs=num_acs).to(device)
-    q2_nn = QValueNN(num_inputs=state_features, num_acs=num_acs).to(device)
+    q1_nn = QValueNN(num_inputs=s_features, num_acs=num_acs).to(device)
+    q2_nn = QValueNN(num_inputs=s_features, num_acs=num_acs).to(device)
 
     p_opt = torch.optim.Adam(p_nn.parameters(), lr=lr)
     v_opt = torch.optim.Adam(v_nn.parameters(), lr=lr)

@@ -19,36 +19,32 @@ class StackStates(BaseTransform):
             )
             raise ValueError(err_msg)
 
-    def transform(self, state):
-        state = U.to_np(state)
+    def transform(self, s):
+        s = U.to_np(s)
         assert (
-            state.shape[self.dim + 1] == 1
-        ), "Dimension to stack must be 1 but it is {}".format(
-            state.shape[self.dim + 1]
-        )
+            s.shape[self.dim + 1] == 1
+        ), "Dimension to stack must be 1 but it is {}".format(s.shape[self.dim + 1])
 
-        return state.swapaxes(0, self.dim + 1)[0]
+        return s.swapaxes(0, self.dim + 1)[0]
 
-    def transform_state(self, state, training=True):
+    def transform_s(self, s, training=True):
         if self.ring_buffer is None:
-            self.ring_buffer = U.buffers.RingBuffer(
-                input_shape=state.shape, maxlen=self.n
-            )
+            self.ring_buffer = U.buffers.RingBuffer(input_shape=s.shape, maxlen=self.n)
         if self.eval_ring_buffer is None:
             # First dimension (num_envs) for evaluation is always 1
-            eval_shape = (1,) + state.shape[1:]
+            eval_shape = (1,) + s.shape[1:]
             self.eval_ring_buffer = U.buffers.RingBuffer(
                 input_shape=eval_shape, maxlen=self.n
             )
 
         if training:
-            self.ring_buffer.append(state)
-            state = self.ring_buffer.get_data()
+            self.ring_buffer.append(s)
+            s = self.ring_buffer.get_data()
         else:
-            self.eval_ring_buffer.append(state)
-            state = self.eval_ring_buffer.get_data()
+            self.eval_ring_buffer.append(s)
+            s = self.eval_ring_buffer.get_data()
 
-        return self.transform(state)
+        return self.transform(s)
 
 
 class StateRunNorm(BaseTransform):
@@ -57,18 +53,18 @@ class StateRunNorm(BaseTransform):
         self.filt = None
         self.clip_range = clip_range
 
-    def transform_state(self, state, training=True):
+    def transform_s(self, s, training=True):
         if self.filt is None:
-            shape = state.shape
+            shape = s.shape
             if len(shape) != 2:
                 msg = "state shape must (num_envs, num_features, got {})".format(shape)
                 raise ValueError(msg)
             self.filt = U.filter.MeanStdFilter(
-                num_features=state.shape[-1], clip_range=self.clip_range
+                num_features=s.shape[-1], clip_range=self.clip_range
             )
 
-        state = self.filt.normalize(state, add_sample=training)
-        return state
+        s = self.filt.normalize(s, add_sample=training)
+        return s
 
     def transform_batch(self, batch, training=True):
         if training:
@@ -81,5 +77,5 @@ class StateRunNorm(BaseTransform):
 
 
 class Frame2Float(BaseTransform):
-    def transform_state(self, state, training=True):
-        return state.astype("float32") / 255.
+    def transform_s(self, s, training=True):
+        return s.astype("float32") / 255.0

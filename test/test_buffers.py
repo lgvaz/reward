@@ -15,43 +15,43 @@ def test_ring_buffer():
 
     frame = np.ones(shape)
     buffer.append(frame)
-    state = U.to_np(buffer.get_data())
+    s = U.to_np(buffer.get_data())
     expected = np.zeros(expected_shape)
     expected[3] = np.ones(shape)
-    assert state.shape[0] == maxlen
-    np.testing.assert_equal(state, expected)
+    assert s.shape[0] == maxlen
+    np.testing.assert_equal(s, expected)
 
     frame = 2 * np.ones(shape)
     buffer.append(frame)
-    state = np.array(buffer.get_data())
+    s = np.array(buffer.get_data())
     expected = np.zeros(expected_shape)
     expected[3] = 2 * np.ones(shape)
     expected[2] = np.ones(shape)
-    assert state.shape[0] == maxlen
-    np.testing.assert_equal(state, expected)
+    assert s.shape[0] == maxlen
+    np.testing.assert_equal(s, expected)
 
     frame = 3 * np.ones(shape)
     buffer.append(frame)
-    state = np.array(buffer.get_data())
+    s = np.array(buffer.get_data())
     expected = np.zeros(expected_shape)
     expected[3] = 3 * np.ones(shape)
     expected[2] = 2 * np.ones(shape)
     expected[1] = np.ones(shape)
-    assert state.shape[0] == maxlen
-    np.testing.assert_equal(state, expected)
+    assert s.shape[0] == maxlen
+    np.testing.assert_equal(s, expected)
 
     frame = 42 * np.ones(shape)
     buffer.append(frame)
     buffer.append(frame)
     buffer.append(frame)
-    state = np.array(buffer.get_data())
+    s = np.array(buffer.get_data())
     expected = np.zeros(expected_shape)
     expected[3] = 42 * np.ones(shape)
     expected[2] = 42 * np.ones(shape)
     expected[1] = 42 * np.ones(shape)
     expected[0] = 3 * np.ones(shape)
-    assert state.shape[0] == maxlen
-    np.testing.assert_equal(state, expected)
+    assert s.shape[0] == maxlen
+    np.testing.assert_equal(s, expected)
 
 
 @pytest.mark.parametrize("num_envs", [1, 8])
@@ -142,17 +142,13 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     memory = deque(maxlen=real_maxlen)
 
     for i in range(int(maxlen * 1.5 / num_envs)):
-        state = i * create_test_array(num_envs=num_envs, shape=shape)
+        s = i * create_test_array(num_envs=num_envs, shape=shape)
         ac = i * create_test_array(num_envs=num_envs)
         r = i * create_test_array(num_envs=num_envs)
         d = (i * 10 == 0) * np.ones((num_envs,))
 
-        replay_buffer.add_sample(state=state, ac=ac, r=r, d=d)
-        memory.append(
-            U.memories.SimpleMemory(
-                state=state, ac=ac, r=r, d=d
-            )
-        )
+        replay_buffer.add_sample(s=s, ac=ac, r=r, d=d)
+        memory.append(U.memories.SimpleMemory(s=s, ac=ac, r=r, d=d))
     assert len(replay_buffer) == real_maxlen
 
     random.seed(seed)
@@ -162,7 +158,7 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
     idxs = random.sample(range(len(memory)), k=batch_size)
 
     for i, (i_env, i_idx) in enumerate(zip(env, idxs)):
-        np.testing.assert_equal(batch.state[i], memory[i_idx].state[i_env])
+        np.testing.assert_equal(batch.s[i], memory[i_idx].s[i_env])
         np.testing.assert_equal(batch.ac[i], memory[i_idx].ac[i_env])
         np.testing.assert_equal(batch.r[i], memory[i_idx].r[i_env])
         np.testing.assert_equal(batch.d[i], memory[i_idx].d[i_env])
@@ -177,16 +173,16 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
 #     replay_buffer = ReplayBuffer(maxlen=5 * num_envs)
 
 #     for i in range(5 * num_envs + 3):
-#         state = create_test_array(num_envs=num_envs, shape=shape[1:])
-#         ring_buffer.append(state)
-#         replay_buffer.add_sample(state=ring_buffer.get_data())
+#         s = create_test_array(num_envs=num_envs, shape=shape[1:])
+#         ring_buffer.append(s)
+#         replay_buffer.add_sample(s=ring_buffer.get_data())
 
 #     for i_sample in range(0, len(replay_buffer) - num_envs, num_envs):
 #         for i_env in range(num_envs):
-#             state = replay_buffer[i_sample + i_env].state.data
-#             sn = replay_buffer[i_sample + i_env + num_envs].state.data
+#             s = replay_buffer[i_sample + i_env].s.data
+#             sn = replay_buffer[i_sample + i_env + num_envs].s.data
 
-#             for arr1, arr2 in zip(state[1:], sn[:-1]):
+#             for arr1, arr2 in zip(s[1:], sn[:-1]):
 #                 if not np.shares_memory(arr1, arr2):
 #                     raise ValueError('Arrays should share memory')
 

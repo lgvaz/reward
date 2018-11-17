@@ -41,19 +41,19 @@
 #         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
 #         s = self.runner.reset()
-#         s = self.transform_state(s)
+#         s = self.transform_s(s)
 
 #         tqdm.write("Populating Replay Buffer...")
 #         for _ in tqdm(range(num_replays)):
 #             if act_fn is not None:
-#                 ac = act_fn(state=U.to_tensor(s), step=0)
+#                 ac = act_fn(s=U.to_tensor(s), step=0)
 #             else:
 #                 ac = self.runner.sample_random_ac()
 #             sn, reward, d, info = self.runner.act(ac)
-#             sn = self.transform_state(sn)
+#             sn = self.transform_s(sn)
 
 #             self.replay_buffer.add_sample_demo(
-#                 state=s,
+#                 s=s,
 #                 ac=ac,
 #                 r=r,
 #                 d=d,
@@ -84,19 +84,19 @@ class DemoReplayBatcher(ReplayBatcher):
         num_replays = int(n or pct * self.replay_buffer.maxlen)
 
         s = self.runner.reset()
-        s = self.transform_state(s)
+        s = self.transform_s(s)
 
         tqdm.write("Populating Replay Buffer...")
         for _ in tqdm(range(num_replays)):
             if act_fn is not None:
-                ac = act_fn(state=U.to_tensor(s), step=0)
+                ac = act_fn(s=U.to_tensor(s), step=0)
             else:
                 ac = self.runner.sample_random_ac()
             sn, r, d, info = self.runner.act(ac)
-            sn = self.transform_state(sn)
+            sn = self.transform_s(sn)
 
             self.replay_buffer.add_sample_demo(
-                state=s,
+                s=s,
                 ac=ac,
                 r=r,
                 d=d,

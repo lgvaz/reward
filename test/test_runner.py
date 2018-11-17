@@ -73,11 +73,11 @@ def test_paac_runner(env):
 def create_expected_trajs(env, acs):
     ss, rs, ds, infos = [], [], [], []
 
-    state = env.reset()
+    s = env.reset()
     for a in acs:
         sn, r, d, info = env.step(a)
 
-        ss.append(state)
+        ss.append(s)
         rs.append(r)
         ds.append(d)
         infos.append(info)
@@ -85,7 +85,7 @@ def create_expected_trajs(env, acs):
         if d:
             sn = env.reset()
 
-        state = sn
+        s = sn
 
     return list(map(np.array, [ss, rs, ds, infos]))
 
@@ -93,15 +93,15 @@ def create_expected_trajs(env, acs):
 def create_runner_trajs(runner, acs):
     ss, rs, ds, infos = [], [], [], []
 
-    state = runner.reset()
+    s = runner.reset()
     for a in acs:
         sn, r, d, info = runner.act(a)
 
-        ss.append(state)
+        ss.append(s)
         rs.append(r)
         ds.append(d)
         infos.append(info)
 
-        state = sn
+        s = sn
 
     return list(map(np.array, [ss, rs, ds, infos]))
