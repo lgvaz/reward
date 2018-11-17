@@ -116,7 +116,7 @@ def run(
     p_is=False,
     q_pr=0.,
     p_pr=0.,
-    replay_buffer_maxlen=1e6,
+    rbuff_maxlen=1e6,
     learning_freq=1,
     grad_steps_per_batch=1,
     gamma=0.99,
@@ -152,7 +152,7 @@ def run(
         batcher = rw.batcher.PrReplayBatcher(
             runner=runner,
             batch_size=batch_size,
-            maxlen=replay_buffer_maxlen,
+            maxlen=rbuff_maxlen,
             learning_freq=learning_freq,
             grad_steps_per_batch=grad_steps_per_batch,
             transforms=tfms,
@@ -163,11 +163,11 @@ def run(
         batcher = rw.batcher.ReplayBatcher(
             runner=runner,
             batch_size=batch_size,
-            maxlen=replay_buffer_maxlen,
+            maxlen=rbuff_maxlen,
             learning_freq=learning_freq,
             grad_steps_per_batch=grad_steps_per_batch,
             transforms=tfms,
-            # replay_buffer_fn=U.buffers.DictReplayBuffer,
+            # rbuff_fn=U.buffers.DictReplayBuffer,
         )
     s_features = batcher.s_space.shape[0]
     num_acs = batcher.ac_space.shape[0]

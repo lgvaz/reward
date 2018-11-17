@@ -38,8 +38,7 @@ class ReplayBuffer:
         self.idx = -1
         self._len = 0
 
-    def __len__(self):
-        return self._len * self.num_envs
+    def __len__(self): return self._len * self.num_envs
 
     def _get_batch(self, idxs):
         idxs = np.array(idxs)
@@ -62,8 +61,7 @@ class ReplayBuffer:
         return Batch(s=sb, sn=snb, ac=acs, r=rs, d=ds, idx=idxs)
 
     @property
-    def available_idxs(self):
-        return self.num_envs * (len(self) - self.stack - self.n_step + 1)
+    def available_idxs(self): return self.num_envs * (len(self) - self.stack - self.n_step + 1)
 
     def _initialize(self, s, ac, r, d, sn=None):
         self.initialized = True
@@ -76,8 +74,7 @@ class ReplayBuffer:
         if sn is not None:
             assert s.shape == sn.shape
             self.sn = np.empty((maxlen,) + s.shape, dtype=s.dtype)
-        else:
-            self.sn = None
+        else: self.sn = None
 
         self._create_strides()
 
@@ -87,30 +84,20 @@ class ReplayBuffer:
         self.a_stride = strided_axis(arr=self.acs, window=self.stack)
         self.r_stride = strided_axis(arr=self.rs, window=self.stack + self.n_step - 1)
         self.d_stride = strided_axis(arr=self.ds, window=self.stack + self.n_step - 1)
-        if self.sn is not None:
-            self.stp1_stride = strided_axis(arr=self.sn, window=self.stack)
-        else:
-            self.stp1_stride = strided_axis(arr=self.ss, window=self.stack)
+        if self.sn is not None: self.stp1_stride = strided_axis(arr=self.sn, window=self.stack)
+        else: self.stp1_stride = strided_axis(arr=self.ss, window=self.stack)
 
     def reset(self):
         self.idx = -1
         self._len = 0
 
     def add_sample(self, s, ac, r, d, sn=None):
-        """
-        Add a single sample to the replay buffer.
-
-        Expect transitions to be in the shape of (num_envs, features).
-        """
-        if not self.initialized:
-            self._initialize(s=s, ac=ac, r=r, d=d, sn=sn)
-
+        "Add a single sample to the replay buffer, shape should be: (num_envs, features)."
+        if not self.initialized: self._initialize(s=s, ac=ac, r=r, d=d, sn=sn)
         self.check_shapes(s, ac, r, d)
-
         # Update current position
         self.idx = (self.idx + 1) % self.real_maxlen
         self._len = min(self._len + 1, self.real_maxlen)
-
         # Store transition
         self.ss[self.idx] = s
         self.acs[self.idx] = ac
@@ -121,15 +108,10 @@ class ReplayBuffer:
             self.sn[self.idx] = sn
 
     def add_samples(self, ss, acs, rs, ds):
-        """
-        Add a single sample to the replay buffer.
-
-        Expect transitions to be in the shape of (num_samples, num_envs, features).
-        """
+        " Add a single sample to the replay buffer, shape should be (num_samples, num_envs, features)."
         # TODO: Possible optimization using slices
         assert ss.shape[0] == acs.shape[0] == rs.shape[0] == ds.shape[0]
-        if not self.initialized:
-            self._initialize(s=ss[0], ac=acs[0], r=rs[0], d=ds[0])
+        if not self.initialized: self._initialize(s=ss[0], ac=acs[0], r=rs[0], d=ds[0])
         num_samples = ss.shape[0]
 
         part = range(self.idx + 1, self.idx + 1 + num_samples)
@@ -184,9 +166,7 @@ class ReplayBuffer:
 
 
 def strided_axis(arr, window):
-    """
-    https://stackoverflow.com/questions/43413582/selecting-multiple-slices-from-a-numpy-array-at-once/43413801#43413801
-    """
+    "https://stackoverflow.com/questions/43413582/selecting-multiple-slices-from-a-numpy-array-at-once/43413801#43413801"
     shape = arr.shape
     strides = arr.strides
     num_envs = shape[1]
@@ -209,11 +189,9 @@ class DictReplayBuffer:
         # Intialized at -1 so the first updated position is 0
         self.position = -1
 
-    def __len__(self):
-        return len(self.buffer)
+    def __len__(self): return len(self.buffer)
 
-    def __getitem__(self, key):
-        return self.buffer[key]
+    def __getitem__(self, key): return self.buffer[key]
 
     def _get_batch(self, idxs):
         samples = [self[i] for i in idxs]
@@ -226,8 +204,7 @@ class DictReplayBuffer:
 
     def add_sample(self, s, ac, r, d):
         # If buffer is not full, add a new element
-        if len(self.buffer) <= self.maxlen:
-            self.buffer.append(None)
+        if len(self.buffer) <= self.maxlen: self.buffer.append(None)
         # Store new transition at the appropriate index
         self.position = (self.position + 1) % self.maxlen
         self.buffer[self.position] = dict(s=s, ac=ac, r=r, d=d)
@@ -236,8 +213,6 @@ class DictReplayBuffer:
         idxs = np.random.choice(len(self) - 1, batch_size, replace=False)
         return self._get_batch(idxs=idxs)
 
-    def save(self, savedir):
-        raise NotImplementedError
+    def save(self, savedir): raise NotImplementedError
 
-    def load(self, loaddir):
-        raise NotImplementedError
+    def load(self, loaddir): raise NotImplementedError

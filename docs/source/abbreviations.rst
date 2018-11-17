@@ -12,4 +12,7 @@ reward         r
 done           d
 batch          b          sb, snb, rb
 environment    env
+policy         pi
+neural net     nn         pnn, qnn, vnn
+replay buffer  rbuff
 =============  =========  ====================

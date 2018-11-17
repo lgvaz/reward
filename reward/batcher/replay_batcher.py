@@ -17,7 +17,7 @@ class ReplayBatcher(BaseBatcher):
         learning_freq=1,
         grad_steps_per_batch=1,
         transforms=None,
-        replay_buffer_fn=ReplayBuffer,
+        rbuff_fn=ReplayBuffer,
         maxlen=1e6,
         init_replays=0.05,
     ):
@@ -26,15 +26,15 @@ class ReplayBatcher(BaseBatcher):
         self.maxlen = maxlen
         self.learning_freq = learning_freq
         self.grad_steps_per_batch = grad_steps_per_batch
-        self.replay_buffer = self._create_replay_buffer(replay_buffer_fn)
+        self.rbuff = self._create_rbuff(rbuff_fn)
         self._grad_iter = 0
         self.init_replays = init_replays
 
-    def _create_replay_buffer(self, replay_buffer_fn):
-        return replay_buffer_fn(maxlen=self.maxlen, num_envs=self.runner.num_envs)
+    def _create_rbuff(self, rbuff_fn):
+        return rbuff_fn(maxlen=self.maxlen, num_envs=self.runner.num_envs)
 
     def _check_transforms(self):
-        # TODO: Hack for handling StackStates transform together with replay_buffer
+        # TODO: Hack for handling StackStates transform together with rbuff
         # TODO: Add support for StackStates dim != 1
         # TODO TODO TODO: Modify replay buffer history length
         self.s_stacker = None
@@ -47,7 +47,7 @@ class ReplayBatcher(BaseBatcher):
 
     def populate(self, n=None, pct=None, act_fn=None, clean=True):
         assert (n and not pct) or (pct and not n)
-        num_replays = int(n or pct * self.replay_buffer.maxlen)
+        num_replays = int(n or pct * self.rbuff.maxlen)
 
         s = self.runner.reset()
         # s = self.transform_s(s)
@@ -64,9 +64,9 @@ class ReplayBatcher(BaseBatcher):
             sn, r, d, info = self.runner.act(ac)
             # sn = self.transform_s(sn)
 
-            self.replay_buffer.add_sample(
+            # TODO: sn here only for testing
+            self.rbuff.add_sample(
                 s=s,
-                # TODO: sn here only for testing
                 sn=sn,
                 ac=ac,
                 r=r,
@@ -93,7 +93,7 @@ class ReplayBatcher(BaseBatcher):
 
                 sn, r, d, info = self.runner.act(ac)
 
-                self.replay_buffer.add_sample(
+                self.rbuff.add_sample(
                     s=self.s,
                     # TODO: sn here only for testing
                     sn=sn,
@@ -105,7 +105,7 @@ class ReplayBatcher(BaseBatcher):
 
                 self.s = sn
 
-        batch = self.replay_buffer.sample(self.batch_size)
+        batch = self.rbuff.sample(self.batch_size)
         # TODO: Refactor next lines, training=False incorrect?
         batch.s = self.transform_s(
             U.join_first_dims(batch.s, 2), training=False
@@ -121,10 +121,10 @@ class ReplayBatcher(BaseBatcher):
         return batch
 
     def reset(self):
-        self.replay_buffer.reset()
+        self.rbuff.reset()
 
     def save_exp(self, savedir):
-        self.replay_buffer.save(savedir=savedir)
+        self.rbuff.save(savedir=savedir)
 
     def load_exp(self, loaddir):
-        self.replay_buffer.load(loaddir=loaddir)
+        self.rbuff.load(loaddir=loaddir)

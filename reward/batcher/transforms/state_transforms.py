@@ -12,7 +12,7 @@ class StackStates(BaseTransform):
 
         if dim != 1:
             err_msg = (
-                "Because of the way of the way the replay_buffer is currently"
+                "Because of the way of the way the rbuff is currently"
                 "implemented, we're only allowed to stack in the first dimension"
                 "(which should be the case for image stacking). Support for other"
                 "options will be added in the future"

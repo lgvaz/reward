@@ -13,7 +13,7 @@
 #         pr_factor=0.6,
 #         is_factor=1.,
 #         pr_demo=0.3,
-#         replay_buffer_fn=DemoReplayBuffer,
+#         rbuff_fn=DemoReplayBuffer,
 #         **kwargs
 #     ):
 #         self.pr_demo = pr_demo
@@ -22,12 +22,12 @@
 #             min_pr=min_pr,
 #             pr_factor=pr_factor,
 #             is_factor=is_factor,
-#             replay_buffer_fn=replay_buffer_fn,
+#             rbuff_fn=rbuff_fn,
 #             **kwargs
 #         )
 
-#     def _create_replay_buffer(self, replay_buffer_fn):
-#         return replay_buffer_fn(
+#     def _create_rbuff(self, rbuff_fn):
+#         return rbuff_fn(
 #             maxlen=self.maxlen,
 #             num_envs=self.runner.num_envs,
 #             min_pr=self.min_pr,
@@ -38,7 +38,7 @@
 
 #     def populate_expert(self, n=None, pct=None, act_fn=None, clean=True):
 #         assert (n and not pct) or (pct and not n)
-#         num_replays = int(n or pct * self.replay_buffer.maxlen)
+#         num_replays = int(n or pct * self.rbuff.maxlen)
 
 #         s = self.runner.reset()
 #         s = self.transform_s(s)
@@ -52,7 +52,7 @@
 #             sn, reward, d, info = self.runner.act(ac)
 #             sn = self.transform_s(sn)
 
-#             self.replay_buffer.add_sample_demo(
+#             self.rbuff.add_sample_demo(
 #                 s=s,
 #                 ac=ac,
 #                 r=r,
@@ -73,15 +73,15 @@ from reward.utils.buffers import DemoReplayBuffer
 
 # TODO: Fix args and kwargs
 class DemoReplayBatcher(ReplayBatcher):
-    def __init__(self, *args, replay_buffer_fn=DemoReplayBuffer, **kwargs):
-        super().__init__(*args, replay_buffer_fn=replay_buffer_fn, **kwargs)
+    def __init__(self, *args, rbuff_fn=DemoReplayBuffer, **kwargs):
+        super().__init__(*args, rbuff_fn=rbuff_fn, **kwargs)
 
-    def _create_replay_buffer(self, replay_buffer_fn):
-        return replay_buffer_fn(maxlen=self.maxlen, num_envs=self.runner.num_envs)
+    def _create_rbuff(self, rbuff_fn):
+        return rbuff_fn(maxlen=self.maxlen, num_envs=self.runner.num_envs)
 
     def populate_expert(self, n=None, pct=None, act_fn=None, clean=True):
         assert (n and not pct) or (pct and not n)
-        num_replays = int(n or pct * self.replay_buffer.maxlen)
+        num_replays = int(n or pct * self.rbuff.maxlen)
 
         s = self.runner.reset()
         s = self.transform_s(s)
@@ -95,7 +95,7 @@ class DemoReplayBatcher(ReplayBatcher):
             sn, r, d, info = self.runner.act(ac)
             sn = self.transform_s(sn)
 
-            self.replay_buffer.add_sample_demo(
+            self.rbuff.add_sample_demo(
                 s=s,
                 ac=ac,
                 r=r,

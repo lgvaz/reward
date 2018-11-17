@@ -134,11 +134,11 @@ def test_ring_buffer_error_handling():
 @pytest.mark.parametrize("num_envs", [1, 4])
 @pytest.mark.parametrize("batch_size", [1, 32])
 @pytest.mark.parametrize("shape", [(1, 16, 16), (1, 3, 6), (1, 1, 1)])
-def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
+def test_rbuff(num_envs, shape, batch_size, maxlen=1000, seed=None):
     seed = seed or random.randint(0, 10000)
     real_maxlen = maxlen // num_envs
 
-    replay_buffer = ReplayBuffer(maxlen=maxlen, num_envs=num_envs)
+    rbuff = ReplayBuffer(maxlen=maxlen, num_envs=num_envs)
     memory = deque(maxlen=real_maxlen)
 
     for i in range(int(maxlen * 1.5 / num_envs)):
@@ -147,12 +147,12 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
         r = i * create_test_array(num_envs=num_envs)
         d = (i * 10 == 0) * np.ones((num_envs,))
 
-        replay_buffer.add_sample(s=s, ac=ac, r=r, d=d)
+        rbuff.add_sample(s=s, ac=ac, r=r, d=d)
         memory.append(U.memories.SimpleMemory(s=s, ac=ac, r=r, d=d))
-    assert len(replay_buffer) == real_maxlen
+    assert len(rbuff) == real_maxlen
 
     random.seed(seed)
-    batch = replay_buffer.sample(batch_size=batch_size).concat_batch()
+    batch = rbuff.sample(batch_size=batch_size).concat_batch()
     random.seed(seed)
     env = random.choices(range(num_envs), k=batch_size)
     idxs = random.sample(range(len(memory)), k=batch_size)
@@ -170,17 +170,17 @@ def test_replay_buffer(num_envs, shape, batch_size, maxlen=1000, seed=None):
 #     shape = (num_envs, 1, 3, 3)
 
 #     ring_buffer = RingBuffer(input_shape=(shape), maxlen=3)
-#     replay_buffer = ReplayBuffer(maxlen=5 * num_envs)
+#     rbuff = ReplayBuffer(maxlen=5 * num_envs)
 
 #     for i in range(5 * num_envs + 3):
 #         s = create_test_array(num_envs=num_envs, shape=shape[1:])
 #         ring_buffer.append(s)
-#         replay_buffer.add_sample(s=ring_buffer.get_data())
+#         rbuff.add_sample(s=ring_buffer.get_data())
 
-#     for i_sample in range(0, len(replay_buffer) - num_envs, num_envs):
+#     for i_sample in range(0, len(rbuff) - num_envs, num_envs):
 #         for i_env in range(num_envs):
-#             s = replay_buffer[i_sample + i_env].s.data
-#             sn = replay_buffer[i_sample + i_env + num_envs].s.data
+#             s = rbuff[i_sample + i_env].s.data
+#             sn = rbuff[i_sample + i_env + num_envs].s.data
 
 #             for arr1, arr2 in zip(s[1:], sn[:-1]):
 #                 if not np.shares_memory(arr1, arr2):
