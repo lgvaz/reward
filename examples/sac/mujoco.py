@@ -167,7 +167,7 @@ def run(
             learning_freq=learning_freq,
             grad_steps_per_batch=grad_steps_per_batch,
             transforms=tfms,
-            # rbuff_fn=U.buffers.DictReplayBuffer,
+            rbuff_fn=U.buffers.DictReplayBuffer,
         )
     s_features = batcher.s_space.shape[0]
     num_acs = batcher.ac_space.shape[0]
@@ -302,8 +302,8 @@ def run(
             batcher.save_exp(log_dir)
 
 
-if __name__ == "__main__":
-    fire.Fire(run)
+# if __name__ == "__main__":
+    # fire.Fire(run)
 
 run(
     env_name="Humanoid-v2",

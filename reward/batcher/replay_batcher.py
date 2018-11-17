@@ -1,4 +1,5 @@
 import pdb
+import torch
 import numpy as np
 import reward.utils as U
 from reward.batcher import BaseBatcher
@@ -65,19 +66,10 @@ class ReplayBatcher(BaseBatcher):
             # sn = self.transform_s(sn)
 
             # TODO: sn here only for testing
-            self.rbuff.add_sample(
-                s=s,
-                sn=sn,
-                ac=ac,
-                r=r,
-                d=d,
-                # info=info,
-            )
-
+            self.rbuff.add_sample(s=s, ac=ac.astype('float'), r=r, d=d.astype('float'))
             s = sn
 
-        if clean:
-            self.runner.clean()
+        if clean: self.runner.clean()
 
     def get_batch(self, act_fn):
         self._grad_iter = (self._grad_iter + 1) % self.grad_steps_per_batch
@@ -93,28 +85,18 @@ class ReplayBatcher(BaseBatcher):
 
                 sn, r, d, info = self.runner.act(ac)
 
-                self.rbuff.add_sample(
-                    s=self.s,
-                    # TODO: sn here only for testing
-                    sn=sn,
-                    ac=ac,
-                    r=r,
-                    d=d,
-                    # info=info,
-                )
+                # TODO: sn here only for testing
+                self.rbuff.add_sample(s=self.s, ac=ac.astype('float'), r=r, d=d.astype('float'))
 
                 self.s = sn
 
         batch = self.rbuff.sample(self.batch_size)
         # TODO: Refactor next lines, training=False incorrect?
-        batch.s = self.transform_s(
-            U.join_first_dims(batch.s, 2), training=False
-        ).reshape(batch.s.shape)
-        batch.sn = self.transform_s(
-            U.join_first_dims(batch.sn, 2), training=False
-        ).reshape(batch.sn.shape)
+        batch.s = self.transform_s(U.join_first_dims(batch.s, 2), training=False).reshape(batch.s.shape)
+        batch.sn = self.transform_s(U.join_first_dims(batch.sn, 2), training=False).reshape(batch.sn.shape)
         batch = self.transform_batch(batch)
         # TODO: Check if this next lines are correct
+        # batch = batch.apply_to_all(lambda x: U.to_tensor(x).to(U.device.get_device()))
         batch.r = batch.r[..., None]
         batch.d = batch.d[..., None]
         # TODO: Maybe to_tensor states here

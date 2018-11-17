@@ -1,6 +1,7 @@
 from .constants import EPSILON
 from .utils import (
     to_np,
+    is_np,
     explained_var,
     normalize,
     one_hot,

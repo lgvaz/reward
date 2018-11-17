@@ -200,6 +200,7 @@ class DictReplayBuffer:
         sn = [self[i + 1]["s"] for i in idxs]
         batch.sn = sn
         batch.idx = idxs
+        batch = batch.apply_to_all(lambda x: np.array(x))
         return batch
 
     def add_sample(self, s, ac, r, d):

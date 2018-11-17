@@ -4,17 +4,16 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from reward.utils.memories import SimpleMemory
 from reward.utils import to_tensor, join_first_dims, to_np
+from reward.utils.device import get_device
 
 
 class Batch(SimpleMemory):
     def __len__(self):
         return len(self["s"])
 
-    def apply_to_all(self, func):
-        return Batch((k, func(v)) for k, v in self.items())
+    def apply_to_all(self, func): return Batch((k, func(v)) for k, v in self.items())
 
-    def apply_to_keys(self, func, keys):
-        return Batch((k, func(self[k])) for k in keys)
+    def apply_to_keys(self, func, keys): return Batch((k, func(self[k])) for k in keys)
 
     def concat_batch(self):
         func = (
