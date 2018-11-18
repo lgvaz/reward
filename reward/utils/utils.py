@@ -2,11 +2,22 @@ import numpy as np
 import torch
 from numbers import Number
 from reward.utils import EPSILON
+from collections import Iterable
 
 
 def to_np(v): return v.detach().cpu().numpy()
 
 def is_np(v): return isinstance(v, (np.ndarray, np.generic))
+
+def listify(p=None, q=None):
+    "Make `p` same length as `q`. From fastai"
+    if p is None: p=[]
+    elif isinstance(p, str):          p=[p]
+    elif not isinstance(p, Iterable): p=[p]
+    n = q if type(q)==int else len(p) if q is None else len(q)
+    if len(p)==1: p = p * n
+    assert len(p)==n, f'List len mismatch ({len(p)} vs {n})'
+    return list(p)
 
 def explained_var(target, preds):
     """
