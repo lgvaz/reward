@@ -1,14 +1,21 @@
 import PIL
-import torchvision.transforms.functional as ttfm
 import reward.utils as U
+import torchvision.transforms.functional as ttfm
 from copy import deepcopy
+from .space import Space
 
+class Image(Space):
+    def __init__(self, sz, order='chw'):
+        assert order == 'chw', f'Only support order chw, got {order}'
+        self.sz, self.order = sz, order
 
-class Image:
+    def __call__(self, img): return ImageObj(img=img)
+
+class ImageObj:
+    sig = Image
     def __init__(self, img): self.img = img
-
     def __repr__(self): return f'Image({self.img.__repr__()})'
-        
+
     @property
     def shape(self): raise NotImplementedError
     
