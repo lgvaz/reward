@@ -1,6 +1,6 @@
 import torch
 import reward.utils as U
-from reward.distributions import Normal
+from reward.dist import Normal
 
 
 class TanhNormal(Normal):

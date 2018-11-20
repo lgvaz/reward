@@ -7,7 +7,7 @@ List of abbreviations
 -------------  ---------  --------------------
 state          s
 next state     sn
-action         ac
+action         a         SPECIAL: plural acs
 reward         r
 done           d
 batch          b          sb, snb, rb

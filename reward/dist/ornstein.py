@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from reward.distributions import BaseDist
+from reward.dist import BaseDist
 
 
 # TODO: REFACTOR

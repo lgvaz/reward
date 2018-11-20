@@ -82,7 +82,7 @@ class TanhNormalPolicy(rw.policy.BasePolicy):
     def create_dist(self, s):
         parameters = self.nn(s)
         mean, log_std = parameters
-        return rw.distributions.TanhNormal(loc=mean, scale=log_std.exp())
+        return rw.dist.TanhNormal(loc=mean, scale=log_std.exp())
 
     def get_ac(self, s, step):
         dist = self.create_dist(s=s)

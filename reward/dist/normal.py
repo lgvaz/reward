@@ -1,6 +1,6 @@
 import torch
 from torch.distributions import kl
-from reward.distributions import BaseDist
+from reward.dist import BaseDist
 
 
 class Normal(torch.distributions.Normal, BaseDist):
