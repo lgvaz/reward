@@ -4,25 +4,23 @@ from reward.utils import to_tensor
 from copy import deepcopy
 
 
-def disc_sum_rs(rs, ds, v_t_last=None, gamma=0.99):
-    """
-    Expected shape: (num_samples, num_envs)
-    """
+def disc_sum_rs(rs, ds, vt_last=None, gamma=0.99):
+    "Expected shape: (num_samples, num_envs)"
     rs = deepcopy(rs)
 
     # TODO: This works but is messy
     is_tensor = lambda x: isinstance(x, torch.Tensor)
-    if any(map(is_tensor, (rs, ds, v_t_last))):
+    if any(map(is_tensor, (rs, ds, vt_last))):
         rs, ds = to_tensor(rs), to_tensor(ds)
-        v_last = to_tensor(v_t_last) if v_t_last is not None else v_t_last
+        v_last = to_tensor(vt_last) if vt_last is not None else vt_last
         tensor = True
     else: tensor = False
 
-    # if v_t_last is None and not all(ds[-1]):
+    # if vt_last is None and not all(ds[-1]):
     #     raise AssertionError('If one episode is not finished you must'
-    #                          'pass a value to v_t_last to bootstrap from.')
+    #                          'pass a value to vt_last to bootstrap from.')
 
-    if v_t_last is not None: rs[-1][ds[-1] == 0] = v_t_last[ds[-1] == 0]
+    if vt_last is not None: rs[-1][ds[-1] == 0] = vt_last[ds[-1] == 0]
 
     returns = np.zeros(rs.shape, dtype="float32")
     returns_sum = np.zeros(rs.shape[-1], dtype="float32")
@@ -46,6 +44,6 @@ def gae_estimation(rs, ds, v_t, v_tp1, *, gamma, gae_lambda):
     td_target_value = td_target(rs=rs, ds=ds, v_tp1=v_tp1, gamma=gamma)
     td_residual = td_target_value - v_t
 
-    advantages = disc_sum_rs(rs=td_residual, ds=ds, v_t_last=None, gamma=gamma * gae_lambda)
+    advantages = disc_sum_rs(rs=td_residual, ds=ds, vt_last=None, gamma=gamma * gae_lambda)
 
     return advantages

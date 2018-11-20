@@ -81,7 +81,7 @@ def test_disc_sum_rs(rs, ds, s_value_t, gamma, tensor):
     if tensor:
         rs, ds, s_value_t = map(U.to_tensor, (rs, ds, s_value_t))
 
-    result = disc_sum_rs(rs=rs, ds=ds, v_t_last=s_value_t[-1], gamma=gamma)
+    result = disc_sum_rs(rs=rs, ds=ds, vt_last=s_value_t[-1], gamma=gamma)
 
     np.testing.assert_allclose(U.to_np(result), expected_discounted_return)
 
