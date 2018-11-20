@@ -207,7 +207,7 @@ def run(
 
         # Q loss
         v_target_tp1 = v_nn_target(batch.sn)
-        q_t_next = U.estimators.td_target(
+        q_t_next = U.estim.td_target(
             rs=batch.r, ds=batch.d, v_tp1=v_target_tp1, gamma=gamma
         )
         # IS weight corrects for bias introduced by prioritized sampling

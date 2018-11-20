@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import reward.utils as U
 
-from reward.utils.estimators.estimation_funcs import (
+from reward.utils.estim.estimation_funcs import (
     discounted_sum_rs,
     gae_estimation,
     td_target,
