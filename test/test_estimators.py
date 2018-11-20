@@ -3,7 +3,7 @@ import numpy as np
 import reward.utils as U
 
 from reward.utils.estim.estimation_funcs import (
-    discounted_sum_rs,
+    disc_sum_rs,
     gae_estimation,
     td_target,
 )
@@ -61,7 +61,7 @@ def gae_lambda():
 
 
 @pytest.mark.parametrize("tensor", [False, True])
-def test_discounted_sum_rs(rs, ds, s_value_t, gamma, tensor):
+def test_disc_sum_rs(rs, ds, s_value_t, gamma, tensor):
     expected_discounted_return = np.array(
         [
             [
@@ -81,7 +81,7 @@ def test_discounted_sum_rs(rs, ds, s_value_t, gamma, tensor):
     if tensor:
         rs, ds, s_value_t = map(U.to_tensor, (rs, ds, s_value_t))
 
-    result = discounted_sum_rs(rs=rs, ds=ds, v_t_last=s_value_t[-1], gamma=gamma)
+    result = disc_sum_rs(rs=rs, ds=ds, v_t_last=s_value_t[-1], gamma=gamma)
 
     np.testing.assert_allclose(U.to_np(result), expected_discounted_return)
 
