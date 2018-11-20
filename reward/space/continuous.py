@@ -28,7 +28,7 @@ class ContinuousObj:
     def shape(self): return self.arr.shape   
     
     def to_tensor(self):
-        arr = arr.astype('float32') if U.is_np(arr) else arr
+        arr = self.arr.astype('float32') if U.is_np(self.arr) else self.arr
         return torch.as_tensor(arr, dtype=torch.float)
 
     def apply_tfms(self, tfms, priority=True):

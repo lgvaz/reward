@@ -46,8 +46,6 @@ def gae_estimation(rs, ds, v_t, v_tp1, *, gamma, gae_lambda):
     td_target_value = td_target(rs=rs, ds=ds, v_tp1=v_tp1, gamma=gamma)
     td_residual = td_target_value - v_t
 
-    advantages = discounted_sum_rs(
-        rs=td_residual, ds=ds, v_t_last=None, gamma=gamma * gae_lambda
-    )
+    advantages = discounted_sum_rs(rs=td_residual, ds=ds, v_t_last=None, gamma=gamma * gae_lambda)
 
     return advantages
