@@ -11,7 +11,7 @@ class RolloutBatcher(BaseBatcher):
             self.s = U.to_tensor(self.s)
 
         horizon = self.batch_size // self.runner.num_envs
-        batch = U.Batch(initial_keys=["s_and_tp1", "ac", "r", "d"])
+        batch = U.Batch(keys=["s_and_tp1", "ac", "r", "d"])
 
         for i in range(horizon):
             ac = act_fn(self.s, self.num_steps)
