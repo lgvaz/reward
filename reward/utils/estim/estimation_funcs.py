@@ -9,6 +9,7 @@ def disc_sum_rs(rs, ds, vt_last=None, gamma=0.99):
     rs = deepcopy(rs)
 
     # TODO: This works but is messy
+    # TODO: I think tensor should be always be in CPU here (faster?)
     is_tensor = lambda x: isinstance(x, torch.Tensor)
     if any(map(is_tensor, (rs, ds, vt_last))):
         rs, ds = to_tensor(rs), to_tensor(ds)

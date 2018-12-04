@@ -10,11 +10,9 @@ def to_np(v): return v.detach().cpu().numpy()
 def is_np(v): return isinstance(v, (np.ndarray, np.generic))
 
 def listify(p=None):
-    "From fastai"
-    if p is None: p=[]
-    elif isinstance(p, str):          p=[p]
-    elif not isinstance(p, Iterable): p=[p]
-    return list(p)
+    if p is None:                   return []
+    elif not isinstance(p, list): return [p]
+    else:                           return p
 
 def explained_var(target, preds):
     """

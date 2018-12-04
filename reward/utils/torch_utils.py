@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -7,9 +8,13 @@ from reward.utils.device import get_device
 
 TDTYPE = dict(float=torch.float, float32=torch.float, double=torch.double, uint8=torch.uint8, int=torch.int, long=torch.long)
 
-def to_tensor(x, dtype='float32'):
+# TODO: Deprecated
+def to_tensor(x, dtype='float32', device=None):
+    warnings.warn('to_tensor is probably going to be deprecated', DeprecationWarning, stacklevel=2)
+    device = device or get_device()
     if is_np(x): x.astype(dtype)
-    return torch.as_tensor(x, dtype=TDTYPE[dtype], device=get_device())
+    try:                   return x.to_tensor()
+    except AttributeError: return torch.as_tensor(x, dtype=TDTYPE[dtype], device=device)
 
 def copy_weights(from_nn, to_nn, weight):
     for fp, tp in zip(from_nn.parameters(), to_nn.parameters()):

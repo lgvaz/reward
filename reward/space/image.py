@@ -1,4 +1,6 @@
 import PIL
+import torch
+import numpy as np
 import reward.utils as U
 import torchvision.transforms.functional as ttfm
 from copy import deepcopy
@@ -10,7 +12,9 @@ class Image(Space):
         self.sz, self.order = sz, order
 
     def __call__(self, img): return ImageObj(img=img)
+    def from_list(self, imgs): return ImageList(imgs=imgs)
 
+# TODO: Suport for multiple envs
 class ImageObj:
     sig = Image
     def __init__(self, img): self.img = img
@@ -33,3 +37,11 @@ class ImageObj:
         return x
     
     def clone(self): return self.__class__(img=deepcopy(self.img))
+
+    @classmethod
+    def from_list(cls, lst): return cls(np.array([o.img for o in lst]))
+
+class ImageList:
+    sig = Image
+    def __init__(self, imgs): self.imgs = imgs
+    def to_tensor(self): return torch.stack([o.to_tensor() for o in self.imgs])
