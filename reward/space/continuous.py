@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 import reward.utils as U
 from copy import deepcopy
@@ -31,7 +30,7 @@ class ContinuousObj:
     def shape(self): return self.arr.shape   
     
     def to_tensor(self):
-        return torch.as_tensor(self.arr, dtype=torch.float)
+        return U.to_tensor(self.arr, dtype='float32')
 
     def apply_tfms(self, tfms, priority=True):
         if priority: tfms = sorted(U.listify(tfms), key=lambda o: o.priority, reverse=True)
@@ -45,4 +44,4 @@ class ContinuousList:
     sig = Continuous
     def __init__(self, arrs): self.arrs = arrs
 
-    def to_tensor(self): return torch.as_tensor([o.arr for o in self.arrs], dtype=torch.float)
+    def to_tensor(self): return U.to_tensor([o.arr for o in self.arrs], dtype='float32')

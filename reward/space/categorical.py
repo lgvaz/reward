@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 import reward.utils as U
 from copy import deepcopy
@@ -26,7 +25,7 @@ class CategoricalObj:
     @property
     def shape(self): raise NotImplementedError
 
-    def to_tensor(self): return torch.as_tensor(self.val)
+    def to_tensor(self): return U.to_tensor(self.val)
     def apply_tfms(self, tfms, priority): raise NotImplementedError
     def clone(self): raise NotImplementedError
 
@@ -35,4 +34,4 @@ class CategoricalList:
     def __init__(self, vals): self.vals = vals
     def __repr__(self): return f'Categorical({self.vals.__repr__()})'
 
-    def to_tensor(self): return torch.as_tensor([o.val for o in self.vals], dtype=torch.int32)
+    def to_tensor(self): return U.to_tensor([o.val for o in self.vals], dtype='int')
