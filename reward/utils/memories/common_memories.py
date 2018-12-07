@@ -28,8 +28,14 @@ class SimpleMemory(dict):
             raise AttributeError(key)
 
     @classmethod
-    def from_list_of_dicts(cls, dicts):
+    def from_dicts(cls, dicts):
         return cls({k: [d[k] for d in dicts] for k in dicts[0]})
+
+    #TODO: Deprecated
+    @classmethod
+    def from_list_of_dicts(cls, dicts):
+        return cls.from_dicts(dicts=dicts)
+
 
 
 class DefaultMemory(defaultdict):

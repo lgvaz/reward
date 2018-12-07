@@ -16,6 +16,11 @@ def to_tensor(x, dtype='float32', device=None):
     try:                   return x.to_tensor()
     except AttributeError: return torch.as_tensor(x, dtype=TDTYPE[dtype], device=device)
 
+def optimize(loss, opt):
+    opt.zero_grad()
+    loss.backward()
+    opt.step()
+
 def copy_weights(from_nn, to_nn, weight):
     for fp, tp in zip(from_nn.parameters(), to_nn.parameters()):
         v = weight * fp.data + (1 - weight) * tp.data

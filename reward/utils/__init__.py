@@ -20,6 +20,7 @@ from .torch_utils import (
     save_model,
     load_model,
     freeze_weights,
+    optimize,
 )
 from .batch import Batch
 
@@ -28,7 +29,6 @@ import reward.utils.estim
 import reward.utils.filter
 import reward.utils.buffers
 import reward.utils.device
-import reward.utils.space
 
 __all__ = [
     "EPSILON",
@@ -39,8 +39,6 @@ __all__ = [
     "normalize",
     "one_hot",
     "Batch",
-    "SimpleMemory",
-    "DefaultMemory",
     "linear_schedule",
     "piecewise_linear_schedule",
     "piecewise_const_schedule",
