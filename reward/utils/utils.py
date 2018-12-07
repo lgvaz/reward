@@ -37,9 +37,13 @@ def normalize(array):
     "Normalize an array by subtracting the mean and diving by the std dev."
     return (array - array.mean()) / (array.std() + EPSILON)
 
-def map_range(array, low, high):
-    norm_array = (array - array.min()) / (array.max() - array.min())
-    return low + (norm_array * (high - low))
+def map_range(old_low, old_high, new_low, new_high):
+    old_span = old_high - old_low
+    new_span = new_high - new_low
+    def get(value):
+        norm_value = (value - old_low) / old_span
+        return new_low + (norm_value * new_span)
+    return get
 
 def make_callable(x):
     if callable(x): return x

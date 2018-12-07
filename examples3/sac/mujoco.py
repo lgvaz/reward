@@ -83,6 +83,7 @@ env = gym.make('InvertedPendulum-v2')
 # Define spaces
 S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_space.high)
 A = rw.space.Continuous(low=env.action_space.low, high=env.action_space.high)
+a_map = U.map_range(-1, 1, A.low[0], A.high[0])
 
 pnn = PolicyNN(n_in=S.shape[0], n_out=A.shape[0]).to(DEVICE)
 q1nn = QValueNN(n_in=S.shape[0], n_acs=A.shape[0]).to(DEVICE)
@@ -105,7 +106,7 @@ r_sum = 0
 
 for _ in range(int(1e5)):
     a = agent.get_act(S(s[None]))
-    sn, r, d, _ = env.step(a[0].arr)
+    sn, r, d, _ = env.step(a_map(a[0].arr))
     agent.report(r=np.array(r)[None], d=np.array(d)[None].astype('float'))
 
     s = sn
