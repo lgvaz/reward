@@ -70,13 +70,14 @@ class Policy:
         mean, log_std = self.nn(s)
         return rw.dist.TanhNormal(loc=mean, scale=log_std.exp())
 
-    def get_act(self, s): return self.get_dist(s=s).sample()
-    
-    def dist_logprob(self, ss, acs):
-        dist = self.get_dist(*ss)
-        logprob = dist.log_prob(*acs)
-        return dist, logprob
+    def get_act(self, s=None, dist=None):
+        assert (s is not None and dist is None) or (s is None and dist is not None)
+        dist = dist or self.get_dist(s=s)
+        return dist.rsample()
 
+    def logprob(self, dist, acs): return dist.log_prob(acs).sum(-1, keepdim=True)
+    def mean(self, dist): return dist.loc
+    def std(self, dist): return dist.scale
 
 # ## TODO: Action bounds
 env = gym.make('InvertedPendulum-v2')
@@ -98,7 +99,7 @@ q2_opt = torch.optim.Adam(q2nn.parameters())
 v_opt = torch.optim.Adam(vnn.parameters())
 
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, vnn=vnn, vnn_targ=vnn_targ, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, v_opt=v_opt, r_scale=1., gamma=0.99)
-agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=5, maxlen=512)
+agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=256, maxlen=1e6)
 
 s = env.reset()
 r_sum = 0

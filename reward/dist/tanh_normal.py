@@ -5,10 +5,11 @@ from reward.dist import Normal
 
 class TanhNormal(Normal):
     def _atanh(self, value):
+        # TODO: Check numerical stability
         return 0.5 * ((1 + value) / (1 - value + U.EPSILON) + U.EPSILON).log()
 
     def log_prob(self, value):
-        # TODO: Still need to test numerical stability of this (specially _atahh)
+        # TODO: Check numerical stability
         pre_tanh = self._atanh(value)
         log_prob_pre = super().log_prob(pre_tanh)
         log_prob = log_prob_pre - (1 - value.pow(2) + U.EPSILON).log()

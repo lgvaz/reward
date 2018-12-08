@@ -14,30 +14,28 @@ class SAC(Model):
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=1.)
 
     def train(self, *, ss, sns, acs, rs, ds):
-        # TODO: Put this 2 lines on utils? (join_dims)
+        # (#samples, #envs, #feats) -> (#samples + #envs, #feats)
         ss, sns, acs = [[o.reshape((-1, *o.shape[2:])) for o in l] for l in [ss, sns, acs]]
         rs, ds = [o.reshape((-1, *o.shape[2:])) for o in [rs, ds]]
-
+        ### Sac update ###
         q1b, q2b, vb = self.q1nn(*ss, *acs), self.q2nn(*ss, *acs), self.vnn(*ss)
-        # TODO: Fix for multiple actions (dist.sample is wrong for multiple)
         dist = self.p.get_dist(*ss)
-        anew, pretanh_anew = dist.rsample_with_pre()
-        logprob = dist.log_prob_pre(pretanh_anew).sum(-1, keepdim=True)
-        logprob /= float(self.r_scale)
+        anew = U.listify(self.p.get_act(dist=dist))
+        logprob = self.p.logprob(dist, *anew) / float(self.r_scale)
+        assert logprob.shape == q1b.shape == q2b.shape == vb.shape
         # Q loss
         vtarg_tp1 = self.vnn_targ(*sns)
         qt_next = U.estim.td_target(rs=rs, ds=ds, v_tp1=vtarg_tp1, gamma=self.gamma)
         q1_loss = (q1b - qt_next.detach()).pow(2).mean()
         q2_loss = (q2b - qt_next.detach()).pow(2).mean()
         # V Loss
-        # TODO: Check anew, is it being passed correctly?
-        q1new_t, q2new_t = self.q1nn(*ss, anew), self.q2nn(*ss, anew)
+        q1new_t, q2new_t = self.q1nn(*ss, *anew), self.q2nn(*ss, *anew)
         qnew_t = torch.min(q1new_t, q2new_t)
         v_next = qnew_t - logprob
         v_loss = F.mse_loss(vb, v_next.detach())
         # Policy loss
-        p_loss = (logprob - qnew_t).mean()
-        # TODO: Add regulaziation losses
+        p_loss = (logprob - qnew_t).mean() 
+        p_loss += 1e-3 * self.p.mean(dist=dist).pow(2).mean() + 1e-3 * self.p.std(dist=dist).log().pow(2).mean()
         # Optimize
         U.optimize(loss=q1_loss, opt=self.q1_opt)
         U.optimize(loss=q2_loss, opt=self.q2_opt)
