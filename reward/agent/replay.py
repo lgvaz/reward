@@ -16,7 +16,6 @@ class Replay(Agent):
         return a
     
     def report(self, r, d):
-        r, d = U.listify(r), U.listify(d)
         self.b.add_rd(r=r, d=d)
         if len(self.b) > self.bs:
             b = self.b.sample(bs=self.bs)            

@@ -15,9 +15,8 @@ class Rollout(Agent):
         return a
     
     def report(self, r, d):
-        r, d = U.listify(r), U.listify(d)
         self.b.add_rd(r=r, d=d)
-        if len(self.b) >= self.bs:
+        if len(self.b) > self.bs:
             b = self.b.get()            
             b['ss'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['ss'], self.s_sp)]
             b['acs'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['acs'], self.a_sp)]

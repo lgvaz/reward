@@ -19,13 +19,15 @@ class Logger:
         Path to write logs file.
     """
 
-    def __init__(self, log_dir=None, *, debug=False, log_freq=1):
+    def __init__(self, log_dir=None, log_freq=1, *, debug=False):
         self.log_dir = log_dir
         self.debug = debug
         self.log_freq = log_freq
         self.num_logs = 0
-        self.logs = DefaultMemory()
-        self.tf_logs = DefaultMemory()
+        # self.logs = DefaultMemory()
+        # self.tf_logs = DefaultMemory()
+        self.logs = dict()
+        self.tf_logs = dict()
         self.precision = dict()
         self.tf_precision = dict()
         self.histograms = dict()
@@ -54,7 +56,7 @@ class Logger:
         precision: int
             Decimal points displayed for the value (Default is 2).
         """
-        self.logs[name].append(to_np(value))
+        self.logs[name] = value
         self.precision[name] = precision
 
     def add_tf_only_log(self, name, value, precision=2):
@@ -72,12 +74,11 @@ class Logger:
         precision: int
             Decimal points displayed for the value (Default is 2).
         """
-        self.tf_logs[name].append(to_np(value))
+        self.tf_logs[name] = value
         self.tf_precision[name] = precision
 
     def add_debug(self, name, value, precision=2):
-        if self.debug:
-            self.add_log(name, value, precision)
+        if self.debug: self.add_log(name, value, precision)
 
     def add_histogram(self, name, values):
         """
@@ -128,8 +129,8 @@ class Logger:
                 self.writer.add_histogram(key, value, global_step=step)
 
         # Reset dict
-        self.logs = DefaultMemory()
-        self.tf_logs = DefaultMemory()
+        self.logs = dict()
+        self.tf_logs = dict()
         self.histograms = dict()
 
 

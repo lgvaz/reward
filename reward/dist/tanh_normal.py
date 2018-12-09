@@ -5,7 +5,8 @@ from reward.dist import Normal
 
 class TanhNormal(Normal):
     def _atanh(self, value):
-        # TODO: Check numerical stability
+        # TODO: Numerically unstable
+        raise NotImplementedError
         return 0.5 * ((1 + value) / (1 - value + U.EPSILON) + U.EPSILON).log()
 
     def log_prob(self, value):

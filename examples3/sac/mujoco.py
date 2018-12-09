@@ -75,12 +75,18 @@ class Policy:
         dist = dist or self.get_dist(s=s)
         return dist.rsample()
 
+    def get_act_pre(self, s=None, dist=None):
+        assert (s is not None and dist is None) or (s is None and dist is not None)
+        dist = dist or self.get_dist(s=s)
+        return dist.rsample_with_pre()
+
     def logprob(self, dist, acs): return dist.log_prob(acs).sum(-1, keepdim=True)
+    def logprob_pre(self, dist, acs): return dist.log_prob_pre(acs).sum(-1, keepdim=True)
     def mean(self, dist): return dist.loc
     def std(self, dist): return dist.scale
 
 # ## TODO: Action bounds
-env = gym.make('InvertedPendulum-v2')
+env = gym.make('Humanoid-v2')
 # Define spaces
 S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_space.high)
 A = rw.space.Continuous(low=env.action_space.low, high=env.action_space.high)
@@ -93,27 +99,30 @@ vnn = ValueNN(n_in=S.shape[0]).to(DEVICE)
 vnn_targ = ValueNN(n_in=S.shape[0]).to(DEVICE).eval()
 policy = Policy(nn=pnn)
 
-p_opt = torch.optim.Adam(pnn.parameters())
-q1_opt = torch.optim.Adam(q1nn.parameters())
-q2_opt = torch.optim.Adam(q2nn.parameters())
-v_opt = torch.optim.Adam(vnn.parameters())
+p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
+q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
+q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
+v_opt = torch.optim.Adam(vnn.parameters(), lr=3e-4)
 
-model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, vnn=vnn, vnn_targ=vnn_targ, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, v_opt=v_opt, r_scale=1., gamma=0.99)
+logger = U.Logger('sac/humanoid_pre-v1-1')
+model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, vnn=vnn, vnn_targ=vnn_targ, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, v_opt=v_opt,
+                     r_scale=20., logger=logger, gamma=0.99)
 agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=256, maxlen=1e6)
 
 s = env.reset()
 r_sum = 0
 
-
-for _ in range(int(1e5)):
+for i in range(int(20e6)):
     a = agent.get_act(S(s[None]))
     sn, r, d, _ = env.step(a_map(a[0].arr))
     agent.report(r=np.array(r)[None], d=np.array(d)[None].astype('float'))
 
     s = sn
-    r_sum += 1
+    r_sum += r
     if d:
         s = env.reset()
         print('Reward:' + str(r_sum))        
+        logger.add_log('reward', r_sum)
+        logger.log(step=i)
         r_sum = 0
 

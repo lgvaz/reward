@@ -6,8 +6,9 @@ from copy import deepcopy
 
 
 class SAC(Model):
-    def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, vnn_targ_w=0.005, gamma=0.99):
-        self.p,self.q1nn,self.q2nn,self.vnn,self.vnn_targ = policy,q1nn,q2nn,vnn,vnn_targ
+    def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, logger, vnn_targ_w=0.005, gamma=0.99):
+        super().__init__(policy=policy, logger=logger)
+        self.q1nn,self.q2nn,self.vnn,self.vnn_targ = q1nn,q2nn,vnn,vnn_targ
         self.p_opt,self.q1_opt,self.q2_opt,self.v_opt = p_opt,q1_opt,q2_opt,v_opt
         self.r_scale,self.vnn_targ_w,self.gamma = r_scale,vnn_targ_w,gamma
         # Update value target nn
@@ -16,13 +17,13 @@ class SAC(Model):
     def train(self, *, ss, sns, acs, rs, ds):
         # (#samples, #envs, #feats) -> (#samples + #envs, #feats)
         ss, sns, acs = [[o.reshape((-1, *o.shape[2:])) for o in l] for l in [ss, sns, acs]]
-        rs, ds = [o.reshape((-1, *o.shape[2:])) for o in [rs, ds]]
+        rs, ds = [o.reshape((-1, *o.shape[2:]))[..., None] for o in [rs, ds]]
         ### Sac update ###
         q1b, q2b, vb = self.q1nn(*ss, *acs), self.q2nn(*ss, *acs), self.vnn(*ss)
         dist = self.p.get_dist(*ss)
-        anew = U.listify(self.p.get_act(dist=dist))
-        logprob = self.p.logprob(dist, *anew) / float(self.r_scale)
-        assert logprob.shape == q1b.shape == q2b.shape == vb.shape
+        anew, anew_pre = map(U.listify, self.p.get_act_pre(dist=dist))
+        logprob = self.p.logprob_pre(dist, *anew_pre) / float(self.r_scale)
+        assert logprob.shape == q1b.shape == q2b.shape == vb.shape == rs.shape == ds.shape
         # Q loss
         vtarg_tp1 = self.vnn_targ(*sns)
         qt_next = U.estim.td_target(rs=rs, ds=ds, v_tp1=vtarg_tp1, gamma=self.gamma)
@@ -43,3 +44,16 @@ class SAC(Model):
         U.optimize(loss=p_loss, opt=self.p_opt)
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=self.vnn_targ_w)
+        # Write logs
+        # TODO: Only log to file when client wants, something like that
+        self.logger.add_log("policy/loss", U.to_np(p_loss))
+        self.logger.add_log("v/loss", U.to_np(v_loss))
+        self.logger.add_log("q1/loss", U.to_np(q1_loss))
+        self.logger.add_log("q2/loss", U.to_np(q2_loss))
+        self.logger.add_histogram("policy/logprob", logprob)
+        self.logger.add_histogram("policy/mean", self.p.mean(dist=dist))
+        self.logger.add_histogram("policy/std", self.p.std(dist=dist))
+        self.logger.add_histogram("v/value", vb)
+        self.logger.add_histogram("q1/value", q1b)
+        self.logger.add_histogram("q2/value", q2b)
+

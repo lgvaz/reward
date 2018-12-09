@@ -6,6 +6,7 @@ from copy import deepcopy
 
 def disc_sum_rs(rs, ds, vt_last=None, gamma=0.99):
     "Expected shape: (num_samples, num_envs)"
+    assert rs.shape == ds.shape
     rs = deepcopy(rs)
 
     # TODO: This works but is messy
