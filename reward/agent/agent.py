@@ -2,11 +2,13 @@ import reward.utils as U
 from abc import ABC, abstractmethod
 
 class Agent(ABC):
-    def __init__(self, model, *, s_sp, a_sp):
-        self.md, self.s_sp, self.a_sp = model,U.listify(s_sp),U.listify(a_sp)
-        
+    def __init__(self, model, logger, *, s_sp, a_sp):
+        self.md, self.logger, self.s_sp, self.a_sp = model, logger, U.listify(s_sp), U.listify(a_sp)
+        self._rsum, self._rs = None, []
+
     @abstractmethod
     def get_act(self, s):
+        U.global_step.add(1)
         s = U.listify(s)
         self._check_s(s)
         s = [o.to_tensor() for o in s]
@@ -15,7 +17,16 @@ class Agent(ABC):
         return a
     
     @abstractmethod
-    def report(self, r, d): pass
+    def report(self, r, d):
+        assert r.shape == d.shape
+        if self._rsum is None: self._rsum = r
+        else:                  self._rsum += r
+        for i in range(len(r)):
+            if d[i]:
+                self._rs.append(self._rsum[i])
+                self.logger.add_log('reward', self._rsum[i], force=True)
+                self._rsum[i] = 0
+
     
     def _check_s(self, s): self._check_space(expected=self.s_sp, recv=s, name='State')
     def _check_a(self, a): self._check_space(expected=self.a_sp, recv=a, name='Action')

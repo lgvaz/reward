@@ -19,3 +19,4 @@ class PG(Model):
         self.p_opt.zero_grad()
         loss.backward()
         self.p_opt.step()
+        self.logger.add_log("policy/loss", U.to_np(loss))

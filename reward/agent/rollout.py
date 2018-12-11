@@ -4,8 +4,8 @@ from .agent import Agent
 
 
 class Rollout(Agent):
-    def __init__(self, model, *, s_sp, a_sp, bs):
-        super().__init__(model=model, s_sp=s_sp, a_sp=a_sp)
+    def __init__(self, model, logger, *, s_sp, a_sp, bs):
+        super().__init__(model=model, logger=logger, s_sp=s_sp, a_sp=a_sp)
         self.bs = bs
         self.b = RollBatch()
         
@@ -15,6 +15,7 @@ class Rollout(Agent):
         return a
     
     def report(self, r, d):
+        super().report(r=r, d=d)
         self.b.add_rd(r=r, d=d)
         if len(self.b) > self.bs:
             b = self.b.get()            

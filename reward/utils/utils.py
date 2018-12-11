@@ -53,3 +53,17 @@ def make_callable(x):
 def one_hot(array, num_classes): return np.eye(num_classes)[array]
 
 def join_first_dims(x, num_dims): return x.reshape((-1, *x.shape[num_dims:]))
+
+
+class ScalarStats:
+    def __init__(self, window):
+        self.arr, self.w, self._sum = [], window, 0
+
+    def append(self, v):
+        self.arr.append(v)
+        self._sum += v
+        if len(self.arr) > self.w: self._sum -= self.arr[-self.w]
+
+    def sum(self): return self._sum
+    def mean(self): return self._sum / min(self.w, len(self.arr))
+

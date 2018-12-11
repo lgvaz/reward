@@ -39,23 +39,13 @@ pnn = PolicyNN(n_ins=S.shape[0], n_outs=A.n_acs).to(DEVICE)
 policy = Policy(nn=pnn)
 p_opt = torch.optim.Adam(policy.nn.parameters())
 logger = U.Logger('/tmp/tests')
-model = rw.model.PG(policy=policy, p_opt=p_opt, logger=logger)
-agent = rw.agent.Rollout(model=model, s_sp=S, a_sp=A, bs=512)
+model = rw.model.PG(policy=policy, logger=logger, p_opt=p_opt)
+agent = rw.agent.Rollout(model=model, logger=logger, s_sp=S, a_sp=A, bs=512)
 
 s = env.reset()
-
-r_sum = 0
 for _ in range(int(1e5)):
-    # a = agent.get_act(S(np.stack([s, s])))
-    # sn, r, d, _ = env.step(int(a[0].val[0]))
-    # agent.report(r=np.array([r, 2]), d=np.array([d, False]).astype('float'))
     a = agent.get_act(S(s[None]))
     sn, r, d, _ = env.step(int(a[0].val))
     agent.report(r=np.array(r)[None], d=np.array(d)[None].astype('float'))
-    
     s = sn
-    r_sum += 1
-    if d:
-        s = env.reset()
-        print('Reward:' + str(r_sum))        
-        r_sum = 0
+    if d: s = env.reset()

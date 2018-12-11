@@ -9,6 +9,7 @@ from .utils import (
     make_callable,
     join_first_dims,
     map_range,
+    ScalarStats,
 )
 from .config import Config
 from .logger import Logger
