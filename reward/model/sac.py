@@ -45,7 +45,6 @@ class SAC(Model):
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=self.vnn_targ_w)
         # Write logs
-        # TODO: Only log to file when client wants, something like that
         self.logger.add_log("policy/loss", U.to_np(p_loss))
         self.logger.add_log("v/loss", U.to_np(v_loss))
         self.logger.add_log("q1/loss", U.to_np(q1_loss))

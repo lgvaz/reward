@@ -26,6 +26,7 @@ class Agent(ABC):
                 self._rs.append(self._rsum[i])
                 self.logger.add_log('reward', self._rsum[i], force=True)
                 self._rsum[i] = 0
+        self.logger.add_header('Episode', len(self._rs))
 
     
     def _check_s(self, s): self._check_space(expected=self.s_sp, recv=s, name='State')

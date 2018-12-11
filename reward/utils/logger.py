@@ -1,5 +1,5 @@
 import numpy as np
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from tqdm.autonotebook import tqdm
 from tensorboardX import SummaryWriter
 from reward.utils import to_np
@@ -13,8 +13,8 @@ Log = namedtuple('Log', 'val prec hid')
 class Logger:
     "Common logger used by all agents, writes to file and prints a pretty table."
     def __init__(self, logdir=None, logfreq=1000, maxsteps=None):
-        self.logdir, self.logfreq, self.pbar = logdir, logfreq, tqdm(total=maxsteps, dynamic_ncols=True, unit_scale=True)
-        self.logs, self.histograms, self.writer, self._next_log = {}, {}, SummaryWriter(log_dir=logdir), global_step.get() + logfreq
+        self.logdir, self.logfreq, self.pbar = logdir, int(logfreq), tqdm(total=maxsteps, dynamic_ncols=True, unit_scale=True)
+        self.logs,self.hists,self.header,self.writer,self._next_log = {},{},OrderedDict(),SummaryWriter(log_dir=logdir),global_step.get()+logfreq
         global_step.subscribe_add(self._gstep_callback)
         tqdm.write("Writing logs to: {}".format(logdir))
 
@@ -22,17 +22,19 @@ class Logger:
         self.logs[name] = Log(val=value, prec=precision, hid=hidden)
         if force: self.writer.add_scalar(name, value, global_step=global_step.get())
 
-    def add_histogram(self, name, values): self.histograms[name] = to_np(values)
+    def add_histogram(self, name, values): self.hists[name] = to_np(values)
 
-    def log(self, header=None):
+    def add_header(self, name, value): self.header[name] = value
+
+    def log(self):
         step, rate = global_step.get(), self.pbar.n/(self.pbar._time() - self.pbar.start_t)
-        header = header or dict(Step=step, Rate=f'{rate:.2f} steps/s')
         logs = {k: f'{v.val:.{v.prec}f}' for k, v in self.logs.items() if not v.hid}
-        if logs: print_table(logs, header)
+        self.header.update(OrderedDict(Step=step, Rate=f'{rate:.2f} steps/s'))
+        if logs: print_table(logs, self.header)
         self.add_log(name='steps_second', value=rate, hidden=True)
         for k, v in self.logs.items(): self.writer.add_scalar(k, v.val, global_step=step)
-        for k, v in self.histograms.items(): self.writer.add_histogram(k, v, global_step=step)
-        self.logs, self.histograms = {}, {}
+        for k, v in self.hists.items(): self.writer.add_histogram(k, v, global_step=step)
+        self.logs, self.hists, self.header = {}, {}, OrderedDict()
 
     def close(self): self.pbar.close()
 
