@@ -9,3 +9,4 @@ import reward.space
 # import reward.cont
 import reward.model
 import reward.agent
+import reward.tfm

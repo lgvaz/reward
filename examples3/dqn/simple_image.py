@@ -1,26 +1,16 @@
-import pdb
 import gym
 import torch
-import numpy as np
-import reward as rw
-import matplotlib.pyplot as plt
-import torchvision.transforms as T
-import torch.nn.functional as F
-import reward.utils as U
-import torch.nn as nn
-from PIL import Image
-from reward.img.transform import Gray, Resize
+import numpy as np, reward as rw, torch.nn as nn, matplotlib.pyplot as plt
+import torch.nn.functional as F, reward.utils as U
 
 screen_width = 600
 device = U.device.get_device()
-# resize = T.Compose([T.ToPILImage(), T.Resize(40, interpolation=Image.CUBIC), T.ToTensor()])
 MAX_STEPS = 2e5
 
 def get_cart_location():
     world_width = env.x_threshold * 2
     scale = screen_width / world_width
     return int(env.state[0] * scale + screen_width / 2.0)  # MIDDLE OF CART
-
 
 def get_screen():
     screen = env.render(mode='rgb_array').transpose((2, 0, 1))
@@ -70,15 +60,14 @@ def main():
     S = rw.space.Image(sz=[40, 80], order='NCHW')
     A = rw.space.Categorical(n_acs=env.action_space.n)
     exp_rate = U.schedules.linear_schedule(1., .1, int(.3 * MAX_STEPS))
-
-    tfms = [Gray(), Resize(sz=[40, 80])]
+    tfms = [rw.tfm.img.Gray(), rw.tfm.img.Resize(sz=[40, 80])]
 
     qnn = QValueNN().to(device)
     qnn_targ = QValueNN().to(device).eval()
     q_opt = torch.optim.Adam(qnn.parameters())
     policy = Policy(qnn=qnn, exp_rate=exp_rate)
 
-    logger = U.Logger('logs/cp_img/v3-0', maxsteps=MAX_STEPS, logfreq=300)
+    logger = U.Logger('logs/cp_img/v3-1', maxsteps=MAX_STEPS, logfreq=300)
     model = rw.model.DQN(policy=policy, qnn=qnn, qnn_targ=qnn_targ, q_opt=q_opt, targ_up_freq=10, logger=logger, gamma=0.99)
     agent = rw.agent.Replay(model=model, logger=logger, s_sp=S, a_sp=A, bs=128, maxlen=1e4)
 

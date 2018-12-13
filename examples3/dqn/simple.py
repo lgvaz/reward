@@ -6,16 +6,16 @@ import torch.nn as nn
 import reward.utils as U
 
 
-MAX_STEPS = 1e5
+MAX_STEPS = 4e5
 
 
 class QValueNN(nn.Module):
-    def __init__(self, n_in, n_acs, hidden=32, activation=nn.ReLU):
+    def __init__(self, n_in, n_acs, activation=nn.ReLU):
         super().__init__()
         layers = []
-        layers += [nn.Linear(n_in, hidden), activation()]
-        layers += [nn.Linear(hidden, hidden), activation()]
-        layers += [nn.Linear(hidden, n_acs)]
+        layers += [nn.Linear(n_in, 8), activation()]
+        layers += [nn.Linear(8, 4), activation()]
+        layers += [nn.Linear(4, n_acs)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, s): return self.layers(s)
@@ -36,16 +36,16 @@ class Policy:
 env = gym.make('CartPole-v0').env
 S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_space.high)
 A = rw.space.Categorical(n_acs=env.action_space.n)
-exp_rate = U.schedules.linear_schedule(1., .1, int(.3 * MAX_STEPS))
+exp_rate = U.schedules.linear_schedule(1., .05, int(.3 * MAX_STEPS))
 
 qnn = QValueNN(n_in=S.shape[0], n_acs=A.n_acs).to(U.device.get_device())
 qnn_targ = QValueNN(n_in=S.shape[0], n_acs=A.n_acs).to(U.device.get_device()).to(U.device.get_device()).eval()
-q_opt = torch.optim.Adam(qnn.parameters())
+q_opt = torch.optim.Adam(qnn.parameters(), lr=1e-4)
 policy = Policy(qnn=qnn, exp_rate=exp_rate)
 
-logger = U.Logger('logs/cart_pole/terminal_hack-hardtarg-v3-1', maxsteps=MAX_STEPS)
-model = rw.model.DQN(policy=policy, qnn=qnn, qnn_targ=qnn_targ, q_opt=q_opt, logger=logger)
-agent = rw.agent.Replay(model=model, logger=logger, s_sp=S, a_sp=A, bs=128, maxlen=1e4)
+logger = U.Logger('logs/cart_pole/terminal_hack-hardtarg-v4-0', maxsteps=MAX_STEPS)
+model = rw.model.DQN(policy=policy, qnn=qnn, qnn_targ=qnn_targ, targ_up_freq=10000, targ_up_w=1., q_opt=q_opt, logger=logger)
+agent = rw.agent.Replay(model=model, logger=logger, s_sp=S, a_sp=A, bs=512, maxlen=MAX_STEPS)
 
 s = env.reset()
 tsteps = 0
