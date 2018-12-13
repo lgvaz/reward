@@ -34,4 +34,4 @@ class CategoricalList:
     def __init__(self, vals): self.vals = vals
     def __repr__(self): return f'Categorical({self.vals.__repr__()})'
 
-    def to_tensor(self): return U.to_tensor([o.val for o in self.vals], dtype='int')
+    def to_tensor(self): return U.to_tensor([o.val for o in self.vals], dtype='long')

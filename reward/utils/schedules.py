@@ -10,12 +10,8 @@ def linear_schedule(initial_value, final_value, final_step, initial_step=0):
 
     @wraps(linear_schedule)
     def get(step):
-        step = to_np(step)
-        if step <= final_step:
-            return float(decay_rate * (step - initial_step) + initial_value)
-        else:
-            return float(final_value)
-
+        if step <= final_step: return float(decay_rate * (step - initial_step) + initial_value)
+        else:                  return float(final_value)
     return get
 
 

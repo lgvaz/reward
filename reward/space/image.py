@@ -6,15 +6,18 @@ import torchvision.transforms.functional as ttfm
 from copy import deepcopy
 from .space import Space
 
+
 class Image(Space):
-    def __init__(self, sz, order='chw'):
-        assert order == 'chw', f'Only support order chw, got {order}'
+    def __init__(self, sz, order='NHWC'):
+        if order not in {'NHWC', 'NCHW'}: raise ValueError('Order must be NHWC or NCHW')
+        # TODO: self.sz is not used
         self.sz, self.order = sz, order
 
-    def __call__(self, img): return ImageObj(img=img)
+    def __call__(self, img): return ImageObj(img=self._fix_dims(img))
     def from_list(self, imgs): return ImageList(imgs=imgs)
 
-# TODO: Suport for multiple envs
+    def _fix_dims(self, img): return img if self.order == 'NHWC' else img.transpose([0, 2, 3, 1])
+
 class ImageObj:
     sig = Image
     def __init__(self, img): self.img = img
@@ -24,15 +27,13 @@ class ImageObj:
     def shape(self): raise NotImplementedError
     
     def to_tensor(self):
-        # Hack for Stack
-        try:                   x = self.img.to_pil()
-        except AttributeError: x = self.img
-        return ttfm.to_tensor(x)
+        x = torch.as_tensor(np.array(self.img).transpose([0, 3, 1, 2]), device=U.device.get_device())
+        if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
+        return x
     
     def apply_tfms(self, tfms):
         tfms = sorted(U.listify(tfms), key=lambda o: o.priority, reverse=True)
         x = self.clone()
-        x.img = x if isinstance(x, PIL.Image.Image) else ttfm.to_pil_image(x.img)        
         for tfm in tfms: x.img = tfm(x.img)
         return x
     
@@ -44,4 +45,8 @@ class ImageObj:
 class ImageList:
     sig = Image
     def __init__(self, imgs): self.imgs = imgs
-    def to_tensor(self): return torch.stack([o.to_tensor() for o in self.imgs])
+
+    def to_tensor(self):
+        x = torch.as_tensor(np.array([o.img for o in self.imgs]).transpose([0, 1, 4, 2, 3]), device=U.device.get_device())
+        if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
+        return x

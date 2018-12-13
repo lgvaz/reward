@@ -34,13 +34,15 @@ def disc_sum_rs(rs, ds, vt_last=None, gamma=0.99):
 
     return returns
 
-def td_target(*, rs, ds, v_tp1, gamma):
-    return rs + (1 - ds) * gamma * v_tp1
+# TODO: Name change td_target -> td_targ
+def td_target(*, rs, ds, vn, gamma):
+    assert rs.shape == ds.shape == vn.shape
+    return rs + (1 - ds) * gamma * vn
 
 # TODO: Test this
-def q_learning_target(*, rs, ds, q_tp1, gamma):
-    max_q_tp1, _ = q_tp1.max(dim=1)
-    return td_target(rs=rs, ds=ds, v_tp1=max_q_tp1, gamma=gamma)
+def qlearn_targ(*, rs, ds, qn, gamma):
+    qn_max, _ = qn.max(dim=1, keepdim=True)
+    return td_target(rs=rs, ds=ds, vn=qn_max, gamma=gamma)
 
 def gae_estimation(rs, ds, v_t, v_tp1, *, gamma, gae_lambda):
     td_target_value = td_target(rs=rs, ds=ds, v_tp1=v_tp1, gamma=gamma)
