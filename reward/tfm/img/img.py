@@ -27,21 +27,18 @@ class Resize(Transform):
 
 class Stack(Transform):   
     priority = 1
-    def __init__(self, n, in_sz):
-        self.deque = deque(maxlen=n)
-        for _ in range(n): self.deque.append(np.zeros(in_sz, dtype='uint8'))
-            
-    def get(self): return LazyStack(self.deque)
+    def __init__(self, n):
+        self.n, self.deque = n, deque(maxlen=n)
+
+    def get(self): return LazyStack(list(self.deque))
         
     def apply(self, x):
+        if x.shape[-1] != 1: raise ValueError(f'Can only stack grayscale images (last dim = 1), got {x.shape}')
+        if len(self.deque) == 0:
+            for _ in range(self.n-1): self.deque.append(x)
         self.deque.append(x)
         return self.get()
 
-class LazyStack():
+class LazyStack:
     def __init__(self, arr): self.arr = arr        
-    @property
-    def shape(self): raise NotImplementedError     
-    def to_pil(self):
-        arr = np.array([np.array(o) for o in self.arr])
-        return PIL.Image.fromarray(np.moveaxis(arr, 0, -1))
-
+    def __array__(self): return np.array(self.arr).transpose((4, 1, 2, 3, 0))[0]

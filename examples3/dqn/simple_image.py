@@ -28,7 +28,7 @@ def get_screen():
 class QValueNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=2)
+        self.conv1 = nn.Conv2d(4, 16, kernel_size=5, stride=2)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
         self.bn2 = nn.BatchNorm2d(32)
@@ -60,14 +60,14 @@ def main():
     S = rw.space.Image(sz=[40, 80], order='NCHW')
     A = rw.space.Categorical(n_acs=env.action_space.n)
     exp_rate = U.schedules.linear_schedule(1., .1, int(.3 * MAX_STEPS))
-    tfms = [rw.tfm.img.Gray(), rw.tfm.img.Resize(sz=[40, 80])]
+    tfms = [rw.tfm.img.Gray(), rw.tfm.img.Resize(sz=[40, 80]), rw.tfm.img.Stack(n=4)]
 
     qnn = QValueNN().to(device)
     qnn_targ = QValueNN().to(device).eval()
     q_opt = torch.optim.Adam(qnn.parameters())
     policy = Policy(qnn=qnn, exp_rate=exp_rate)
 
-    logger = U.Logger('logs/cp_img/v3-1', maxsteps=MAX_STEPS, logfreq=300)
+    logger = U.Logger('/tmp/logs/cp_img/v3-1', maxsteps=MAX_STEPS, logfreq=300)
     model = rw.model.DQN(policy=policy, qnn=qnn, qnn_targ=qnn_targ, q_opt=q_opt, targ_up_freq=10, logger=logger, gamma=0.99)
     agent = rw.agent.Replay(model=model, logger=logger, s_sp=S, a_sp=A, bs=128, maxlen=1e4)
 
