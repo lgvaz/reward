@@ -2,7 +2,6 @@ import torch
 import torch.nn.functional as F
 import reward.utils as U
 from .model import Model
-from copy import deepcopy
 
 
 class SAC(Model):
@@ -26,7 +25,7 @@ class SAC(Model):
         assert logprob.shape == q1b.shape == q2b.shape == vb.shape == rs.shape == ds.shape
         # Q loss
         vtarg_tp1 = self.vnn_targ(*sns)
-        qt_next = U.estim.td_target(rs=rs, ds=ds, v_tp1=vtarg_tp1, gamma=self.gamma)
+        qt_next = U.estim.td_target(rs=rs, ds=ds, vn=vtarg_tp1, gamma=self.gamma)
         q1_loss = (q1b - qt_next.detach()).pow(2).mean()
         q2_loss = (q2b - qt_next.detach()).pow(2).mean()
         # V Loss

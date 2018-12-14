@@ -46,6 +46,6 @@ s = env.reset()
 for _ in range(int(1e5)):
     a = agent.get_act(S(s[None]))
     sn, r, d, _ = env.step(int(a[0].val))
-    agent.report(r=np.array(r)[None], d=np.array(d)[None].astype('float'))
+    agent.report(r=np.array(r)[None], d=np.array(d)[None])
     s = sn
     if d: s = env.reset()

@@ -18,14 +18,16 @@ class Replay(Agent):
     def report(self, r, d):
         super().report(r=r, d=d)
         self.b.add_rd(r=r, d=d)
-        if len(self.b) > self.bs:
-            b = self.b.sample(bs=self.bs)            
-            b['ss'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['ss'], self.s_sp)]
-            b['sns'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['sns'], self.s_sp)]
-            b['acs'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['acs'], self.a_sp)]
-            b['rs'] = torch.as_tensor(b['rs'], dtype=torch.float32, device=U.device.get_device())
-            b['ds'] = torch.as_tensor(b['ds'], dtype=torch.float32, device=U.device.get_device())
-            self.md.train(**b)
+        if len(self.b) > self.bs: self.md.train(**self._get_batch())
+
+    def _get_batch(self):
+        b = self.b.sample(bs=self.bs)            
+        b['ss'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['ss'], self.s_sp)]
+        b['sns'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['sns'], self.s_sp)]
+        b['acs'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['acs'], self.a_sp)]
+        b['rs'] = torch.as_tensor(b['rs'], dtype=torch.float32, device=U.device.get_device())
+        b['ds'] = torch.as_tensor(b['ds'], dtype=torch.float32, device=U.device.get_device())
+        return b
 
 
 class ReplayBuffer:
