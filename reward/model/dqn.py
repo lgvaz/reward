@@ -4,7 +4,7 @@ from .model import  Model
 
 
 class DQN(Model):
-    def __init__(self, *, policy, qnn, qnn_targ, q_opt, logger, targ_up_w=1., targ_up_freq=1000, gamma=0.99):
+    def __init__(self, *, policy, qnn, qnn_targ, q_opt, logger, targ_up_w=1., targ_up_freq=10000, gamma=0.99):
         super().__init__(policy=policy, logger=logger)
         self.qnn,self.qnn_targ,self.q_opt,self.targ_up_w,self.targ_up_freq,self.gamma = qnn,qnn_targ,q_opt,targ_up_w,targ_up_freq,gamma
         U.copy_weights(from_nn=self.qnn, to_nn=self.qnn_targ, weight=1.)

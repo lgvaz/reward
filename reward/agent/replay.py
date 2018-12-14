@@ -5,9 +5,9 @@ from .agent import Agent
 
 
 class Replay(Agent):
-    def __init__(self, model, logger, *, s_sp, a_sp, bs, maxlen):
+    def __init__(self, model, logger, *, s_sp, a_sp, bs, maxlen, learn_freq=1., learn_start=0):
         super().__init__(model=model, logger=logger, s_sp=s_sp, a_sp=a_sp)
-        self.bs = bs
+        self.bs, self.learn_freq, self.learn_start = bs, learn_freq, learn_start
         self.b = ReplayBuffer(maxlen=maxlen)
         
     def get_act(self, s):
@@ -18,7 +18,9 @@ class Replay(Agent):
     def report(self, r, d):
         super().report(r=r, d=d)
         self.b.add_rd(r=r, d=d)
-        if len(self.b) > self.bs: self.md.train(**self._get_batch())
+        gstep = U.global_step.get()
+        if len(self.b) > self.bs and gstep % self.learn_freq == 0 and gstep > self.learn_start:
+             self.md.train(**self._get_batch())
 
     def _get_batch(self):
         b = self.b.sample(bs=self.bs)            

@@ -30,6 +30,7 @@ import reward.utils.estim
 import reward.utils.filter
 import reward.utils.buffers
 import reward.utils.device
+import reward.utils.wrapper
 
 __all__ = [
     "EPSILON",

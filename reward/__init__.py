@@ -10,3 +10,4 @@ import reward.space
 import reward.model
 import reward.agent
 import reward.tfm
+import reward.nn
