@@ -33,12 +33,12 @@ class Policy:
         else:                                  return q.argmax()[None]
 
 
-env = U.wrapper.gym.wrap_atari(gym.make('PongNoFrameskip-v4'))
+env = U.wrapper.gym.wrap_atari(gym.make('BreakoutNoFrameskip-v4'))
 S = rw.space.Image(sz=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
 exp_rate = U.schedules.linear_schedule(1., .1, int(1e6))
-logger = U.Logger('/tmp/logs/atari', maxsteps=maxsteps)
+logger = U.Logger('logs/breakout/dqn-v0-0', maxsteps=maxsteps)
 
 qnn = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device)
 qnn_targ = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device).eval()
