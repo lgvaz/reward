@@ -33,25 +33,37 @@ class Policy:
         else:                                  return q.argmax()[None]
 
 
-env = U.wrapper.gym.wrap_atari(gym.make('BreakoutNoFrameskip-v4'))
+env = U.wrapper.gym.wrap_atari(gym.make('BreakoutNoFrameskip-v4'), clip_rewards=False)
 S = rw.space.Image(sz=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
 exp_rate = U.schedules.linear_schedule(1., .1, int(1e6))
-logger = U.Logger('logs/breakout/dqn-v0-0', maxsteps=maxsteps)
+logger = U.Logger('/tmp/logs/breakout/dqn-v1-2', maxsteps=maxsteps)
 
 qnn = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device)
 qnn_targ = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device).eval()
 q_opt = torch.optim.Adam(qnn.parameters(), lr=1e-4)
 policy = Policy(qnn=qnn, exp_rate=exp_rate)
 model = rw.model.DQN(policy=policy, qnn=qnn, qnn_targ=qnn_targ, q_opt=q_opt, targ_up_freq=10000, targ_up_w=1., logger=logger)
-agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=32, maxlen=1e6, learn_freq=4, learn_start=5000, logger=logger)
+from pympler import muppy, summary
+# TODO: BUFFER MAXLEN
+agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=32, maxlen=1e4, learn_freq=4, learn_start=5000, logger=logger)
 
 s = env.reset()
-for _ in range(int(maxsteps)):
+r_sum = 0
+for i in range(int(maxsteps)):
     s = S(s[None]).apply_tfms(tfms)
     a = agent.get_act(s)
     sn, r, d, _ = env.step(int(a[0].val))
-    agent.report(r=np.array(r)[None], d=np.array(d)[None])
-    if d: s = env.reset()
+    r_sum += r
+    agent.report(r=np.array(np.sign(r))[None], d=np.array(d)[None])
+    if d:
+        s = env.reset()
+        logger.add_log('reward_unclipped', r_sum)
+        r_sum = 0
     else: s = sn
+
+    if i % 10000 == 0:
+        objs = muppy.get_objects()
+        summ = summary.summarize(objs)
+        summary.print_(summ)
