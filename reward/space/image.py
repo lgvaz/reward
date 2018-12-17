@@ -27,10 +27,11 @@ class ImageObj:
     def __init__(self, img): self.img = img
     def __repr__(self): return f'Image({self.img.__repr__()})'
     
-    def __array__(self):return np.array(self.img, copy=False).transpose([0, 3, 1, 2])
+    def __array__(self):return np.array(self.img, copy=False)
 
-    def to_tensor(self):
-        x = torch.as_tensor(np.array(self), device=U.device.get_device())
+    def to_tensor(self, transpose=True):
+        arr = np.array(self).transpose([0, 3, 1, 2]) if transpose else np.array(self)
+        x = torch.as_tensor(arr, device=U.device.get_device())
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x
     
@@ -52,10 +53,10 @@ class ImageList:
 
     def __array__(self): 
         # StackFrames Hack
-        imgs = [np.array(img.img) if isinstance(img.img, LazyStack) else img.img for img in self.imgs]
-        return np.array(imgs).transpose([0, 1, 4, 2, 3])
+        return np.array([np.array(img.img) if isinstance(img.img, LazyStack) else img.img for img in self.imgs])
 
-    def to_tensor(self):
-        x = torch.as_tensor(np.array(self), device=U.device.get_device())
+    def to_tensor(self, transpose=True):
+        arr = np.array(self).transpose([0, 1, 4, 2, 3]) if transpose else np.array(self)
+        x = torch.as_tensor(arr, device=U.device.get_device())
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x

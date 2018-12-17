@@ -1,6 +1,7 @@
 import numpy as np
-import torch
+import torch, pickle
 import reward.utils as U
+from pathlib import Path
 from .agent import Agent
 
 
@@ -66,9 +67,40 @@ class ReplayBuffer:
         self._cycle = False
         self.buffer[self.position].update(dict(rs=r, ds=d))
 
+    def add_transition(self, *, s, a, r, d):
+        self.add_sa(s=s, a=a)
+        self.add_rd(r=r, d=d)
+
     def sample(self, bs):
         idxs = np.random.choice(len(self) - 1, bs, replace=False)
         return self._get_batch(idxs=idxs)
 
-    def save(self, savedir): raise NotImplementedError
-    def load(self, loaddir): raise NotImplementedError
+    def save(self, savedir):
+        # TODO: Not saving StackStates, include save option on spaces itself
+        path = Path(savedir)/'buffer'
+        path.mkdir(exist_ok=True, parents=True)
+        mem = U.memories.SimpleMemory.from_dicts(self.buffer)
+        mem.update({k: list(zip(*mem[k])) for k in ['ss', 'acs']})
+        for i, s in enumerate(mem.ss): np.save(path/f'state_{i}.npy', np.array(s[0].from_list(s)))
+        for i, a in enumerate(mem.acs): np.save(path/f'action_{i}.npy', np.array(a[0].from_list(a)))
+        np.save(path/'reward.npy', np.array(mem.rs))
+        np.save(path/'done.npy', np.array(mem.ds))
+        info = {'s_sp': [o[0].__class__ for o in mem.ss], 'a_sp': [o[0].__class__ for o in mem.acs]}
+        with open(str(path/'info.pkl'), 'wb') as f: pickle.dump(info, f)
+
+    def load(self, loaddir):
+        path = Path(loaddir)/'buffer'
+        with open(str(path/'info.pkl'), 'rb') as f: info = pickle.load(f)
+        ss,acs,rs,ds = self._load(path, 'state'),self._load(path, 'action'),self._load(path, 'reward'),self._load(path, 'done')
+        ss, acs = self._load_space(arr=ss, sp=info['s_sp']), self._load_space(arr=acs, sp=info['a_sp'])
+        ss, acs, rs, ds = list(zip(*ss)), list(zip(*acs)), rs[0], ds[0]
+        assert len(ss) == len(acs) == len(rs) == len(ds)
+        for s, a, r, d in zip(ss, acs, rs, ds): self.add_transition(s=s, a=a, r=r, d=d)
+
+    def _load(self, path, name):
+        items = sorted([str(p) for p in path.glob('*.npy') if name in str(p)])
+        return [np.load(p) for p in items]
+
+    def _load_space(self, arr, sp):
+        return [[sp(x) for x in o] for o, sp in zip(arr, sp)]
+
