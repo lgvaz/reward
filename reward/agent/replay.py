@@ -36,10 +36,8 @@ class ReplayBuffer:
     # TODO: Save and load
     def __init__(self, maxlen, num_envs=1):
         assert num_envs == 1, 'Only works with one env for now'
-        self.maxlen = int(maxlen)
-        self.buffer = []
-        # Intialized at -1 so the first updated position is 0
-        self.position = -1
+        # Position intialized at -1 so the first updated position is 0
+        self.maxlen, self.buffer, self.position = int(maxlen), [], -1
         self._cycle = False
 
     def __len__(self): return len(self.buffer)
@@ -59,7 +57,7 @@ class ReplayBuffer:
         if self._cycle: raise RuntimeError('add_sa and add_rd should be called sequentially')
         self._cycle = True
         # If buffer is not full, add a new element
-        if len(self.buffer) < self.maxlen: self.buffer.append(None)
+        if len(self) < self.maxlen: self.buffer.append(None)
         self.position = (self.position + 1) % self.maxlen
         self.buffer[self.position] = dict(ss=s, acs=a)
     

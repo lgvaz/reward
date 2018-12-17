@@ -38,11 +38,9 @@ class ImageObj:
     
     def apply_tfms(self, tfms):
         tfms = sorted(U.listify(tfms), key=lambda o: o.priority, reverse=True)
-        x = self.clone()
-        for tfm in tfms: x.img = tfm(x.img)
-        return x
-    
-    def clone(self): return self.__class__(img=deepcopy(self.img))
+        img = self.img.copy()
+        for tfm in tfms: img = tfm(img)
+        return self.__class__(img=img)
 
     @classmethod
     def from_list(cls, lst): return cls(np.array([o.img for o in lst]))
