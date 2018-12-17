@@ -17,7 +17,8 @@ class Image(Space):
     def __call__(self, img): 
         if len(img.shape) != 4: raise ValueError('Image should have 4 dimensions, NHWC or NCHW, specfied in constructor')
         return ImageObj(img=self._fix_dims(img))
-    def from_list(self, imgs): return ImageList(imgs=imgs)
+
+    def from_list(self, imgs): return ImageObj.from_list(imgs=imgs)
 
     def _fix_dims(self, img): return img if self.order == 'NHWC' else img.transpose([0, 2, 3, 1])
 
@@ -26,11 +27,8 @@ class ImageObj:
     def __init__(self, img): self.img = img
     def __repr__(self): return f'Image({self.img.__repr__()})'
     
-    def __array__(self):return np.array(self.img).transpose([0, 3, 1, 2])
+    def __array__(self):return np.array(self.img, copy=False).transpose([0, 3, 1, 2])
 
-    @property
-    def shape(self): raise NotImplementedError
-    
     def to_tensor(self):
         x = torch.as_tensor(np.array(self), device=U.device.get_device())
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
@@ -42,8 +40,11 @@ class ImageObj:
         for tfm in tfms: img = tfm(img)
         return self.__class__(img=img)
 
-    @classmethod
-    def from_list(cls, lst): return cls(np.array([o.img for o in lst]))
+    @staticmethod
+    def from_list(imgs): return ImageList(imgs=imgs)
+
+    @property
+    def shape(self): raise NotImplementedError
 
 class ImageList:
     sig = Image

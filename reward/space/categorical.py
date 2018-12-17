@@ -1,6 +1,6 @@
+import torch
 import numpy as np
 import reward.utils as U
-from copy import deepcopy
 from .space import Space
 
 
@@ -12,7 +12,7 @@ class Categorical(Space):
     def __repr__(self): return "Discrete(num_actions={})".format(self.n_acs)
 
     def __call__(self, val): return CategoricalObj(val=val)
-    def from_list(self, vals): return CategoricalList(vals=vals)
+    def from_list(self, vals): return CategoricalObj.from_list(vals=vals)
 
     def sample(self): return np.random.randint(low=0, high=self.n_acs, size=(1,))
 
@@ -22,16 +22,22 @@ class CategoricalObj:
     def __init__(self, val): self.val = val
     def __repr__(self): return f'Categorical({self.val.__repr__()})'
 
+    def __array__(self): return np.array(val, dtype='int', copy=False)
+    def to_tensor(self): return torch.as_tensor(np.array(self), device=U.device.get_device())
+
+    def apply_tfms(self, tfms, priority): raise NotImplementedError
+
+    @staticmethod
+    def from_list(vals): return CategoricalList(vals=vals)
+
     @property
     def shape(self): raise NotImplementedError
 
-    def to_tensor(self): return U.to_tensor(self.val)
-    def apply_tfms(self, tfms, priority): raise NotImplementedError
-    def clone(self): raise NotImplementedError
 
 class CategoricalList:
     sig = Categorical
     def __init__(self, vals): self.vals = vals
     def __repr__(self): return f'Categorical({self.vals.__repr__()})'
 
-    def to_tensor(self): return U.to_tensor([o.val for o in self.vals], dtype='long')
+    def __array__(self): return np.array([o.val for o in self.vals], dtype='int', copy=False)
+    def to_tensor(self): return torch.as_tensor(np.array(self), device=U.device.get_device())

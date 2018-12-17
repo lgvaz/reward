@@ -16,32 +16,34 @@ class Continuous(Space):
     def __repr__(self): return f'Continuous(shape={self.shape},low={self.low},high={self.high})'
 
     def __call__(self, arr): return ContinuousObj(arr=arr)
-    # def from_list(self, lst): return ContinuousObj.from_list(lst=lst)
-    def from_list(self, arrs): return ContinuousList(arrs=arrs)
+    def from_list(self, arrs): return ContinuousObj.from_list(arrs=arrs)
 
     def sample(self): return np.random.uniform(low=self.low, high=self.high, size=self.shape)
 
 class ContinuousObj:
     sig = Continuous
-    def __init__(self, arr): self.arr = np.array(arr, copy=False).astype('float32')
+    def __init__(self, arr): self.arr = np.array(arr, dtype='float', copy=False)
     def __repr__(self): return f'Continuous({self.arr.__repr__()})'
         
     @property
     def shape(self): return self.arr.shape   
     
-    def to_tensor(self):
-        return U.to_tensor(self.arr, dtype='float32')
+    def __array__(self): return np.array(self.arr, dtype='float', copy=False)
+    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get_device())
 
     def apply_tfms(self, tfms, priority=True):
         if priority: tfms = sorted(U.listify(tfms), key=lambda o: o.priority, reverse=True)
-        x = self.clone()        
-        for tfm in tfms: x.arr = tfm(x.arr)
-        return x    
-    
-    def clone(self): return self.__class__(arr=deepcopy(self.arr))
+        x = self.arr.copy()
+        for tfm in tfms: x = tfm(x)
+        return self.__class__(arr=x)
+
+    @staticmethod
+    def from_list(arrs): return ContinuousList(arrs=arrs)
+
 
 class ContinuousList:
     sig = Continuous
     def __init__(self, arrs): self.arrs = arrs
 
-    def to_tensor(self): return U.to_tensor([o.arr for o in self.arrs], dtype='float32')
+    def __array__(self): return np.array([o.arr for o in self.arrs], dtype='float', copy=False)
+    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get_device())
