@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import reward.utils as U
+from pathlib import Path
 from .space import Space
 
 
@@ -41,3 +42,14 @@ class CategoricalList:
 
     def __array__(self): return np.array([o.val for o in self.vals], dtype='int', copy=False)
     def to_tensor(self): return torch.as_tensor(np.array(self), device=U.device.get_device())
+
+    def unpack(self): return self.vals
+
+    def save(self, savedir, postfix=''):
+        np.save(Path(savedir)/f'cat_{postfix}.npy', np.array(self))
+
+    @classmethod
+    def load(cls, loaddir, postfix=''):
+        arr = np.load(Path(loaddir)/f'cat_{postfix}.npy')
+        return cls([CategoricalObj(o) for o in arr])
+        

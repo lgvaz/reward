@@ -1,10 +1,7 @@
-import PIL
-import torch
-import numpy as np
-import reward.utils as U
-import torchvision.transforms.functional as ttfm
-from copy import deepcopy
+import torch, json
+import numpy as np, reward as rw, reward.utils as U
 from .space import Space
+from pathlib import Path
 from reward.tfm.img.img import LazyStack
 
 
@@ -60,3 +57,26 @@ class ImageList:
         x = torch.as_tensor(arr, device=U.device.get_device())
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x
+
+    def unpack(self): return self.imgs
+
+    def save(self, savedir, postfix=''):
+        savedir = Path(savedir)
+        # StackFrames Hack
+        if isinstance(self.imgs[0].img, LazyStack):
+            x = np.array([np.array(o.img, copy=False)[..., -1, None] for o in self.imgs])
+            with open(str(savedir/(f'lazystack_{postfix}.json')), 'w') as f: json.dump(dict(n=np.array(self.imgs[0]).shape[-1]), f)
+        else:
+             x = np.array([o.img for o in self.imgs])
+        np.save(savedir/f'img_{postfix}.npy', x)
+
+    @classmethod
+    def load(cls, loaddir, postfix=''):
+        arr = np.load(Path(loaddir)/f'img_{postfix}.npy')
+        try:
+            with open(str(Path(loaddir)/(f'lazystack_{postfix}.json')), 'r') as f: n = json.load(f)['n']
+            stack = rw.tfm.img.Stack(n=n)
+            arr = [stack(o) for o in arr]
+        except FileNotFoundError: pass
+        return cls([ImageObj(o) for o in arr])
+        

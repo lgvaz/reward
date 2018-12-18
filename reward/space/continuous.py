@@ -1,6 +1,6 @@
-import numpy as np
-import reward.utils as U
-from copy import deepcopy
+import torch
+import numpy as np, reward.utils as U
+from pathlib import Path
 from .space import Space
 
 
@@ -47,3 +47,14 @@ class ContinuousList:
 
     def __array__(self): return np.array([o.arr for o in self.arrs], dtype='float', copy=False)
     def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get_device())
+
+    def unpack(self): return self.arrs
+
+    def save(self, savedir, postfix=''):
+        np.save(Path(savedir)/f'cont_{postfix}.npy', np.array(self))
+
+    @classmethod
+    def load(cls, loaddir, postfix=''):
+        arr = np.load(Path(loaddir)/f'cont_{postfix}.npy')
+        return cls([ContinuousObj(o) for o in arr])
+        

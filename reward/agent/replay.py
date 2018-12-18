@@ -76,31 +76,34 @@ class ReplayBuffer:
         return self._get_batch(idxs=idxs)
 
     def save(self, savedir):
-        # TODO: Not saving StackStates, include save option on spaces itself
         path = Path(savedir)/'buffer'
         path.mkdir(exist_ok=True, parents=True)
         mem = U.memories.SimpleMemory.from_dicts(self.buffer)
         mem.update({k: list(zip(*mem[k])) for k in ['ss', 'acs']})
-        for i, s in enumerate(mem.ss): np.save(path/f'state_{i}.npy', np.array(s[0].from_list(s)))
-        for i, a in enumerate(mem.acs): np.save(path/f'action_{i}.npy', np.array(a[0].from_list(a)))
+        info = {}
+        info.update(self._save_space(mem.ss, name='state', savedir=path))
+        info.update(self._save_space(mem.acs, name='action', savedir=path))
         np.save(path/'reward.npy', np.array(mem.rs))
         np.save(path/'done.npy', np.array(mem.ds))
-        info = {'s_sp': [o[0].__class__ for o in mem.ss], 'a_sp': [o[0].__class__ for o in mem.acs]}
         with open(str(path/'info.pkl'), 'wb') as f: pickle.dump(info, f)
 
     def load(self, loaddir):
-        path = Path(loaddir)/'buffer'
-        with open(str(path/'info.pkl'), 'rb') as f: info = pickle.load(f)
-        ss,acs,rs,ds = self._load(path, 'state'),self._load(path, 'action'),self._load(path, 'reward'),self._load(path, 'done')
-        ss, acs = self._load_space(arr=ss, sp=info['s_sp']), self._load_space(arr=acs, sp=info['a_sp'])
-        ss, acs, rs, ds = list(zip(*ss)), list(zip(*acs)), rs[0], ds[0]
+        loaddir = Path(loaddir)/'buffer'
+        with open(str(loaddir/'info.pkl'), 'rb') as f: info = pickle.load(f)
+        ss = self._load_space(loaddir=loaddir, info=info['state'])
+        acs = self._load_space(loaddir=loaddir, info=info['action'])
+        rs, ds = np.load(loaddir/'reward.npy'), np.load(loaddir/'done.npy')
         assert len(ss) == len(acs) == len(rs) == len(ds)
         for s, a, r, d in zip(ss, acs, rs, ds): self.add_transition(s=s, a=a, r=r, d=d)
 
-    def _load(self, path, name):
-        items = sorted([str(p) for p in path.glob('*.npy') if name in str(p)])
-        return [np.load(p) for p in items]
+    def _save_space(self, x, name, savedir):
+        info = {name: []}
+        for i, o in enumerate(x):
+            postfix = f'{name}_{i}'
+            olist = o[0].from_list(o)
+            olist.save(savedir=savedir, postfix=postfix)
+            info[name].append(dict(name=postfix, cls=olist.__class__))
+        return info
 
-    def _load_space(self, arr, sp):
-        return [[sp(x) for x in o] for o, sp in zip(arr, sp)]
-
+    def _load_space(self, loaddir, info):
+        return list(zip(*[o['cls'].load(loaddir=loaddir, postfix=o['name']).unpack() for o in info]))
