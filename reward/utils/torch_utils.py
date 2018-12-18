@@ -1,12 +1,30 @@
 import warnings
-import numpy as np
 import torch
+import numpy as np, reward as rw
 from tqdm import tqdm
 from pathlib import Path
-from reward.utils import is_np
+from reward.utils import is_np, listify
 from reward.utils.device import get
 
 TDTYPE = dict(float=torch.float, float32=torch.float, double=torch.double, uint8=torch.uint8, int=torch.int, long=torch.long)
+
+class OptimWrap:
+    def __init__(self, opt, clip_grad_norm=None, callbacks=None):
+        self.opt, self.callbacks = opt, listify(callbacks)
+        self.clip_grad_norm = clip_grad_norm or float('inf')
+
+    # TODO: profile grad_clipping
+    def optimize(self, loss, nn):
+        self.zero_grad()
+        loss.backward()
+        gnorm = torch.nn.utils.clip_grad_norm_(nn.parameters(), self.clip_grad_norm)
+        for cb in self.callbacks: cb(nn.parameters())
+        self.step()
+        rw.logger.add_log(f'{nn.__class__.__name__}/grad_norm', gnorm, hidden=True)
+
+    def step(self): return self.opt.step()
+    def zero_grad(self): return self.opt.zero_grad()
+
 
 # TODO: Deprecated
 def to_tensor(x, dtype='float32', device=None):

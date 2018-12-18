@@ -38,7 +38,6 @@ S = rw.space.Image(sz=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
 exp_rate = U.schedules.linear_schedule(1., .1, int(1e6))
-# logger = U.Logger('/tmp/logs/breakout/dqn-unclipped-v3-0', maxsteps=maxsteps)
 rw.logger.set_logdir('/tmp/logs/breakout/dqn-unclipped-v3-0')
 rw.logger.set_maxsteps(maxsteps)
 

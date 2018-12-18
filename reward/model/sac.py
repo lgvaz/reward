@@ -8,7 +8,7 @@ class SAC(Model):
     def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, vnn_targ_w=0.005, gamma=0.99):
         super().__init__(policy=policy)
         self.q1nn,self.q2nn,self.vnn,self.vnn_targ = q1nn,q2nn,vnn,vnn_targ
-        self.p_opt,self.q1_opt,self.q2_opt,self.v_opt = p_opt,q1_opt,q2_opt,v_opt
+        self.p_opt,self.q1_opt,self.q2_opt,self.v_opt = self._wrap_opts(p_opt,q1_opt,q2_opt,v_opt)
         self.r_scale,self.vnn_targ_w,self.gamma = r_scale,vnn_targ_w,gamma
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=1.)
@@ -37,10 +37,10 @@ class SAC(Model):
         p_loss = (logprob - qnew_t).mean() 
         p_loss += 1e-3 * self.p.mean(dist=dist).pow(2).mean() + 1e-3 * self.p.std(dist=dist).log().pow(2).mean()
         # Optimize
-        U.optimize(loss=q1_loss, opt=self.q1_opt)
-        U.optimize(loss=q2_loss, opt=self.q2_opt)
-        U.optimize(loss=v_loss, opt=self.v_opt)
-        U.optimize(loss=p_loss, opt=self.p_opt)
+        self.q1_opt.optimize(loss=q1_loss, nn=self.q1nn)
+        self.q2_opt.optimize(loss=q2_loss, nn=self.q2nn)
+        self.v_opt.optimize(loss=v_loss, nn=self.vnn)
+        self.p_opt.optimize(loss=p_loss, nn=self.p.nn)
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=self.vnn_targ_w)
         # Write logs

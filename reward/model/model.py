@@ -11,3 +11,6 @@ class Model(ABC):
     # TODO: carefull with shapes, probably want (num_samples, num_envs, feats)
             
     def get_act(self, ss): return self.p.get_act(*U.listify(ss))
+
+    def _wrap_opts(self, *opts):
+        return U.delistify([opt if isinstance(opt, U.OptimWrap) else U.OptimWrap(opt) for opt in opts])

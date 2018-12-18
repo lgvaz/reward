@@ -14,6 +14,8 @@ def listify(p=None):
     elif not isinstance(p, list): return [p]
     else:                         return p
 
+def delistify(x): return x[0] if len(x) == 1 else x
+
 def explained_var(target, preds):
     """
     Calculates the explained variance between two datasets.

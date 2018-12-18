@@ -3,6 +3,7 @@ from .utils import (
     to_np,
     is_np,
     listify,
+    delistify,
     explained_var,
     normalize,
     one_hot,
@@ -21,6 +22,7 @@ from .torch_utils import (
     load_model,
     freeze_weights,
     optimize,
+    OptimWrap,
 )
 from .batch import Batch
 

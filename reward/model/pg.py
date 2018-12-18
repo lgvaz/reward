@@ -5,7 +5,7 @@ import reward.utils as U
 class PG(Model):
     def __init__(self, policy, p_opt, gamma=0.99):
         super().__init__(policy=policy)
-        self.p_opt, self.gamma = p_opt, gamma
+        self.p_opt, self.gamma = self._wrap_opts(p_opt), gamma
                
     def train(self, *, ss, sns, acs, rs, ds):
         ret = U.estim.disc_sum_rs(rs=rs, ds=ds, gamma=self.gamma)
@@ -16,7 +16,5 @@ class PG(Model):
         logprob = self.p.logprob(dist, *acs)
         assert ret.shape == logprob.shape
         loss = -(ret * logprob).mean()
-        self.p_opt.zero_grad()
-        loss.backward()
-        self.p_opt.step()
+        self.p_opt.optimize(loss=loss, nn=self.p.nn)
         rw.logger.add_log("policy/loss", U.to_np(loss))
