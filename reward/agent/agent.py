@@ -1,9 +1,9 @@
-import reward.utils as U
+import reward as rw, reward.utils as U
 from abc import ABC, abstractmethod
 
 class Agent(ABC):
-    def __init__(self, model, logger, *, s_sp, a_sp):
-        self.md, self.logger, self.s_sp, self.a_sp = model, logger, U.listify(s_sp), U.listify(a_sp)
+    def __init__(self, model, *, s_sp, a_sp):
+        self.md, self.s_sp, self.a_sp = model, U.listify(s_sp), U.listify(a_sp)
         self._rsum, self._rs = None, []
 
     @abstractmethod
@@ -24,9 +24,9 @@ class Agent(ABC):
         for i in range(len(r)):
             if d[i]:
                 self._rs.append(self._rsum[i])
-                self.logger.add_log('reward', self._rsum[i], force=True)
+                rw.logger.add_log('reward', self._rsum[i], force=True)
                 self._rsum[i] = 0
-        self.logger.add_header('Episode', len(self._rs))
+        rw.logger.add_header('Episode', len(self._rs))
 
     
     def _check_s(self, s): self._check_space(expected=self.s_sp, recv=s, name='State')

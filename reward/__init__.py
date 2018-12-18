@@ -1,3 +1,4 @@
+import reward.utils
 import reward.env
 import reward.runner
 import reward.batcher
@@ -11,3 +12,4 @@ import reward.model
 import reward.agent
 import reward.tfm
 import reward.nn
+import reward.logger

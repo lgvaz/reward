@@ -12,7 +12,6 @@ from .utils import (
     ScalarStats,
 )
 from .config import Config
-from .logger import Logger
 from .torch_utils import (
     to_tensor,
     copy_weights,
@@ -31,6 +30,7 @@ import reward.utils.filter
 import reward.utils.buffers
 import reward.utils.device
 import reward.utils.wrapper
+import reward.utils.global_step
 
 __all__ = [
     "EPSILON",

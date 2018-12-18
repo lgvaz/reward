@@ -1,12 +1,12 @@
 import torch
 import torch.nn.functional as F
-import reward.utils as U
+import reward as rw, reward.utils as U
 from .model import Model
 
 
 class SAC(Model):
-    def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, logger, vnn_targ_w=0.005, gamma=0.99):
-        super().__init__(policy=policy, logger=logger)
+    def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, vnn_targ_w=0.005, gamma=0.99):
+        super().__init__(policy=policy)
         self.q1nn,self.q2nn,self.vnn,self.vnn_targ = q1nn,q2nn,vnn,vnn_targ
         self.p_opt,self.q1_opt,self.q2_opt,self.v_opt = p_opt,q1_opt,q2_opt,v_opt
         self.r_scale,self.vnn_targ_w,self.gamma = r_scale,vnn_targ_w,gamma
@@ -44,14 +44,14 @@ class SAC(Model):
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=self.vnn_targ_w)
         # Write logs
-        self.logger.add_log("policy/loss", U.to_np(p_loss))
-        self.logger.add_log("v/loss", U.to_np(v_loss))
-        self.logger.add_log("q1/loss", U.to_np(q1_loss))
-        self.logger.add_log("q2/loss", U.to_np(q2_loss))
-        self.logger.add_histogram("policy/logprob", logprob)
-        self.logger.add_histogram("policy/mean", self.p.mean(dist=dist))
-        self.logger.add_histogram("policy/std", self.p.std(dist=dist))
-        self.logger.add_histogram("v/value", vb)
-        self.logger.add_histogram("q1/value", q1b)
-        self.logger.add_histogram("q2/value", q2b)
+        rw.logger.add_log("policy/loss", U.to_np(p_loss))
+        rw.logger.add_log("v/loss", U.to_np(v_loss))
+        rw.logger.add_log("q1/loss", U.to_np(q1_loss))
+        rw.logger.add_log("q2/loss", U.to_np(q2_loss))
+        rw.logger.add_histogram("policy/logprob", logprob)
+        rw.logger.add_histogram("policy/mean", self.p.mean(dist=dist))
+        rw.logger.add_histogram("policy/std", self.p.std(dist=dist))
+        rw.logger.add_histogram("v/value", vb)
+        rw.logger.add_histogram("q1/value", q1b)
+        rw.logger.add_histogram("q2/value", q2b)
 

@@ -1,33 +1,35 @@
-import numpy as np
+import numpy as np, reward.utils as U
 from collections import namedtuple, OrderedDict
 from tqdm.autonotebook import tqdm
 from tensorboardX import SummaryWriter
-from reward.utils import to_np
-from reward.utils.memories import DefaultMemory
-from reward.utils import global_step
 
 
 Log = namedtuple('Log', 'val prec hid')
-
-
 class Logger:
     "Common logger used by all agents, writes to file and prints a pretty table."
-    def __init__(self, logdir=None, logfreq=1000, maxsteps=None):
-        self.logdir, self.logfreq, self.pbar = logdir, int(logfreq), tqdm(total=maxsteps, dynamic_ncols=True, unit_scale=True)
-        self.logs,self.hists,self.header,self.writer,self._next_log = {},{},OrderedDict(),SummaryWriter(log_dir=logdir),global_step.get()+logfreq
-        global_step.subscribe_add(self._gstep_callback)
-        tqdm.write("Writing logs to: {}".format(logdir))
+    def __init__(self, logfreq=1000, maxsteps=None):
+        self.logfreq, self.pbar = int(logfreq), tqdm(total=maxsteps, dynamic_ncols=True, unit_scale=True)
+        self.logs,self.hists,self.header,self.writer,self._next_log = {},{},OrderedDict(),None,U.global_step.get()+logfreq
+        U.global_step.subscribe_add(self._gstep_callback)
+
+    def set_logdir(self, logdir): self.writer = SummaryWriter(log_dir=logdir)
+    def set_logfreq(self, logfreq): self.logfreq = logfreq
+    def set_maxsteps(self, maxsteps):
+        self.maxsteps = maxsteps
+        self.pbar.total = maxsteps
 
     def add_log(self, name, value, precision=2, hidden=False, force=False):
+        self._check_writer()
         self.logs[name] = Log(val=value, prec=precision, hid=hidden)
-        if force: self.writer.add_scalar(name, value, global_step=global_step.get())
+        if force: self.writer.add_scalar(name, value, global_step=U.global_step.get())
 
-    def add_histogram(self, name, values): self.hists[name] = to_np(values)
+    def add_histogram(self, name, values): self.hists[name] = U.to_np(values)
 
     def add_header(self, name, value): self.header[name] = value
 
     def log(self):
-        step, rate = global_step.get(), self.pbar.n/(self.pbar._time() - self.pbar.start_t)
+        self._check_writer()
+        step, rate = U.global_step.get(), self.pbar.n/(self.pbar._time() - self.pbar.start_t)
         logs = {k: f'{v.val:.{v.prec}f}' for k, v in self.logs.items() if not v.hid}
         self.header.update(OrderedDict(Step=step, Rate=f'{rate:.2f} steps/s'))
         if logs: print_table(logs, self.header)
@@ -36,13 +38,16 @@ class Logger:
         for k, v in self.hists.items(): self.writer.add_histogram(k, v, global_step=step)
         self.logs, self.hists, self.header = {}, {}, OrderedDict()
 
-    def close(self): self.pbar.close()
+    def close_pbar(self): self.pbar.close()
 
     def _gstep_callback(self, gstep):
         if self._next_log < gstep:
             self.log()
             self._next_log = gstep + self.logfreq
         self.pbar.update(gstep - self.pbar.n)
+
+    def _check_writer(self):
+        if self.writer is None: self.writer = SummaryWriter(log_dir='/tmp/reward/logs')
 
 
 def print_table(tags_values, header=None, width=60):

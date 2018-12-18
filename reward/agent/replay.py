@@ -6,8 +6,8 @@ from .agent import Agent
 
 
 class Replay(Agent):
-    def __init__(self, model, logger, *, s_sp, a_sp, bs, maxlen, learn_freq=1., learn_start=0):
-        super().__init__(model=model, logger=logger, s_sp=s_sp, a_sp=a_sp)
+    def __init__(self, model, *, s_sp, a_sp, bs, maxlen, learn_freq=1., learn_start=0):
+        super().__init__(model=model, s_sp=s_sp, a_sp=a_sp)
         self.bs, self.learn_freq, self.learn_start = bs, learn_freq, learn_start
         self.b = ReplayBuffer(maxlen=maxlen)
         

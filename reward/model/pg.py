@@ -3,8 +3,8 @@ import reward.utils as U
 
 
 class PG(Model):
-    def __init__(self, policy, p_opt, logger, gamma=0.99):
-        super().__init__(policy=policy, logger=logger)
+    def __init__(self, policy, p_opt, gamma=0.99):
+        super().__init__(policy=policy)
         self.p_opt, self.gamma = p_opt, gamma
                
     def train(self, *, ss, sns, acs, rs, ds):
@@ -19,4 +19,4 @@ class PG(Model):
         self.p_opt.zero_grad()
         loss.backward()
         self.p_opt.step()
-        self.logger.add_log("policy/loss", U.to_np(loss))
+        rw.logger.add_log("policy/loss", U.to_np(loss))
