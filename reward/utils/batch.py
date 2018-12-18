@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from reward.utils.memories import SimpleMemory
 from reward.utils import to_tensor, join_first_dims, to_np
-from reward.utils.device import get_device
+from reward.utils.device import get
 
 
 class Batch(SimpleMemory):

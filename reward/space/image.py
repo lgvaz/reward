@@ -28,7 +28,7 @@ class ImageObj:
 
     def to_tensor(self, transpose=True):
         arr = np.array(self).transpose([0, 3, 1, 2]) if transpose else np.array(self)
-        x = torch.as_tensor(arr, device=U.device.get_device())
+        x = torch.as_tensor(arr, device=U.device.get())
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x
     
@@ -54,7 +54,7 @@ class ImageList:
 
     def to_tensor(self, transpose=True):
         arr = np.array(self).transpose([0, 1, 4, 2, 3]) if transpose else np.array(self)
-        x = torch.as_tensor(arr, device=U.device.get_device())
+        x = torch.as_tensor(arr, device=U.device.get())
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x
 

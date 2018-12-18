@@ -4,7 +4,7 @@ import numpy as np, reward as rw, torch.nn as nn, matplotlib.pyplot as plt
 import torch.nn.functional as F, reward.utils as U
 
 screen_width = 600
-device = U.device.get_device()
+device = U.device.get()
 MAX_STEPS = 2e5
 
 def get_cart_location():

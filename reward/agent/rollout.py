@@ -24,8 +24,8 @@ class Rollout(Agent):
         b['ss'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['ss'], self.s_sp)]
         b['ss'], b['sns'] = [o[:-1] for o in b['ss']], [o[1:] for o in b['ss']]            
         b['acs'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['acs'], self.a_sp)]
-        b['rs'] = torch.as_tensor(b['rs'], dtype=torch.float32, device=U.device.get_device())
-        b['ds'] = torch.as_tensor(b['ds'], dtype=torch.float32, device=U.device.get_device())
+        b['rs'] = torch.as_tensor(b['rs'], dtype=torch.float32, device=U.device.get())
+        b['ds'] = torch.as_tensor(b['ds'], dtype=torch.float32, device=U.device.get())
         return b
 
 

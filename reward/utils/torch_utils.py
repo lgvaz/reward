@@ -4,14 +4,14 @@ import torch
 from tqdm import tqdm
 from pathlib import Path
 from reward.utils import is_np
-from reward.utils.device import get_device
+from reward.utils.device import get
 
 TDTYPE = dict(float=torch.float, float32=torch.float, double=torch.double, uint8=torch.uint8, int=torch.int, long=torch.long)
 
 # TODO: Deprecated
 def to_tensor(x, dtype='float32', device=None):
     warnings.warn('to_tensor is probably going to be deprecated', DeprecationWarning, stacklevel=2)
-    device = device or get_device()
+    device = device or get()
     if is_np(x): x.astype(dtype)
     try:                   return x.to_tensor()
     except AttributeError: return torch.as_tensor(x, dtype=TDTYPE[dtype], device=device)

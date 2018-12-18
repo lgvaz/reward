@@ -38,8 +38,8 @@ S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_spac
 A = rw.space.Categorical(n_acs=env.action_space.n)
 exp_rate = U.schedules.linear_schedule(1., .05, int(.3 * MAX_STEPS))
 
-qnn = QValueNN(n_in=S.shape[0], n_acs=A.n_acs).to(U.device.get_device())
-qnn_targ = QValueNN(n_in=S.shape[0], n_acs=A.n_acs).to(U.device.get_device()).to(U.device.get_device()).eval()
+qnn = QValueNN(n_in=S.shape[0], n_acs=A.n_acs).to(U.device.get())
+qnn_targ = QValueNN(n_in=S.shape[0], n_acs=A.n_acs).to(U.device.get()).to(U.device.get()).eval()
 q_opt = torch.optim.Adam(qnn.parameters(), lr=1e-4)
 policy = Policy(qnn=qnn, exp_rate=exp_rate)
 

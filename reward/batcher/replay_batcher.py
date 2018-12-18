@@ -96,7 +96,7 @@ class ReplayBatcher(BaseBatcher):
         batch.sn = self.transform_s(U.join_first_dims(batch.sn, 2), training=False).reshape(batch.sn.shape)
         batch = self.transform_batch(batch)
         # TODO: Check if this next lines are correct
-        # batch = batch.apply_to_all(lambda x: U.to_tensor(x).to(U.device.get_device()))
+        # batch = batch.apply_to_all(lambda x: U.to_tensor(x).to(U.device.get()))
         batch.r = batch.r[..., None]
         batch.d = batch.d[..., None]
         # TODO: Maybe to_tensor states here

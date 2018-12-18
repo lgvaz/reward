@@ -29,7 +29,7 @@ class ContinuousObj:
     def shape(self): return self.arr.shape   
     
     def __array__(self): return np.array(self.arr, dtype='float', copy=False)
-    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get_device())
+    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get())
 
     def apply_tfms(self, tfms, priority=True):
         if priority: tfms = sorted(U.listify(tfms), key=lambda o: o.priority, reverse=True)
@@ -46,7 +46,7 @@ class ContinuousList:
     def __init__(self, arrs): self.arrs = arrs
 
     def __array__(self): return np.array([o.arr for o in self.arrs], dtype='float', copy=False)
-    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get_device())
+    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get())
 
     def unpack(self): return self.arrs
 

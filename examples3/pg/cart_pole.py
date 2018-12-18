@@ -6,7 +6,7 @@ import torch.nn as nn
 import reward.utils as U
 
 U.device.set_device('cpu')
-DEVICE = U.device.get_device()
+DEVICE = U.device.get()
 
 class PolicyNN(nn.Module):
     def __init__(self, n_ins, n_outs, activation=nn.Tanh):

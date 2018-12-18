@@ -7,7 +7,7 @@ import reward as rw
 import reward.utils as U
 
 U.device.set_device('cuda')
-DEVICE = U.device.get_device()
+DEVICE = U.device.get()
 
 
 class PolicyNN(nn.Module):
