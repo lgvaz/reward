@@ -49,8 +49,10 @@ class ImageList:
     def __init__(self, imgs): self.imgs = imgs
 
     def __array__(self): 
+        x = [o.img for o in self.imgs]
         # StackFrames Hack
-        return np.array([np.array(img.img) if isinstance(img.img, LazyStack) else img.img for img in self.imgs])
+        if isinstance(self.imgs[0].img, LazyStack): x = LazyStack.from_lists(x)
+        return np.array(x)
 
     def to_tensor(self, transpose=True):
         arr = np.array(self).transpose([0, 1, 4, 2, 3]) if transpose else np.array(self)

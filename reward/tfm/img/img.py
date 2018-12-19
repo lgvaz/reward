@@ -22,7 +22,7 @@ class Resize(Transform):
         self.sz = tuple(sz)
 
     def apply(self, x): 
-        img = np.array([cv2.resize(o, self.sz[::-1], interpolation=cv2.INTER_NEAREST) for o in x])
+        img = np.array([cv2.resize(o, self.sz[::-1], interpolation=cv2.INTER_AREA) for o in x])
         return img.reshape((x.shape[0], *self.sz, x.shape[3]))
 
 class Stack(Transform):   
@@ -42,3 +42,10 @@ class Stack(Transform):
 class LazyStack:
     def __init__(self, arr): self.arr = arr        
     def __array__(self): return np.array(self.arr).transpose((4, 1, 2, 3, 0))[0]
+
+    @staticmethod
+    def from_lists(x): return LazyStackList(x=x)
+
+class LazyStackList:
+    def __init__(self, x): self.x = x
+    def __array__(self): return np.array([o.arr for o in self.x]).transpose((5, 0, 2, 3, 4, 1))[0]
