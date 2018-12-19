@@ -21,7 +21,7 @@ class Replay(Agent):
         self.b.add_rd(r=r, d=d)
         gstep = U.global_step.get()
         if len(self.b) > self.bs and gstep % self.learn_freq == 0 and gstep > self.learn_start:
-             self.md.train(**self._get_batch())
+            self.md.train(**self._get_batch())
 
     def _get_batch(self):
         b = self.b.sample(bs=self.bs)            
@@ -34,7 +34,6 @@ class Replay(Agent):
 
 
 class ReplayBuffer:
-    # TODO: Save and load
     def __init__(self, maxlen, num_envs=1):
         assert num_envs == 1, 'Only works with one env for now'
         # Position intialized at -1 so the first updated position is 0
