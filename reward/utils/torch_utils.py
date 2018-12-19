@@ -13,14 +13,14 @@ class OptimWrap:
         self.opt, self.callbacks = opt, listify(callbacks)
         self.clip_grad_norm = clip_grad_norm or float('inf')
 
-    # TODO: profile grad_clipping
     def optimize(self, loss, nn):
         self.zero_grad()
         loss.backward()
-        gnorm = torch.nn.utils.clip_grad_norm_(nn.parameters(), self.clip_grad_norm)
         for cb in self.callbacks: cb(nn.parameters())
+        if self.clip_grad_norm != float('inf') or rw.logger.is_debug():
+            gnorm = torch.nn.utils.clip_grad_norm_(nn.parameters(), self.clip_grad_norm)
+            rw.logger.add_log(f'{nn.__class__.__name__}/grad_norm', gnorm, hidden=True)
         self.step()
-        rw.logger.add_log(f'{nn.__class__.__name__}/grad_norm', gnorm, hidden=True)
 
     def step(self): return self.opt.step()
     def zero_grad(self): return self.opt.zero_grad()

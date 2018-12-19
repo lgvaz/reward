@@ -10,6 +10,7 @@ class Logger:
     def __init__(self, logfreq=1000, maxsteps=None):
         self.logfreq, self.pbar = int(logfreq), tqdm(total=maxsteps, dynamic_ncols=True, unit_scale=True)
         self.logs,self.hists,self.header,self.writer,self._next_log = {},{},OrderedDict(),None,U.global_step.get()+logfreq
+        self.debug = False
         U.global_step.subscribe_add(self._gstep_callback)
 
     def set_logdir(self, logdir): self.writer = SummaryWriter(log_dir=logdir)
