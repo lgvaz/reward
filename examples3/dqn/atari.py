@@ -37,14 +37,14 @@ env = U.wrapper.gym.wrap_atari(gym.make('BreakoutNoFrameskip-v4'), clip_rewards=
 S = rw.space.Image(sz=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
-exp_rate = U.schedules.linear_schedule(1., .1, int(1e6))
-rw.logger.set_logdir('/tmp/logs/breakout/dqn-unclipped-v3-0')
+exp_rate = U.scheds.PieceLinear(values=[1., .1, .01], bounds=[int(1e6), int(24e6)])
+rw.logger.set_logdir('/tmp/logs/breakout2/dqn-unclipped-v3-0')
 rw.logger.set_maxsteps(maxsteps)
 
 qnn = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device)
 qnn_targ = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device).eval()
 U.freeze_weights(qnn_targ)
-q_opt = U.OptimWrap(torch.optim.Adam(qnn.parameters(), lr=1e-4, eps=1e-4))
+q_opt = U.OptimWrap(torch.optim.Adam(qnn.parameters(), lr=1e-4, eps=3e-4))
 policy = Policy(qnn=qnn, exp_rate=exp_rate)
 model = rw.model.DQN(policy=policy, qnn=qnn, qnn_targ=qnn_targ, q_opt=q_opt, targ_up_freq=10000, targ_up_w=1.)
 # TODO: learn_start

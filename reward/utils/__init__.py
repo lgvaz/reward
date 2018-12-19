@@ -26,7 +26,7 @@ from .torch_utils import (
 )
 from .batch import Batch
 
-import reward.utils.schedules
+import reward.utils.scheds
 import reward.utils.estim
 import reward.utils.filter
 import reward.utils.buffers
