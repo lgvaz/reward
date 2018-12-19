@@ -58,6 +58,6 @@ for i in range(int(maxsteps)):
     agent.report(r=np.array(np.sign(r))[None], d=np.array(d)[None])
     if d:
         s = env.reset()
-        rw.logger.add_log('reward_unclipped', r_sum)
+        rw.logger.add_log('reward_unclipped', r_sum, force=True)
         r_sum = 0
     else: s = sn
