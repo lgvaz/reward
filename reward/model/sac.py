@@ -44,10 +44,10 @@ class SAC(Model):
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=self.vnn_targ_w)
         # Write logs
-        rw.logger.add_log("policy/loss", U.to_np(p_loss))
-        rw.logger.add_log("v/loss", U.to_np(v_loss))
-        rw.logger.add_log("q1/loss", U.to_np(q1_loss))
-        rw.logger.add_log("q2/loss", U.to_np(q2_loss))
+        rw.logger.add_log("policy/loss", p_loss)
+        rw.logger.add_log("v/loss", v_loss)
+        rw.logger.add_log("q1/loss", q1_loss)
+        rw.logger.add_log("q2/loss", q2_loss)
         rw.logger.add_histogram("policy/logprob", logprob)
         rw.logger.add_histogram("policy/mean", self.p.mean(dist=dist))
         rw.logger.add_histogram("policy/std", self.p.std(dist=dist))

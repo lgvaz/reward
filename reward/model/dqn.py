@@ -24,8 +24,8 @@ class DQN(Model):
         qtarg = U.estim.td_target(rs=rs, ds=ds, vn=qnb_targ, gamma=self.gamma).detach()
         loss = F.smooth_l1_loss(input=select_qb, target=qtarg)
         self.q_opt.optimize(loss=loss, nn=self.qnn)
-        rw.logger.add_log('loss', U.to_np(loss), precision=4)
-        rw.logger.add_log('q_mean', U.to_np(qb.mean()), precision=4, hidden=True)
+        rw.logger.add_log('loss', loss, precision=4)
+        rw.logger.add_log('q_mean', qb.mean(), hidden=True)
         rw.logger.add_histogram('q', select_qb)
         rw.logger.add_histogram('qtarg', qtarg)
 

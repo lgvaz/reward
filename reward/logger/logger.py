@@ -22,7 +22,7 @@ class Logger:
     def add_log(self, name, value, precision=2, hidden=False, force=False):
         self._check_writer()
         self.logs[name] = Log(val=value, prec=precision, hid=hidden)
-        if force: self.writer.add_scalar(name, value, global_step=U.global_step.get())
+        if force: self.writer.add_scalar(name, U.to_np(value), global_step=U.global_step.get())
 
     def add_histogram(self, name, values): self.hists[name] = U.to_np(values)
 
@@ -31,8 +31,9 @@ class Logger:
     def log(self):
         self._check_writer()
         step, rate = U.global_step.get(), self.pbar.n/(self.pbar._time() - self.pbar.start_t)
-        logs = {k: f'{v.val:.{v.prec}f}' for k, v in self.logs.items() if not v.hid}
         self.header.update(OrderedDict(Step=step, Rate=f'{rate:.2f} steps/s'))
+        for k, v in self.logs.items(): self.logs[k] = self.logs[k]._replace(val=U.to_np(self.logs[k].val))
+        logs = {k: f'{v.val:.{v.prec}f}' for k, v in self.logs.items() if not v.hid}
         if logs: print_table(logs, self.header)
         self.add_log(name='steps_second', value=rate, hidden=True)
         for k, v in self.logs.items(): self.writer.add_scalar(k, v.val, global_step=step)

@@ -17,4 +17,4 @@ class PG(Model):
         assert ret.shape == logprob.shape
         loss = -(ret * logprob).mean()
         self.p_opt.optimize(loss=loss, nn=self.p.nn)
-        rw.logger.add_log("policy/loss", U.to_np(loss))
+        rw.logger.add_log("policy/loss", loss)

@@ -5,7 +5,9 @@ from reward.utils import EPSILON
 from collections import Iterable
 
 
-def to_np(v): return v.detach().cpu().numpy()
+def to_np(v): 
+    if isinstance(v, torch.Tensor): return v.detach().cpu().numpy()
+    else:                           return np.array(v, copy=False)
 
 def is_np(v): return isinstance(v, (np.ndarray, np.generic))
 
