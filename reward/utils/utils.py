@@ -19,22 +19,7 @@ def listify(p=None):
 def delistify(x): return x[0] if len(x) == 1 else x
 
 def explained_var(target, preds):
-    """
-    Calculates the explained variance between two datasets.
-    Useful for estimating the quality of the value function
-
-    Parameters
-    ----------
-    target: np.array
-        Target dataset.
-    preds: np.array
-        Predictions array.
-
-    Returns
-    -------
-    float
-        The explained variance.
-    """
+    "Calculates the explained variance between two datasets. Useful for estimating the quality of the value function"
     return 1 - (target.squeeze() - preds.squeeze()).var() / target.view(-1).var()
 
 def normalize(array):
