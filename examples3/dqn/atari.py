@@ -6,18 +6,36 @@ maxsteps = 40e6
 device = U.device.get()
 
 class QValueNN(nn.Module):
-    def __init__(self, in_channels, n_acs, activation=nn.ReLU):
+    def __init__(self, in_channels, n_acs, dueling=True, activation=nn.ReLU):
         super().__init__()
-        layers = []
-        layers += [nn.Conv2d(in_channels, 32, 8, 4), activation()]
-        layers += [nn.Conv2d(32, 64, 4, 2), activation()]
-        layers += [nn.Conv2d(64, 64, 3, 1), activation()]
-        layers += [rw.nn.Flatten()]
-        layers += [nn.Linear(7*7*64, 512), activation()]
-        layers += [nn.Linear(512, n_acs)]
-        self.layers = nn.Sequential(*layers)
+        self.dueling = dueling
+        convs = []
+        convs += [nn.Conv2d(in_channels, 32, 8, 4), activation()]
+        convs += [nn.Conv2d(32, 64, 4, 2), activation()]
+        self.conv_final = nn.Conv2d(64, 64, 3, 1)
+        convs += [self.conv_final, activation()]
+        convs += [rw.nn.Flatten()]
+        self.convs = nn.Sequential(*convs)
+        if self.dueling:
+            self.v = nn.Sequential(nn.Linear(7*7*64, 512), activation(), nn.Linear(512, 1))
+            self.adv = nn.Sequential(nn.Linear(7*7*64, 512), activation(), nn.Linear(512, n_acs))
+            self._duel_grad_hook()
+        else:
+            self.q = nn.Sequential(nn.Linear(7*7*64, 512), activation(), nn.Linear(512, n_acs))
 
-    def forward(self, x): return self.layers(x)
+    def forward(self, x):
+        x = self.convs(x)
+        if self.dueling:
+            v, adv = self.v(x), self.adv(x)
+            return v + (adv - adv.mean(dim=-1, keepdim=True))
+        else:
+            return self.q(x)
+
+    def _duel_grad_hook(self):
+        def hook(self, grad_input, grad_output):
+            for grad in grad_input: grad.mul_(1./np.sqrt(2))
+            for grad in grad_output: grad.mul_(1./np.sqrt(2))
+        self.conv_final.register_backward_hook(hook)
 
 class Policy:
     def __init__(self, qnn, exp_rate):
@@ -37,7 +55,7 @@ S = rw.space.Image(sz=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
 exp_rate = U.scheds.PieceLinear(values=[1., .1, .01], bounds=[int(1e6), int(24e6)])
-rw.logger.set_logdir('logs/breakout2/ddqn-v3-0')
+rw.logger.set_logdir('logs/breakout/dddqn-v3-0')
 rw.logger.set_maxsteps(maxsteps)
 
 qnn = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device)
