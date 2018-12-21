@@ -45,9 +45,10 @@ class Policy:
     def exp_rate(self): return self._exp_rate(U.global_step.get())
 
     def get_act(self, s):
-        q = self.qnn(s)
-        if np.random.random() < self.exp_rate: return U.to_tensor(np.random.choice(len(q.squeeze())), dtype='long', device='cpu')[None]
-        else:                                  return q.argmax()[None]
+        if np.random.random() < self.exp_rate: return U.to_tensor(A.sample(), dtype='long', device='cpu')
+        else:
+            q = self.qnn(s)
+            return q.argmax(dim=1)
 
 
 env = U.wrapper.gym.wrap_atari(gym.make('BreakoutNoFrameskip-v4'), clip_rewards=False)
@@ -55,7 +56,7 @@ S = rw.space.Image(sz=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
 exp_rate = U.scheds.PieceLinear(values=[1., .1, .01], bounds=[int(1e6), int(24e6)])
-rw.logger.set_logdir('logs/breakout/dddqn-v3-0')
+rw.logger.set_logdir('logs/breakout/dddqn-v5-0')
 rw.logger.set_maxsteps(maxsteps)
 
 qnn = QValueNN(in_channels=4, n_acs=env.action_space.n).to(device)
@@ -75,7 +76,8 @@ for i in range(int(maxsteps)):
     r_sum += r
     agent.report(r=np.array(np.sign(r))[None], d=np.array(d)[None])
     if d:
+        if env.env.was_real_done:
+            rw.logger.add_log('reward_unclipped', r_sum, force=True)
+            r_sum = 0
         s = env.reset()
-        rw.logger.add_log('reward_unclipped', r_sum, force=True)
-        r_sum = 0
     else: s = sn
