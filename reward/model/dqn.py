@@ -26,6 +26,7 @@ class DQN(Model):
         self.q_opt.optimize(loss=loss, nn=self.qnn)
         rw.logger.add_log('loss', loss, precision=4)
         rw.logger.add_log('q_mean', qb.mean(), hidden=True)
+        rw.logger.add_histogram('acs', acs[0])
         rw.logger.add_histogram('q', select_qb)
         rw.logger.add_histogram('qtarg', qtarg)
 
