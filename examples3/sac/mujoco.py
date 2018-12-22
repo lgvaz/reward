@@ -85,7 +85,6 @@ class Policy:
     def mean(self, dist): return dist.loc
     def std(self, dist): return dist.scale
 
-# ## TODO: Action bounds
 env = gym.make('Humanoid-v2')
 # Define spaces
 S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_space.high)
@@ -104,7 +103,7 @@ q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 v_opt = torch.optim.Adam(vnn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir('logs/humanoid/pre-global-v2-1')
+rw.logger.set_logdir('logs/humanoid/v4-0')
 rw.logger.set_maxsteps(20e6)
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, vnn=vnn, vnn_targ=vnn_targ, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, v_opt=v_opt,
                      r_scale=20., gamma=0.99)
@@ -114,6 +113,6 @@ s = env.reset()
 for i in range(int(20e6)):
     a = agent.get_act(S(s[None]))
     s, r, d, _ = env.step(a_map(a[0].arr[0]))
-    agent.report(r=np.array(r)[None], d=np.array(d)[None].astype('float'))
+    agent.report(r=np.array(r)[None], d=np.array(d)[None])
     if d: s = env.reset()
 
