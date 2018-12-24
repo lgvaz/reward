@@ -21,6 +21,7 @@ class SAC(Model):
         q1b, q2b, vb = self.q1nn(*ss, *acs), self.q2nn(*ss, *acs), self.vnn(*ss)
         dist = self.p.get_dist(*ss)
         anew, anew_pre = map(U.listify, self.p.get_act_pre(dist=dist))
+        # TODO: Test scale reward
         logprob = self.p.logprob_pre(dist, *anew_pre) / float(self.r_scale)
         assert logprob.shape == q1b.shape == q2b.shape == vb.shape == rs.shape == ds.shape
         # Q loss
