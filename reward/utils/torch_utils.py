@@ -32,7 +32,11 @@ def to_tensor(x, dtype='float32', device=None):
     device = device or get()
     if is_np(x): x.astype(dtype)
     try:                   return x.to_tensor()
-    except AttributeError: return torch.as_tensor(x, dtype=TDTYPE[dtype], device=device)
+    except AttributeError: return torch.as_tensor(x, dtype=TDTYPE[dtype]).to(device, non_blocking=True)
+
+def tensor(x, device=None, **kwargs):
+    device = device or get()
+    return torch.as_tensor(x, **kwargs).to(device)
 
 def optimize(loss, opt):
     opt.zero_grad()

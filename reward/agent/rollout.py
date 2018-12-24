@@ -9,10 +9,9 @@ class Rollout(Agent):
         self.bs = bs
         self.b = RollBatch()
         
-    def get_act(self, s):
-        a = super().get_act(s=s)
+    def register_sa(self, s, a):
+        super().register_sa(s=s, a=a)
         self.b.add_sa(s=U.listify(s), a=U.listify(a))
-        return a
     
     def report(self, r, d):
         super().report(r=r, d=d)
@@ -24,8 +23,8 @@ class Rollout(Agent):
         b['ss'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['ss'], self.s_sp)]
         b['ss'], b['sns'] = [o[:-1] for o in b['ss']], [o[1:] for o in b['ss']]            
         b['acs'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['acs'], self.a_sp)]
-        b['rs'] = torch.as_tensor(b['rs'], dtype=torch.float32, device=U.device.get())
-        b['ds'] = torch.as_tensor(b['ds'], dtype=torch.float32, device=U.device.get())
+        b['rs'] = U.tensor(b['rs'], dtype=torch.float32)
+        b['ds'] = U.tensor(b['ds'], dtype=torch.float32)
         return b
 
 

@@ -15,6 +15,7 @@ from .utils import (
 from .config import Config
 from .torch_utils import (
     to_tensor,
+    tensor,
     copy_weights,
     mean_grad,
     change_lr,

@@ -52,7 +52,7 @@ class Policy:
 
 
 env = U.wrapper.gym.wrap_atari(gym.make('BreakoutNoFrameskip-v4'), clip_rewards=False)
-S = rw.space.Image(sz=[1, 84, 84, 4])
+S = rw.space.Image(shape=[1, 84, 84, 4])
 A = rw.space.Categorical(n_acs=env.action_space.n)
 tfms = [Gray(), Resize(sz=[84, 84]), Stack(n=4)]
 exp_rate = U.scheds.PieceLinear(values=[1., .1, .01], bounds=[int(1e6), int(24e6)])

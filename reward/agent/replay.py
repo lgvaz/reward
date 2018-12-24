@@ -11,11 +11,10 @@ class Replay(Agent):
         self.bs, self.learn_freq, self.learn_start = bs, learn_freq, learn_start
         self.b = ReplayBuffer(maxlen=maxlen)
         
-    def get_act(self, s):
-        a = super().get_act(s=s)
+    def register_sa(self, s, a):
+        super().register_sa(s=s, a=a)
         self.b.add_sa(s=U.listify(s), a=U.listify(a))
-        return a
-    
+
     def report(self, r, d):
         super().report(r=r, d=d)
         self.b.add_rd(r=r, d=d)
@@ -28,8 +27,8 @@ class Replay(Agent):
         b['ss'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['ss'], self.s_sp)]
         b['sns'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['sns'], self.s_sp)]
         b['acs'] = [sp.from_list(o).to_tensor() for o, sp in zip(b['acs'], self.a_sp)]
-        b['rs'] = torch.as_tensor(b['rs'], dtype=torch.float32, device=U.device.get())
-        b['ds'] = torch.as_tensor(b['ds'], dtype=torch.float32, device=U.device.get())
+        b['rs'] = U.tensor(b['rs'], dtype=torch.float32)
+        b['ds'] = U.tensor(b['ds'], dtype=torch.float32)
         return b
 
 

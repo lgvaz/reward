@@ -7,15 +7,12 @@ class Agent(ABC):
         self._rsum, self._rs = None, []
 
     @abstractmethod
-    def get_act(self, s):
-        U.global_step.add(1)
-        s = U.listify(s)
+    def register_sa(self, s, a):
+        for _ in range(s[0].shape[0]): U.global_step.add(1)
+        s, a = U.listify(s), U.listify(a)
         self._check_s(s)
-        s = [o.to_tensor() for o in s]
-        a = [sp(U.to_np(o)) for o, sp in zip(U.listify(self.md.get_act(s)), self.a_sp)]
         self._check_a(a)
-        return a
-    
+
     @abstractmethod
     def report(self, r, d):
         assert r.shape == d.shape
@@ -28,6 +25,15 @@ class Agent(ABC):
                 self._rsum[i] = 0
         rw.logger.add_header('Episode', len(self._rs))
 
+    def get_act(self, s):
+        s = U.listify(s)
+        self._check_s(s)
+        st = [o.to_tensor() for o in s]
+        a = [sp(U.to_np(o)) for o, sp in zip(U.listify(self.md.get_act(st)), self.a_sp)]
+        self._check_a(a)
+        self.register_sa(s=s, a=a)
+        return a
+    
     
     def _check_s(self, s): self._check_space(expected=self.s_sp, recv=s, name='State')
     def _check_a(self, a): self._check_space(expected=self.a_sp, recv=a, name='Action')

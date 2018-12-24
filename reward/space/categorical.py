@@ -17,6 +17,9 @@ class Categorical(Space):
 
     def sample(self): return np.random.randint(low=0, high=self.n_acs, size=(1,))
 
+    @property
+    def shape(self): return (1,)
+
 
 class CategoricalObj:
     sig = Categorical
@@ -24,7 +27,7 @@ class CategoricalObj:
     def __repr__(self): return f'Categorical({self.val.__repr__()})'
 
     def __array__(self): return np.array(val, dtype='int', copy=False)
-    def to_tensor(self): return torch.as_tensor(np.array(self), device=U.device.get())
+    def to_tensor(self): return U.tensor(np.array(self))
 
     def apply_tfms(self, tfms, priority): raise NotImplementedError
 
@@ -41,7 +44,7 @@ class CategoricalList:
     def __repr__(self): return f'Categorical({self.vals.__repr__()})'
 
     def __array__(self): return np.array([o.val for o in self.vals], dtype='int', copy=False)
-    def to_tensor(self): return torch.as_tensor(np.array(self), device=U.device.get())
+    def to_tensor(self): return U.tensor(np.array(self))
 
     def unpack(self): return self.vals
 

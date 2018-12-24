@@ -22,14 +22,14 @@ class Continuous(Space):
 
 class ContinuousObj:
     sig = Continuous
-    def __init__(self, arr): self.arr = np.array(arr, dtype='float', copy=False)
+    def __init__(self, arr): self.arr = np.array(arr, dtype='float')
     def __repr__(self): return f'Continuous({self.arr.__repr__()})'
         
     @property
     def shape(self): return self.arr.shape   
     
     def __array__(self): return np.array(self.arr, dtype='float', copy=False)
-    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get())
+    def to_tensor(self): return U.tensor(np.array(self), dtype=torch.float)
 
     def apply_tfms(self, tfms, priority=True):
         if priority: tfms = sorted(U.listify(tfms), key=lambda o: o.priority, reverse=True)
@@ -46,7 +46,7 @@ class ContinuousList:
     def __init__(self, arrs): self.arrs = arrs
 
     def __array__(self): return np.array([o.arr for o in self.arrs], dtype='float', copy=False)
-    def to_tensor(self): return torch.as_tensor(np.array(self), dtype=torch.float, device=U.device.get())
+    def to_tensor(self): return U.tensor(np.array(self), dtype=torch.float)
 
     def unpack(self): return self.arrs
 

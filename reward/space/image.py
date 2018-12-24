@@ -6,18 +6,20 @@ from reward.tfm.img.img import LazyStack
 
 
 class Image(Space):
-    def __init__(self, sz, order='NHWC'):
+    def __init__(self, shape, order='NHWC', dtype=np.uint8):
         if order not in {'NHWC', 'NCHW'}: raise ValueError('Order must be NHWC or NCHW')
         # TODO: self.sz is not used
-        self.sz, self.order = sz, order
+        self.shape, self.order, self.dtype = shape, order, dtype
 
     def __call__(self, img): 
         if len(img.shape) != 4: raise ValueError('Image should have 4 dimensions, NHWC or NCHW, specfied in constructor')
+        if self.dtype != img.dtype: raise ValueError(f'Expected dtype {self.dtype} but got {img.dtype}')
         return ImageObj(img=self._fix_dims(img))
 
     def from_list(self, imgs): return ImageObj.from_list(imgs=imgs)
 
     def _fix_dims(self, img): return img if self.order == 'NHWC' else img.transpose([0, 2, 3, 1])
+
 
 class ImageObj:
     sig = Image
@@ -26,9 +28,9 @@ class ImageObj:
     
     def __array__(self):return np.array(self.img, copy=False)
 
-    def to_tensor(self, transpose=True):
+    def to_tensor(self, transpose=True, device=None):
         arr = np.array(self).transpose([0, 3, 1, 2]) if transpose else np.array(self)
-        x = torch.as_tensor(arr, device=U.device.get())
+        x = U.tensor(arr, device=device)
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x
     
@@ -56,7 +58,7 @@ class ImageList:
 
     def to_tensor(self, transpose=True):
         arr = np.array(self).transpose([0, 1, 4, 2, 3]) if transpose else np.array(self)
-        x = torch.as_tensor(arr, device=U.device.get())
+        x = U.tensor(arr)
         if isinstance(x, (torch.ByteTensor, torch.cuda.ByteTensor)): x = x.float() / 255.
         return x
 
