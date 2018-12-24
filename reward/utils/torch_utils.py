@@ -9,15 +9,17 @@ from reward.utils.device import get
 TDTYPE = dict(float=torch.float, float32=torch.float, double=torch.double, uint8=torch.uint8, int=torch.int, long=torch.long)
 
 class OptimWrap:
-    def __init__(self, opt, clip_grad_norm=None, callbacks=None):
+    def __init__(self, opt, nn=None, clip_grad_norm=None, callbacks=None):
         self.opt, self.callbacks = opt, listify(callbacks)
         self.clip_grad_norm = clip_grad_norm or float('inf')
 
-    def optimize(self, loss, nn):
+    def optimize(self, loss, nn=None):
+        # TODO: nn can be passed on init
         self.zero_grad()
         loss.backward()
         for cb in self.callbacks: cb(nn.parameters())
         if self.clip_grad_norm != float('inf') or rw.logger.is_debug():
+            assert nn is not None
             gnorm = torch.nn.utils.clip_grad_norm_(nn.parameters(), self.clip_grad_norm)
             rw.logger.add_log(f'{nn.__class__.__name__}/grad_norm', gnorm, hidden=True)
         self.step()

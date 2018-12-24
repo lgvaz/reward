@@ -1,12 +1,16 @@
-import torch
+import torch, torch.nn as nn
 import torch.nn.functional as F
 import reward as rw, reward.utils as U
 from .model import Model
 
 
-class SAC(Model):
-    def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, vnn_targ_w=0.005, gamma=0.99):
+class SAC2(Model):
+    def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, entropy, vnn_targ_w=0.005, gamma=0.99):
         super().__init__(policy=policy)
+        self.ent_targ = entropy
+        self.logtemp = nn.Parameter(torch.zeros(1).squeeze().to(U.device.get()))
+        self.temp_opt = self._wrap_opts(torch.optim.Adam([self.logtemp], lr=3e-4))
+
         self.q1nn,self.q2nn,self.vnn,self.vnn_targ = q1nn,q2nn,vnn,vnn_targ
         self.p_opt,self.q1_opt,self.q2_opt,self.v_opt = self._wrap_opts(p_opt,q1_opt,q2_opt,v_opt)
         self.r_scale,self.vnn_targ_w,self.gamma = r_scale,vnn_targ_w,gamma
@@ -22,7 +26,8 @@ class SAC(Model):
         dist = self.p.get_dist(*ss)
         anew, anew_pre = map(U.listify, self.p.get_act_pre(dist=dist))
         # Divide log_prob by r_scale instead of multiplying reward, better stability
-        logprob = self.p.logprob_pre(dist, *anew_pre) / float(self.r_scale)
+        logprob = self.p.logprob_pre(dist, *anew_pre)
+        logprob_scaled = logprob * self.logtemp.exp().detach()
         assert logprob.shape == q1b.shape == q2b.shape == vb.shape == rs.shape == ds.shape
         # Q loss
         vtarg_tp1 = self.vnn_targ(*sns)
@@ -32,16 +37,20 @@ class SAC(Model):
         # V Loss
         q1new_t, q2new_t = self.q1nn(*ss, *anew), self.q2nn(*ss, *anew)
         qnew_t = torch.min(q1new_t, q2new_t)
-        v_next = qnew_t - logprob
+        v_next = qnew_t - logprob_scaled
         v_loss = F.mse_loss(vb, v_next.detach())
         # Policy loss
-        p_loss = (logprob - qnew_t).mean() 
+        p_loss = (logprob_scaled - qnew_t).mean() 
         p_loss += 1e-3 * self.p.mean(dist=dist).pow(2).mean() + 1e-3 * self.p.std(dist=dist).log().pow(2).mean()
+        # Temperature loss
+        # TODO: check shapes and broadcast
+        temp_loss = -self.logtemp * (logprob + self.ent_targ).detach().mean()
         # Optimize
         self.q1_opt.optimize(loss=q1_loss, nn=self.q1nn)
         self.q2_opt.optimize(loss=q2_loss, nn=self.q2nn)
         self.v_opt.optimize(loss=v_loss, nn=self.vnn)
         self.p_opt.optimize(loss=p_loss, nn=self.p.nn)
+        self.temp_opt.optimize(loss=temp_loss)
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=self.vnn_targ_w)
         # Write logs
@@ -49,6 +58,7 @@ class SAC(Model):
         rw.logger.add_log("v/loss", v_loss)
         rw.logger.add_log("q1/loss", q1_loss)
         rw.logger.add_log("q2/loss", q2_loss)
+        rw.logger.add_log('temperature', self.logtemp.exp(), precision=4)
         rw.logger.add_histogram("policy/logprob", logprob)
         rw.logger.add_histogram("policy/mean", self.p.mean(dist=dist))
         rw.logger.add_histogram("policy/std", self.p.std(dist=dist))

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class Agent(ABC):
     def __init__(self, model, *, s_sp, a_sp):
         self.md, self.s_sp, self.a_sp = model, U.listify(s_sp), U.listify(a_sp)
-        self._rsum, self._rs = None, []
+        self._rsum, self._rs, self._eplen = None, [], None
 
     @abstractmethod
     def register_sa(self, s, a):
@@ -18,11 +18,15 @@ class Agent(ABC):
         assert r.shape == d.shape
         if self._rsum is None: self._rsum = r
         else:                  self._rsum += r
+        if self._eplen is None: self._eplen = r * 0.
+        self._eplen += 1
         for i in range(len(r)):
             if d[i]:
                 self._rs.append(self._rsum[i])
-                rw.logger.add_log('reward', self._rsum[i], force=True)
+                rw.logger.add_log('episode/reward', self._rsum[i], force=True)
+                rw.logger.add_log('episode/len', self._eplen[i], force=True)
                 self._rsum[i] = 0
+                self._eplen[i] = 0
         rw.logger.add_header('Episode', len(self._rs))
 
     def get_act(self, s):
