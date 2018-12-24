@@ -34,7 +34,7 @@ jdk:
 script:
   - sonar-scanner
   # - python -m unittest discover
-  - pytest test
+  - pytest tests
 
 notifications:
   email:
