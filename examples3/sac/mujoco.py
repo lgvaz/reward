@@ -69,6 +69,7 @@ class Policy:
     def std(self, dist): return dist.scale
 
 env = gym.make('Humanoid-v2')
+if isinstance(env, gym.wrappers.TimeLimit): env = env.env
 # Define spaces
 S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_space.high)
 A = rw.space.Continuous(low=env.action_space.low, high=env.action_space.high)
@@ -94,5 +95,5 @@ for i in range(int(20e6)):
     a = agent.get_act(S(s[None]))
     s, r, d, _ = env.step(a_map(a[0].arr[0]))
     agent.report(r=np.array(r)[None], d=np.array(d)[None])
-    if d: s = env.reset()
+    if d or (i+1) % 1000 == 0: s = env.reset()
 
