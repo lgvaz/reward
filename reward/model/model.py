@@ -3,8 +3,8 @@ import reward.utils as U
 
 
 class Model(ABC):
-    def __init__(self, policy):
-        self.p = policy
+    def __init__(self, policy, gamma):
+        self.p, self.gamma = policy, gamma
 
     @abstractmethod
     def train(self, *, ss, sns, acs, rs, ds): pass

@@ -6,10 +6,10 @@ from .model import Model
 
 class SAC(Model):
     def __init__(self, *, policy, q1nn, q2nn, vnn, vnn_targ, p_opt, q1_opt, q2_opt, v_opt, r_scale, vnn_targ_w=0.005, gamma=0.99):
-        super().__init__(policy=policy)
+        super().__init__(policy=policy, gamma=gamma)
         self.q1nn,self.q2nn,self.vnn,self.vnn_targ = q1nn,q2nn,vnn,vnn_targ
         self.p_opt,self.q1_opt,self.q2_opt,self.v_opt = self._wrap_opts(p_opt,q1_opt,q2_opt,v_opt)
-        self.r_scale,self.vnn_targ_w,self.gamma = r_scale,vnn_targ_w,gamma
+        self.r_scale,self.vnn_targ_w = r_scale,vnn_targ_w
         # Update value target nn
         U.copy_weights(from_nn=self.vnn, to_nn=self.vnn_targ, weight=1.)
 

@@ -4,8 +4,8 @@ import reward.utils as U
 
 class PG(Model):
     def __init__(self, policy, p_opt, gamma=0.99):
-        super().__init__(policy=policy)
-        self.p_opt, self.gamma = self._wrap_opts(p_opt), gamma
+        super().__init__(policy=policy, gamma=gamma)
+        self.p_opt = self._wrap_opts(p_opt)
                
     def train(self, *, ss, sns, acs, rs, ds):
         ret = U.estim.disc_sum_rs(rs=rs, ds=ds, gamma=self.gamma)

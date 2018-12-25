@@ -6,8 +6,8 @@ from .model import Model
 
 class SAC2(Model):
     def __init__(self, *, policy, q1nn, q2nn, p_opt, q1_opt, q2_opt, entropy=None, r_scale=1.0, targ_smooth=0.005, gamma=0.99):
-        super().__init__(policy=policy)
-        self.q1nn,self.q2nn,self.ent_targ,self.r_scale,self.targ_smooth,self.gamma = q1nn,q2nn,entropy,r_scale,targ_smooth,gamma
+        super().__init__(policy=policy, gamma=gamma)
+        self.q1nn,self.q2nn,self.ent_targ,self.r_scale,self.targ_smooth = q1nn,q2nn,entropy,r_scale,targ_smooth
         self.p_opt,self.q1_opt,self.q2_opt = self._wrap_opts(p_opt,q1_opt,q2_opt)
         self.logtemp = nn.Parameter(torch.zeros(1).squeeze().to(U.device.get()))
         self.temp_opt = self._wrap_opts(torch.optim.Adam([self.logtemp], lr=self.p_opt.lr))

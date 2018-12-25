@@ -84,7 +84,7 @@ p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
 q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir('/tmp/logs/humanoid/autotemp-v2-7-0')
+rw.logger.set_logdir('logs/humanoid/autotemp-v2-7-0')
 rw.logger.set_maxsteps(20e6)
 entropy = -np.prod(env.action_space.shape)
 model = rw.model.SAC2(policy=policy, q1nn=q1nn, q2nn=q2nn, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, entropy=entropy)

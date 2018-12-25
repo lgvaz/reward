@@ -5,9 +5,9 @@ from .model import  Model
 
 class DQN(Model):
     def __init__(self, *, policy, qnn, qnn_targ, q_opt, double=True, targ_up_w=1., targ_up_freq=10000, gamma=0.99):
-        super().__init__(policy=policy)
+        super().__init__(policy=policy, gamma=gamma)
         self.qnn,self.qnn_targ,self.q_opt = qnn,qnn_targ,self._wrap_opts(q_opt)
-        self.double,self.targ_up_w,self.targ_up_freq,self.gamma = double,targ_up_w,targ_up_freq,gamma
+        self.double,self.targ_up_w,self.targ_up_freq = double,targ_up_w,targ_up_freq
         U.copy_weights(from_nn=self.qnn, to_nn=self.qnn_targ, weight=1.)
         U.global_step.subscribe_add(self._update_target_callback)
 
