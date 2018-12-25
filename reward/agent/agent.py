@@ -20,14 +20,7 @@ class Agent(ABC):
         else:                  self._rsum += r
         if self._eplen is None: self._eplen = r * 0.
         self._eplen += 1
-        for i in range(len(r)):
-            if d[i]:
-                self._rs.append(self._rsum[i])
-                rw.logger.add_log('episode/reward', self._rsum[i], force=True)
-                rw.logger.add_log('episode/len', self._eplen[i], force=True)
-                self._rsum[i] = 0
-                self._eplen[i] = 0
-        rw.logger.add_header('Episode', len(self._rs))
+        self.write_ep_logs(d=d)
 
     def get_act(self, s):
         s = U.listify(s)
@@ -37,7 +30,16 @@ class Agent(ABC):
         self._check_a(a)
         self.register_sa(s=s, a=a)
         return a
-    
+
+    def write_ep_logs(self, d):
+        for i in range(len(d)):
+            if d[i]:
+                self._rs.append(self._rsum[i])
+                rw.logger.add_log('episode/reward', self._rsum[i], force=True)
+                rw.logger.add_log('episode/len', self._eplen[i], force=True)
+                self._rsum[i] = 0
+                self._eplen[i] = 0
+        rw.logger.add_header('Episode', len(self._rs))
     
     def _check_s(self, s): self._check_space(expected=self.s_sp, recv=s, name='State')
     def _check_a(self, a): self._check_space(expected=self.a_sp, recv=a, name='Action')

@@ -95,5 +95,9 @@ for i in range(int(20e6)):
     a = agent.get_act(S(s[None]))
     s, r, d, _ = env.step(a_map(a[0].arr[0]))
     agent.report(r=np.array(r)[None], d=np.array(d)[None])
-    if d or (i+1) % 1000 == 0: s = env.reset()
+    if d: s = env.reset()
+    # TimeLimit was removed, we need to manually correct for this (we want to report done == False, but log the end of the episode)
+    if (i+1) % 1000 == 0:
+        s = env.reset()
+        agent.write_ep_logs(d=np.array(True)[None])
 
