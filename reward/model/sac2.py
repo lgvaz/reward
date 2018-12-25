@@ -1,26 +1,18 @@
-import torch, torch.nn as nn
-import torch.nn.functional as F
+import torch, torch.nn as nn, torch.nn.functional as F
 import reward as rw, reward.utils as U
 from copy import deepcopy
 from .model import Model
 
 
 class SAC2(Model):
-    def __init__(self, *, policy, q1nn, q2nn, p_opt, q1_opt, q2_opt, r_scale, entropy, targ_smooth=0.005, gamma=0.99):
+    def __init__(self, *, policy, q1nn, q2nn, p_opt, q1_opt, q2_opt, entropy=None, r_scale=1.0, targ_smooth=0.005, gamma=0.99):
         super().__init__(policy=policy)
-        # TODO r_scale, what to do?
-        self.ent_targ = entropy
+        self.q1nn,self.q2nn,self.ent_targ,self.r_scale,self.targ_smooth,self.gamma = q1nn,q2nn,entropy,r_scale,targ_smooth,gamma
+        self.p_opt,self.q1_opt,self.q2_opt = self._wrap_opts(p_opt,q1_opt,q2_opt)
         self.logtemp = nn.Parameter(torch.zeros(1).squeeze().to(U.device.get()))
-        # TODO: Auto lr
-        self.temp_opt = self._wrap_opts(torch.optim.Adam([self.logtemp], lr=3e-4))
-
-        self.q1nn,self.q2nn = q1nn,q2nn
+        self.temp_opt = self._wrap_opts(torch.optim.Adam([self.logtemp], lr=self.p_opt.lr))
         self.q1nn_targ, self.q2nn_targ = deepcopy(q1nn).eval(), deepcopy(q2nn).eval()
         U.freeze_weights(self.q1nn_targ), U.freeze_weights(self.q2nn_targ)
-
-        self.p_opt,self.q1_opt,self.q2_opt = self._wrap_opts(p_opt,q1_opt,q2_opt)
-        self.targ_smooth = targ_smooth
-        self.r_scale,self.gamma = r_scale,gamma
         self._update_targ_nn(w=1.)
 
     def train(self, *, ss, sns, acs, rs, ds):
@@ -32,13 +24,9 @@ class SAC2(Model):
         dist, distn = self.p.get_dist(*ss), self.p.get_dist(*sns)
         anew, anew_pre = map(U.listify, self.p.get_act_pre(dist=dist))
         anewn, anew_pren = map(U.listify, self.p.get_act_pre(dist=distn))
-        # Divide log_prob by r_scale instead of multiplying reward, better stability
-        logprob = self.p.logprob_pre(dist, *anew_pre)
-        logprobn = self.p.logprob_pre(distn, *anew_pren)
-        logprob_scaled = logprob * self.temp.detach()
-        logprob_scaledn = logprobn * self.temp.detach()
-        # TODO: new shapes to assert
-        assert logprob.shape == q1b.shape == q2b.shape == rs.shape == ds.shape
+        logprob = self.p.logprob_pre(dist, *anew_pre) / float(self.r_scale)
+        logprobn = self.p.logprob_pre(distn, *anew_pren) / float(self.r_scale)
+        assert logprob.shape == logprobn.shape == q1b.shape == q2b.shape == rs.shape == ds.shape
         # Q loss
         q1targn, q2targn = self.q1nn_targ(*sns, *anewn), self.q2nn_targ(*sns, *anewn)
         qtargn = torch.min(q1targn, q2targn) - self.temp.detach() * logprobn
@@ -48,16 +36,16 @@ class SAC2(Model):
         # Policy loss
         q1new, q2new = self.q1nn(*ss, *anew), self.q2nn(*ss, *anew)
         qnew = torch.min(q1new, q2new)
-        p_loss = (logprob_scaled - qnew).mean() 
+        p_loss = (self.temp.detach() * logprob - qnew).mean() 
         p_loss += 1e-3 * self.p.mean(dist=dist).pow(2).mean() + 1e-3 * self.p.std(dist=dist).log().pow(2).mean()
-        # Temperature loss
-        temp_loss = -self.logtemp * (logprob + self.ent_targ).detach().mean()
         # Optimize
         self.q1_opt.optimize(loss=q1_loss, nn=self.q1nn)
         self.q2_opt.optimize(loss=q2_loss, nn=self.q2nn)
         self.p_opt.optimize(loss=p_loss, nn=self.p.nn)
-        self.temp_opt.optimize(loss=temp_loss)
         self._update_targ_nn(w=self.targ_smooth)
+        if self.ent_targ is not None:
+            temp_loss = -self.logtemp * (logprob + self.ent_targ).detach().mean()
+            self.temp_opt.optimize(loss=temp_loss)
         # Write logs
         rw.logger.add_log("policy/loss", p_loss)
         rw.logger.add_log("q1/loss", q1_loss)

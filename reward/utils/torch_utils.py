@@ -24,6 +24,12 @@ class OptimWrap:
             rw.logger.add_log(f'{nn.__class__.__name__}/grad_norm', gnorm, hidden=True)
         self.step()
 
+    @property
+    def lr(self): return self.opt.param_groups[-1]['lr']
+    @lr.setter
+    def lr(self, val):
+        for p in self.opt.param_groups: p['lr'] = val
+
     def step(self): return self.opt.step()
     def zero_grad(self): return self.opt.zero_grad()
 
