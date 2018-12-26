@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import reward as rw
 import reward.utils as U
 
+NORMALIZE = False
 U.device.set_device('cuda')
 DEVICE = U.device.get()
 
@@ -74,6 +75,7 @@ if isinstance(env, gym.wrappers.TimeLimit): env = env.env
 S = rw.space.Continuous(low=env.observation_space.low, high=env.observation_space.high)
 A = rw.space.Continuous(low=env.action_space.low, high=env.action_space.high)
 a_map = U.map_range(-1, 1, A.low[0], A.high[0])
+state_norm = U.filter.MeanStdFilter(S.shape[0])
 
 pnn = PolicyNN(n_in=S.shape[0], n_out=A.shape[0]).to(DEVICE)
 q1nn = QValueNN(n_in=S.shape[0], n_acs=A.shape[0]).to(DEVICE)
@@ -84,7 +86,7 @@ p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
 q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir('logs/humanoid/v8-0')
+rw.logger.set_logdir('logs/humanoid/v9-0')
 rw.logger.set_maxsteps(20e6)
 entropy = -np.prod(env.action_space.shape)
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, entropy=entropy)
@@ -93,7 +95,9 @@ agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=256, maxlen=1e6)
 s = env.reset()
 ep_len = 0
 for i in range(int(20e6)):
-    a = agent.get_act(S(s[None]))
+    s = s[None]
+    if NORMALIZE: s = state_norm.normalize(s)
+    a = agent.get_act(S(s))
     s, r, d, _ = env.step(a_map(a[0].arr[0]))
     agent.report(r=np.array(r)[None], d=np.array(d)[None])
     ep_len += 1
@@ -102,4 +106,5 @@ for i in range(int(20e6)):
         s = env.reset()
         if ep_len % 1000 == 0: agent.write_ep_logs(d=np.array(True)[None])
         ep_len = 0
+    if NORMALIZE and (i+1) % 1000 == 0: state_norm.update()
 
