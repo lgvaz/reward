@@ -48,6 +48,7 @@ class SAC(Model):
             self.temp_opt.optimize(loss=temp_loss)
         # Write logs
         rw.logger.add_log("policy/loss", p_loss)
+        rw.logger.add_log("policy/logprob_mean", logprob.mean(), hidden=False)
         rw.logger.add_log("q1/loss", q1_loss)
         rw.logger.add_log("q2/loss", q2_loss)
         rw.logger.add_log('temperature', self.temp, precision=4)
