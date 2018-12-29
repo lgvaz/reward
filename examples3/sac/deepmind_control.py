@@ -68,7 +68,7 @@ class Policy:
     def mean(self, dist): return dist.loc
     def std(self, dist): return dist.scale
 
-def concat_state_shape(s_spec): return (np.sum([np.prod(o.shape) for o in s_spec.values()]), )
+def concat_state_shape(s_spec): return (int(np.sum([np.prod(o.shape) for o in s_spec.values()])), )
 def concat_state(s): return np.concatenate([o.flatten() for o in s.values()])
 
 env = suite.load(domain_name="manipulator", task_name="bring_ball")
