@@ -8,6 +8,7 @@ from dm_control import suite
 
 U.device.set_device('cuda')
 DEVICE = U.device.get()
+MAX_STEPS = 999
 
 
 class PolicyNN(nn.Module):
@@ -71,7 +72,7 @@ class Policy:
 def concat_state_shape(s_spec): return (int(np.sum([np.prod(o.shape) for o in s_spec.values()])), )
 def concat_state(s): return np.concatenate([o.flatten() for o in s.values()])
 
-env = suite.load(domain_name="manipulator", task_name="bring_ball")
+env = suite.load(domain_name="walker", task_name="run")
 # Define spaces
 S = rw.space.Continuous(shape=concat_state_shape(env.observation_spec()), low=-np.inf, high=np.inf)
 A = rw.space.Continuous(low=env.action_spec().minimum, high=env.action_spec().maximum, shape=env.action_spec().shape)
@@ -86,18 +87,25 @@ p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
 q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir('logs/dm/manipulator/brinball/v9-0')
+rw.logger.set_logdir(f'logs/dm/walker/max{MAX_STEPS}-v9-0')
 rw.logger.set_maxsteps(20e6)
 entropy = -np.prod(env.action_spec().shape)
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, entropy=entropy)
 agent = rw.agent.Replay(model=model, s_sp=S, a_sp=A, bs=256, maxlen=1e6)
 
 s = env.reset().observation
+ep_len = 1
 for i in range(int(20e6)):
     s = concat_state(s)[None]
     a = agent.get_act(S(s))
     tstep = env.step(a_map(a[0].arr[0]))
     s, r, d = tstep.observation, tstep.reward, tstep.last()
     agent.report(r=np.array(r)[None], d=np.array(d)[None])
-    if d: s = env.reset().observation
+    ep_len += 1
+    if d or ep_len % MAX_STEPS == 0:
+        s = env.reset().observation
+        if ep_len % MAX_STEPS == 0: agent.write_ep_logs(d=np.array(True)[None])
+        ep_len = 1
+
+
 
