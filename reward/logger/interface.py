@@ -8,6 +8,10 @@ def set_logfreq(logfreq): return _logger.set_logfreq(logfreq)
 def set_maxsteps(maxsteps): return _logger.set_maxsteps(maxsteps=maxsteps)
 def set_debug(debug=True): _logger.debug = debug
 
+def get_logdir(): return _logger.logdir
+
+def subscribe_log(callback): return _logger.subscribe_log(callback=callback)
+
 def log(): return _logger.log()
 
 def add_histogram(name, values): return _logger.add_histogram(name=name, values=values)

@@ -30,6 +30,7 @@ class OptimWrap:
     def lr(self, val):
         for p in self.opt.param_groups: p['lr'] = val
 
+    def state_dict(self): return self.opt.state_dict()
     def step(self): return self.opt.step()
     def zero_grad(self): return self.opt.zero_grad()
 

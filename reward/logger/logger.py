@@ -10,11 +10,17 @@ class Logger:
     def __init__(self, logfreq=1000, maxsteps=None):
         self.logfreq, self.pbar = int(logfreq), tqdm(total=maxsteps, dynamic_ncols=True, unit_scale=True)
         self.logs,self.hists,self.header,self.writer,self._next_log = {},{},OrderedDict(),None,U.global_step.get()+logfreq
-        self.debug = False
+        self.debug, self.callbacks = False, []
         U.global_step.subscribe_add(self._gstep_callback)
 
-    def set_logdir(self, logdir): self.writer = SummaryWriter(log_dir=logdir)
+    def subscribe_log(self, callback): self.callbacks.append(callback)
+
     def set_logfreq(self, logfreq): self.logfreq = logfreq
+
+    def set_logdir(self, logdir):
+        self.logdir = logdir
+        self.writer = SummaryWriter(log_dir=logdir)
+
     def set_maxsteps(self, maxsteps):
         self.maxsteps = maxsteps
         self.pbar.total = maxsteps
@@ -44,6 +50,7 @@ class Logger:
 
     def _gstep_callback(self, gstep):
         if self._next_log < gstep:
+            for c in self.callbacks: c()
             self.log()
             self._next_log = gstep + self.logfreq
         self.pbar.update(gstep - self.pbar.n)

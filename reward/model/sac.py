@@ -14,6 +14,9 @@ class SAC(Model):
         self.q1nn_targ, self.q2nn_targ = deepcopy(q1nn).eval(), deepcopy(q2nn).eval()
         U.freeze_weights(self.q1nn_targ), U.freeze_weights(self.q2nn_targ)
         self._update_targ_nn(w=1.)
+        self.save_nn_callback(nn=self.p.nn, opt=self.p_opt, name='pnn')
+        self.save_nn_callback(nn=self.q1nn, opt=self.q1_opt, name='q1nn')
+        self.save_nn_callback(nn=self.q2nn, opt=self.q2_opt, name='q2nn')
 
     def train(self, *, ss, sns, acs, rs, ds):
         # (#samples, #envs, #feats) -> (#samples + #envs, #feats)
