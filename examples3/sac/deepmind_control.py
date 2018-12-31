@@ -74,7 +74,7 @@ class Policy:
 def concat_state_shape(s_spec): return (int(np.sum([np.prod(o.shape) for o in s_spec.values()])), )
 def concat_state(s): return np.concatenate([o.flatten() for o in s.values()])
 
-env = suite.load(domain_name="walker", task_name="run")
+env = suite.load(domain_name=DOMAIN, task_name=TASK)
 # Define spaces
 S = rw.space.Continuous(shape=concat_state_shape(env.observation_spec()), low=-np.inf, high=np.inf)
 A = rw.space.Continuous(low=env.action_spec().minimum, high=env.action_spec().maximum, shape=env.action_spec().shape)
@@ -89,7 +89,7 @@ p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
 q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir(f'logs/dm/{DOMAIN}/{task}-max{MAX_STEPS}-v9-0')
+rw.logger.set_logdir(f'logs/dm/{DOMAIN}/{TASK}-max{MAX_STEPS}-v9-0')
 rw.logger.set_maxsteps(20e6)
 entropy = -np.prod(env.action_spec().shape)
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, entropy=entropy)
