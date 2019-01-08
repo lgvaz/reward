@@ -6,7 +6,7 @@ channels:
 
 dependencies:
   - python>=3.5
-  - pytorch>=0.4
+  - pytorch>=1.0
   - numpy
   - scipy
   - opencv
@@ -15,7 +15,6 @@ dependencies:
       - pytest
       - pyyaml
       - sphinx
-      - tensorflow
       - tensorboardX
       - tqdm
       - fire
