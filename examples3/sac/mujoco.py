@@ -7,7 +7,6 @@ import reward as rw
 import reward.utils as U
 
 NORMALIZE = False
-U.device.set_device('cuda')
 DEVICE = U.device.get()
 
 
@@ -86,7 +85,7 @@ p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
 q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir('logs/humanoid/v9-0')
+rw.logger.set_logdir('/tmp/logs/humanoid/v9-0')
 rw.logger.set_maxsteps(20e6)
 entropy = -np.prod(env.action_space.shape)
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, entropy=entropy)

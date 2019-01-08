@@ -83,7 +83,7 @@ def save_model(model, save_dir, opt=None, step=0, is_best=False, name=None, post
 
 def load_model(model, path, opt=None):
     path = str(path) + ".pth.tar"
-    load = torch.load(path)
+    load = torch.load(path, map_location=get())
     model.load_state_dict(load["model"])
     if opt is not None: opt.load_state_dict(load["opt"])
     tqdm.write("Loaded {} from {}".format(model.__class__.__name__, path))

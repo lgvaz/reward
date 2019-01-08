@@ -6,7 +6,6 @@ import reward as rw
 import reward.utils as U
 from dm_control import suite
 
-U.device.set_device('cuda')
 DEVICE = U.device.get()
 MAX_STEPS = 999
 DOMAIN = 'walker'
@@ -89,7 +88,7 @@ p_opt = torch.optim.Adam(pnn.parameters(), lr=3e-4)
 q1_opt = torch.optim.Adam(q1nn.parameters(), lr=3e-4)
 q2_opt = torch.optim.Adam(q2nn.parameters(), lr=3e-4)
 
-rw.logger.set_logdir(f'logs/dm/{DOMAIN}/{TASK}-max{MAX_STEPS}-v9-0')
+rw.logger.set_logdir(f'/tmp/logs/dm/{DOMAIN}/{TASK}-max{MAX_STEPS}-v9-0')
 rw.logger.set_maxsteps(20e6)
 entropy = -np.prod(env.action_spec().shape)
 model = rw.model.SAC(policy=policy, q1nn=q1nn, q2nn=q2nn, p_opt=p_opt, q1_opt=q1_opt, q2_opt=q2_opt, entropy=entropy)

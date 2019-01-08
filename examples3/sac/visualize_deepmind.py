@@ -2,7 +2,6 @@ import torch, torch.nn as nn, numpy as np
 import reward as rw, reward.utils as U
 from dm_control import suite, viewer
 
-U.device.set_device('cuda')
 DEVICE = U.device.get()
 
 class PolicyNN(nn.Module):
@@ -59,8 +58,8 @@ def get_act_fn(policy, a_map):
         return a_map(U.to_np(policy.get_act(s)[0]))
     return get
 
-env = suite.load(domain_name="cartpole", task_name="three_poles")
-# env = suite.load(domain_name="walker", task_name="run")
+# env = suite.load(domain_name="cartpole", task_name="three_poles")
+env = suite.load(domain_name="walker", task_name="run")
 # Define spaces
 S = rw.space.Continuous(shape=concat_state_shape(env.observation_spec()), low=-np.inf, high=np.inf)
 A = rw.space.Continuous(low=env.action_spec().minimum, high=env.action_spec().maximum, shape=env.action_spec().shape)
